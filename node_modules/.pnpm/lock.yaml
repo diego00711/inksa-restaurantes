@@ -33,6 +33,9 @@ importers:
       browserslist:
         specifier: ^4.25.1
         version: 4.25.1
+      caniuse-api:
+        specifier: ^3.0.0
+        version: 3.0.0
       caniuse-lite:
         specifier: ^1.0.30001726
         version: 1.0.30001726

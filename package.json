@@ -3,6 +3,7 @@
     "@tailwindcss/postcss": "^4.1.11",
     "autoprefixer": "^10.4.21",
     "browserslist": "^4.25.1",
+    "caniuse-api": "^3.0.0",
     "caniuse-lite": "^1.0.30001726",
     "css-declaration-sorter": "^7.2.0",
     "cssesc": "^3.0.0",
