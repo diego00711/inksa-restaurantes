@@ -66,6 +66,9 @@ importers:
       tailwindcss:
         specifier: ^3.3.3
         version: 3.4.17
+      util-deprecate:
+        specifier: ^1.0.2
+        version: 1.0.2
 
 packages:
 
