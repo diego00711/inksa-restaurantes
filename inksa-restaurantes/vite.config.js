@@ -13,6 +13,6 @@ export default defineConfig({
     postcss: './postcss.config.cjs',
   },
   build: {
-    cssMinify: false, // <--- Mude para 'false' para desabilitar a minificação CSS
+    cssMinify: 'esbuild', // <--- Mude para 'esbuild' aqui
   },
 })
