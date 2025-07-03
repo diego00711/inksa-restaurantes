@@ -48,6 +48,9 @@ importers:
       cssnano-preset-default:
         specifier: ^7.0.7
         version: 7.0.7(postcss@8.5.6)
+      electron-to-chromium:
+        specifier: ^1.5.179
+        version: 1.5.179
       esbuild:
         specifier: ^0.25.5
         version: 0.25.5
