@@ -1,7 +1,7 @@
 module.exports = {
   plugins: {
-    '@tailwindcss/postcss': {},
+    tailwindcss: {}, // Para Tailwind CSS v3.x, usa tailwindcss: {} diretamente
     autoprefixer: {},
-    cssnano: {} // Garanta que cssnano esteja aqui também, caso não use a configuração do build em Vite
+    cssnano: {} // Opcional: para minificação, se não estiver usando cssMinify no Vite
   },
 };

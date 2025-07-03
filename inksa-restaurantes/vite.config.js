@@ -10,9 +10,9 @@ export default defineConfig({
     },
   },
   css: {
-    postcss: './postcss.config.cjs',
+    postcss: './postcss.config.cjs', // Indica explicitamente para o Vite usar seu postcss.config.cjs
   },
   build: {
-    cssMinify: 'esbuild', // <--- Mude para 'esbuild' aqui
+    cssMinify: 'cssnano', // Ou 'esbuild', se preferir
   },
 })
