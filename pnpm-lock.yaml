@@ -54,6 +54,9 @@ importers:
       postcss-discard-comments:
         specifier: ^7.0.4
         version: 7.0.4(postcss@8.5.6)
+      postcss-selector-parser:
+        specifier: ^7.1.0
+        version: 7.1.0
       source-map-js:
         specifier: ^1.2.1
         version: 1.2.1
