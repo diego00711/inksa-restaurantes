@@ -57,6 +57,9 @@ importers:
       postcss-discard-comments:
         specifier: ^7.0.4
         version: 7.0.4(postcss@8.5.6)
+      postcss-reduce-initial:
+        specifier: ^7.0.3
+        version: 7.0.3(postcss@8.5.6)
       postcss-selector-parser:
         specifier: ^7.1.0
         version: 7.1.0
