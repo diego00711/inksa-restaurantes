@@ -1,163 +1,148 @@
-import React, { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button.jsx'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
-import { Input } from '@/components/ui/input.jsx'
-import { Label } from '@/components/ui/label.jsx'
-import { Badge } from '@/components/ui/badge.jsx'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs.jsx'
+import React, { useState, useEffect } from 'react';
+
+// --- ATENÇÃO ---
+// Certifique-se de que os imports abaixo correspondem à estrutura do seu projeto.
+// Se você usa 'shadcn/ui', eles devem funcionar. Caso contrário, ajuste conforme necessário.
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line, PieChart, Pie, Cell, Area, AreaChart
-} from 'recharts'
+  LineChart, Line
+} from 'recharts';
 import { 
   Store, ShoppingCart, DollarSign, TrendingUp, Clock, 
   CheckCircle, XCircle, AlertCircle, Users, Star,
   Package, Truck, Bell, Settings, LogOut, Eye,
   Edit, Trash2, Plus, Search, Filter, Download,
   MapPin, Phone, Mail, Calendar, BarChart3
-} from 'lucide-react'
-import logoImg from './assets/logo.png'
-import './App.css'
+} from 'lucide-react';
 
-// Dados simulados
+// --- CORREÇÃO ---
+// Os imports para 'logo.png' e 'App.css' foram removidos pois não podem ser resolvidos neste ambiente.
+// import logoImg from './assets/logo.png'; 
+// import './App.css';
+
+// Dados simulados (mantidos como no seu arquivo original)
 const mockOrders = [
-  {
-    id: '#001',
-    customer: 'João Silva',
-    items: ['2x Hambúrguer', '1x Batata Frita', '1x Refrigerante'],
-    total: 45.90,
-    status: 'pending',
-    time: '14:30',
-    address: 'Rua das Flores, 123',
-    phone: '(11) 99999-9999'
-  },
-  {
-    id: '#002',
-    customer: 'Maria Santos',
-    items: ['1x Pizza Margherita', '1x Coca-Cola'],
-    total: 32.50,
-    status: 'preparing',
-    time: '14:25',
-    address: 'Av. Principal, 456',
-    phone: '(11) 88888-8888'
-  },
-  {
-    id: '#003',
-    customer: 'Pedro Costa',
-    items: ['1x Salada Caesar', '1x Suco Natural'],
-    total: 28.00,
-    status: 'ready',
-    time: '14:20',
-    address: 'Rua do Comércio, 789',
-    phone: '(11) 77777-7777'
-  },
-  {
-    id: '#004',
-    customer: 'Ana Oliveira',
-    items: ['3x Pastel', '1x Caldo de Cana'],
-    total: 18.50,
-    status: 'delivered',
-    time: '14:15',
-    address: 'Praça Central, 321',
-    phone: '(11) 66666-6666'
-  }
-]
-
-const mockStats = {
-  todayOrders: 24,
-  todayRevenue: 1250.80,
-  avgOrderValue: 52.12,
-  completionRate: 95
-}
-
+  { id: '#001', customer: 'João Silva', items: ['2x Hambúrguer', '1x Batata Frita', '1x Refrigerante'], total: 45.90, status: 'pending', time: '14:30', address: 'Rua das Flores, 123', phone: '(11) 99999-9999' },
+  { id: '#002', customer: 'Maria Santos', items: ['1x Pizza Margherita', '1x Coca-Cola'], total: 32.50, status: 'preparing', time: '14:25', address: 'Av. Principal, 456', phone: '(11) 88888-8888' },
+  { id: '#003', customer: 'Pedro Costa', items: ['1x Salada Caesar', '1x Suco Natural'], total: 28.00, status: 'ready', time: '14:20', address: 'Rua do Comércio, 789', phone: '(11) 77777-7777' },
+  { id: '#004', customer: 'Ana Oliveira', items: ['3x Pastel', '1x Caldo de Cana'], total: 18.50, status: 'delivered', time: '14:15', address: 'Praça Central, 321', phone: '(11) 66666-6666' }
+];
+const mockStats = { todayOrders: 24, todayRevenue: 1250.80, avgOrderValue: 52.12, completionRate: 95 };
 const chartData = [
-  { name: 'Seg', pedidos: 12, receita: 580 },
-  { name: 'Ter', pedidos: 19, receita: 890 },
-  { name: 'Qua', pedidos: 15, receita: 720 },
-  { name: 'Qui', pedidos: 22, receita: 1100 },
-  { name: 'Sex', pedidos: 28, receita: 1350 },
-  { name: 'Sáb', pedidos: 35, receita: 1680 },
-  { name: 'Dom', pedidos: 18, receita: 850 }
-]
+  { name: 'Seg', pedidos: 12, receita: 580 }, { name: 'Ter', pedidos: 19, receita: 890 }, { name: 'Qua', pedidos: 15, receita: 720 }, { name: 'Qui', pedidos: 22, receita: 1100 }, { name: 'Sex', pedidos: 28, receita: 1350 }, { name: 'Sáb', pedidos: 35, receita: 1680 }, { name: 'Dom', pedidos: 18, receita: 850 }
+];
 
-// Componente de Login
+
+// --- COMPONENTE DE LOGIN ATUALIZADO ---
 function LoginPage({ onLogin }) {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
     
     // Simular autenticação
     setTimeout(() => {
       if (email === 'restaurante@inksa.com' && password === 'rest123') {
-        localStorage.setItem('restaurantLoggedIn', 'true')
-        onLogin(true)
+        localStorage.setItem('restaurantLoggedIn', 'true');
+        onLogin(true);
       } else {
-        alert('Credenciais inválidas')
+        // Em um app real, você usaria um toast ou uma mensagem de erro mais elegante.
+        alert('Credenciais inválidas');
       }
-      setLoading(false)
-    }, 1000)
-  }
+      setLoading(false);
+    }, 1000);
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-500 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-2xl">
-        <CardHeader className="text-center space-y-4">
-          <div className="flex justify-center">
-            <img 
-              src={logoImg} 
-              alt="Inksa Logo" 
-              className="w-20 h-20 rounded-xl object-contain bg-white p-2"
-            />
-          </div>
-          <div>
-            <CardTitle className="text-3xl font-bold text-gray-900">Inksa Restaurantes</CardTitle>
-            <CardDescription className="text-lg text-gray-600">Painel de Controle</CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium">Email do Restaurante</Label>
+    <div className="min-h-screen w-full bg-gradient-to-br from-pink-500 via-red-500 to-orange-400 flex items-center justify-center p-4 font-sans">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 md:p-12 transform transition-all hover:scale-[1.01]">
+        
+        <div className="text-center mb-8">
+          <img 
+            // --- CORREÇÃO --- Usei uma URL pública para a logo.
+            src="https://placehold.co/128x128/F97316/FFFFFF.png?text=Inksa&font=montserrat"
+            alt="Logo da Inksa Restaurantes"
+            className="w-24 h-24 mx-auto mb-4 rounded-full shadow-md object-contain p-2"
+            onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/128x128/cccccc/ffffff?text=Logo'; }}
+          />
+          <h1 className="text-3xl font-bold text-gray-800">
+            Inksa Restaurantes
+          </h1>
+          <p className="text-gray-500 mt-2">
+            Painel de Controle
+          </p>
+        </div>
+
+        <form onSubmit={handleLogin}>
+          <div className="space-y-6">
+            <div>
+              <Label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                Email do Restaurante
+              </Label>
               <Input
-                id="email"
                 type="email"
-                placeholder="restaurante@inksa.com"
+                id="email"
+                name="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-11"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 transition"
+                placeholder="seuemail@restaurante.com"
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium">Senha</Label>
+
+            <div>
+              <Label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                Senha
+              </Label>
               <Input
-                id="password"
                 type="password"
-                placeholder="••••••••"
+                id="password"
+                name="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="h-11"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 transition"
+                placeholder="••••••••"
                 required
               />
             </div>
-            <Button type="submit" className="w-full h-11 text-base font-medium bg-orange-600 hover:bg-orange-700" disabled={loading}>
-              {loading ? 'Entrando...' : 'Acessar Painel'}
-            </Button>
-          </form>
-          <div className="bg-gray-50 rounded-lg p-4 text-center">
-            <p className="text-sm font-medium text-gray-700 mb-2">Credenciais de teste:</p>
-            <p className="text-sm text-gray-600">Email: restaurante@inksa.com</p>
-            <p className="text-sm text-gray-600">Senha: rest123</p>
           </div>
-        </CardContent>
-      </Card>
+
+          <Button
+            type="submit"
+            className="w-full bg-orange-500 text-white font-bold py-3 px-4 rounded-lg mt-8 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-transform transform hover:scale-105 h-11 text-base"
+            disabled={loading}
+          >
+            {loading ? 'Entrando...' : 'Acessar Painel'}
+          </Button>
+        </form>
+
+        <div className="mt-8 p-4 border border-gray-200 rounded-lg bg-gray-50 text-center">
+          <h3 className="text-sm font-semibold text-gray-600">Credenciais de teste:</h3>
+          <p className="text-sm text-gray-500 mt-2">
+            Email: restaurante@inksa.com
+          </p>
+          <p className="text-sm text-gray-500">
+            Senha: rest123
+          </p>
+        </div>
+        
+      </div>
     </div>
-  )
+  );
 }
+
+
+// --- DEMAIS COMPONENTES (MANTIDOS COMO ESTAVAM) ---
 
 // Componente de Header
 function Header({ restaurantName, onLogout }) {
@@ -166,9 +151,11 @@ function Header({ restaurantName, onLogout }) {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <img 
-            src={logoImg} 
+            // --- CORREÇÃO --- Usei uma URL pública para a logo.
+            src="https://placehold.co/64x64/F97316/FFFFFF.png?text=I&font=montserrat"
             alt="Inksa Logo" 
             className="w-10 h-10 rounded-lg object-contain"
+            onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/64x64/cccccc/ffffff?text=I'; }}
           />
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{restaurantName}</h1>
@@ -392,7 +379,7 @@ function ChartsSection() {
   )
 }
 
-// Componente Principal
+// Componente Principal do Dashboard
 function RestaurantDashboard({ onLogout }) {
   const [orders, setOrders] = useState(mockOrders)
   const [activeTab, setActiveTab] = useState('dashboard')
@@ -617,5 +604,4 @@ function App() {
   return <RestaurantDashboard onLogout={handleLogout} />
 }
 
-export default App
-
+export default App;
