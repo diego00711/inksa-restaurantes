@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
 
-// Imports dos componentes UI (verifique os caminhos)
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+// Imports dos componentes UI. Verifique se os caminhos estão corretos para o seu projeto.
+// Ex: import { Button } from './components/ui/button';
+// Se os componentes não existem, o build irá falhar.
+// Por simplicidade, substituí por elementos HTML padrão que o Tailwind pode estilizar.
+
+// import { Button } from '@/components/ui/button';
+// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+// import { Input } from '@/components/ui/input';
+// import { Label } from '@/components/ui/label';
+// import { Badge } from '@/components/ui/badge';
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line
@@ -17,8 +22,7 @@ import {
   MapPin, Phone, Plus
 } from 'lucide-react';
 
-// A importação do CSS foi removida daqui. Ela agora está no main.jsx
-// import './App.css'; 
+// A importação do CSS deve estar no src/main.jsx, então foi removida daqui.
 
 // Dados simulados
 const mockOrders = [
@@ -30,6 +34,22 @@ const mockStats = { todayOrders: 24, todayRevenue: 1250.80, avgOrderValue: 52.12
 const chartData = [
   { name: 'Seg', pedidos: 12, receita: 580 }, { name: 'Ter', pedidos: 19, receita: 890 }, { name: 'Qua', pedidos: 15, receita: 720 }, { name: 'Qui', pedidos: 22, receita: 1100 }, { name: 'Sex', pedidos: 28, receita: 1350 }, { name: 'Sáb', pedidos: 35, receita: 1680 }, { name: 'Dom', pedidos: 18, receita: 850 }
 ];
+
+// Componentes UI Simples para substituir os de 'shadcn/ui' para fins de teste
+const Card = ({ children, className }) => <div className={`bg-white rounded-lg border shadow-sm ${className}`}>{children}</div>;
+const CardHeader = ({ children, className }) => <div className={`p-6 ${className}`}>{children}</div>;
+const CardTitle = ({ children, className }) => <h3 className={`text-2xl font-semibold leading-none tracking-tight ${className}`}>{children}</h3>;
+const CardDescription = ({ children, className }) => <p className={`text-sm text-gray-500 ${className}`}>{children}</p>;
+const CardContent = ({ children, className }) => <div className={`p-6 pt-0 ${className}`}>{children}</div>;
+const Button = ({ children, className, ...props }) => <button className={`inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2 ${className}`} {...props}>{children}</button>;
+const Input = ({ className, ...props }) => <input className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`} {...props} />;
+const Label = ({ children, className, ...props }) => <label className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${className}`} {...props}>{children}</label>;
+const Badge = ({ children, className }) => <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${className}`}>{children}</span>;
+const Tabs = ({ children, className, ...props }) => <div className={className} {...props}>{children}</div>;
+const TabsList = ({ children, className, ...props }) => <div className={`inline-flex h-10 items-center justify-center rounded-md bg-gray-100 p-1 text-gray-500 ${className}`} {...props}>{children}</div>;
+const TabsTrigger = ({ children, className, ...props }) => <button className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm ${className}`} {...props}>{children}</button>;
+const TabsContent = ({ children, className, ...props }) => <div className={className} {...props}>{children}</div>;
+
 
 const InksaLogo = ({ className }) => (
   <div className={`mx-auto flex items-center justify-center rounded-full bg-orange-500 shadow-md ${className}`}>
@@ -60,33 +80,35 @@ function LoginPage({ onLogin }) {
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-pink-500 via-red-500 to-orange-400 flex items-center justify-center p-4 font-sans">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 md:p-12">
-        <div className="text-center mb-8">
+      <Card className="w-full max-w-md p-8 md:p-12">
+        <CardHeader className="text-center mb-4 p-0">
           <InksaLogo className="w-24 h-24 mb-4" />
-          <h1 className="text-3xl font-bold text-gray-800">Inksa Restaurantes</h1>
-          <p className="text-gray-500 mt-2">Painel de Controle</p>
-        </div>
-        <form onSubmit={handleLogin}>
-          <div className="space-y-6">
-            <div>
-              <Label htmlFor="email">Email do Restaurante</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seuemail@restaurante.com" required />
+          <CardTitle>Inksa Restaurantes</CardTitle>
+          <CardDescription>Painel de Controle</CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          <form onSubmit={handleLogin}>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="email">Email do Restaurante</Label>
+                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seuemail@restaurante.com" required />
+              </div>
+              <div>
+                <Label htmlFor="password">Senha</Label>
+                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
+              </div>
             </div>
-            <div>
-              <Label htmlFor="password">Senha</Label>
-              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
-            </div>
+            <Button type="submit" className="w-full mt-6 bg-orange-500 hover:bg-orange-600 text-white" disabled={loading}>
+              {loading ? 'Entrando...' : 'Acessar Painel'}
+            </Button>
+          </form>
+          <div className="mt-6 p-4 border rounded-lg bg-gray-50 text-center">
+            <h3 className="text-sm font-semibold text-gray-600">Credenciais de teste:</h3>
+            <p className="text-sm text-gray-500 mt-2">Email: restaurante@inksa.com</p>
+            <p className="text-sm text-gray-500">Senha: rest123</p>
           </div>
-          <Button type="submit" className="w-full mt-8 bg-orange-500 hover:bg-orange-600" disabled={loading}>
-            {loading ? 'Entrando...' : 'Acessar Painel'}
-          </Button>
-        </form>
-        <div className="mt-8 p-4 border rounded-lg bg-gray-50 text-center">
-          <h3 className="text-sm font-semibold text-gray-600">Credenciais de teste:</h3>
-          <p className="text-sm text-gray-500 mt-2">Email: restaurante@inksa.com</p>
-          <p className="text-sm text-gray-500">Senha: rest123</p>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -135,7 +157,7 @@ function OrderCard({ order, onUpdateStatus }) {
       <div className="mb-4"><h4>Itens:</h4><ul>{order.items.map((item, i) => <li key={i}>• {item}</li>)}</ul></div>
       <div className="flex items-center space-x-2 mb-4"><MapPin className="w-4 h-4" /><span>{order.address}</span></div>
       <div className="flex items-center space-x-2 mb-4"><Phone className="w-4 h-4" /><span>{order.phone}</span></div>
-      <div className="flex justify-between items-center"><span className="text-xl font-bold">R$ {order.total.toFixed(2)}</span>{order.status !== 'delivered' && <Button size="sm" className="bg-orange-600 hover:bg-orange-700" onClick={() => onUpdateStatus(order.id, getNextStatus(order.status))}>{getNextStatusText(order.status)}</Button>}</div>
+      <div className="flex justify-between items-center"><span className="text-xl font-bold">R$ {order.total.toFixed(2)}</span>{order.status !== 'delivered' && <Button size="sm" className="bg-orange-600 hover:bg-orange-700 text-white" onClick={() => onUpdateStatus(order.id, getNextStatus(order.status))}>{getNextStatusText(order.status)}</Button>}</div>
     </CardContent></Card>
   );
 }
@@ -152,40 +174,4 @@ function ChartsSection() {
 function RestaurantDashboard({ onLogout }) {
   const [orders, setOrders] = useState(mockOrders);
   const [activeTab, setActiveTab] = useState('dashboard');
-  const handleUpdateOrderStatus = (orderId, newStatus) => setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
-  const filterOrdersByStatus = (status) => orders.filter(o => o.status === status);
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <Header restaurantName="Restaurante Exemplo" onLogout={onLogout} />
-      <main className="p-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="orders">Pedidos</TabsTrigger>
-            <TabsTrigger value="analytics">Relatórios</TabsTrigger>
-            <TabsTrigger value="menu">Cardápio</TabsTrigger>
-          </TabsList>
-          <TabsContent value="dashboard" className="space-y-6 mt-4"><StatsCards /><ChartsSection /><Card><CardHeader><CardTitle>Pedidos Recentes</CardTitle></CardHeader><CardContent><div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">{orders.slice(0, 3).map(o => <OrderCard key={o.id} order={o} onUpdateStatus={handleUpdateOrderStatus} />)}</div></CardContent></Card></TabsContent>
-          <TabsContent value="orders" className="space-y-6 mt-4"><div className="flex justify-between items-center"><h2>Gerenciar Pedidos</h2><div className="flex space-x-2"><Button variant="outline" size="sm"><Filter className="w-4 h-4 mr-2" />Filtros</Button><Button variant="outline" size="sm"><Download className="w-4 h-4 mr-2" />Exportar</Button></div></div><Tabs defaultValue="all"><TabsList><TabsTrigger value="all">Todos ({orders.length})</TabsTrigger><TabsTrigger value="pending">Pendentes ({filterOrdersByStatus('pending').length})</TabsTrigger><TabsTrigger value="preparing">Preparando ({filterOrdersByStatus('preparing').length})</TabsTrigger><TabsTrigger value="ready">Prontos ({filterOrdersByStatus('ready').length})</TabsTrigger></TabsList>{['all', 'pending', 'preparing', 'ready'].map(status => <TabsContent key={status} value={status}><div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">{(status === 'all' ? orders : filterOrdersByStatus(status)).map(o => <OrderCard key={o.id} order={o} onUpdateStatus={handleUpdateOrderStatus} />)}</div></TabsContent>)}</Tabs></TabsContent>
-          <TabsContent value="analytics" className="space-y-6 mt-4"><h2>Relatórios e Analytics</h2><StatsCards /><ChartsSection /></TabsContent>
-          <TabsContent value="menu" className="space-y-6 mt-4"><div className="flex justify-between items-center"><h2>Gerenciar Cardápio</h2><Button><Plus className="w-4 h-4 mr-2" />Adicionar Item</Button></div><Card><CardContent className="p-12 text-center text-gray-500"><Package className="w-16 h-16 mx-auto mb-4" /><h3>Gerenciamento de Cardápio</h3><p>Funcionalidade em breve.</p></CardContent></Card></TabsContent>
-        </Tabs>
-      </main>
-    </div>
-  );
-}
-
-function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  useEffect(() => { setIsLoggedIn(localStorage.getItem('restaurantLoggedIn') === 'true'); }, []);
-  const handleLogin = (status) => setIsLoggedIn(status);
-  const handleLogout = () => { localStorage.removeItem('restaurantLoggedIn'); setIsLoggedIn(false); };
-
-  if (!isLoggedIn) {
-    return <LoginPage onLogin={handleLogin} />;
-  }
-  return <RestaurantDashboard onLogout={handleLogout} />;
-}
-
-export default App;
+  const handleUpdateOrderStatus = (orderId, newStatus) => setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o
