@@ -142,7 +142,7 @@ function OrderCard({ order, onUpdateStatus }) {
       <div className="mb-4"><h4>Itens:</h4><ul>{order.items.map((item, i) => <li key={i}>• {item}</li>)}</ul></div>
       <div className="flex items-center space-x-2 mb-4"><MapPin className="w-4 h-4" /><span>{order.address}</span></div>
       <div className="flex items-center space-x-2 mb-4"><Phone className="w-4 h-4" /><span>{order.phone}</span></div>
-      <div className="flex justify-between items-center"><span className="text-xl font-bold">R$ {order.total.toFixed(2)}</span>{order.status !== 'delivered' && <Button size="sm" className="bg-orange-600 hover:bg-orange-700 text-white" onClick={() => onUpdateStatus(order.id, getNextStatus(order.status))}>{getNextStatusText(order.status)}</Button>}</div>
+      <div className="flex justify-between items-center"><span className="text-xl font-bold">R$ {order.total.toFixed(2)}</span>{order.status !== 'delivered' && <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white" onClick={() => onUpdateStatus(order.id, getNextStatus(order.status))}>{getNextStatusText(order.status)}</Button>}</div>
     </CardContent></Card>
   );
 }
