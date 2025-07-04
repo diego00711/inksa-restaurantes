@@ -174,4 +174,22 @@ function ChartsSection() {
 function RestaurantDashboard({ onLogout }) {
   const [orders, setOrders] = useState(mockOrders);
   const [activeTab, setActiveTab] = useState('dashboard');
-  const handleUpdateOrderStatus = (orderId, newStatus) => setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o
+  
+  // CORREÇÃO: A linha abaixo estava com um parêntese ')' faltando no final,
+  // o que causava o erro de build "Expected ')' but found end of file".
+  const handleUpdateOrderStatus = (orderId, newStatus) => setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+  
+  const filterOrdersByStatus = (status) => orders.filter(o => o.status === status);
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Header restaurantName="Restaurante Exemplo" onLogout={onLogout} />
+      <main className="p-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="dashboard" data-state={activeTab === 'dashboard' ? 'active' : ''}>Dashboard</TabsTrigger>
+            <TabsTrigger value="orders" data-state={activeTab === 'orders' ? 'active' : ''}>Pedidos</TabsTrigger>
+            <TabsTrigger value="analytics" data-state={activeTab === 'analytics' ? 'active' : ''}>Relatórios</TabsTrigger>
+            <TabsTrigger value="menu" data-state={activeTab === 'menu' ? 'active' : ''}>Cardápio</TabsTrigger>
+          </TabsList>
+          <TabsContent value="dashboard" className="space-y-6 mt-4"><StatsCards /><ChartsSection /><Card><CardHeader><CardTitle>Pedidos Recentes</CardTitle></CardHeader><CardContent><div className="grid md:grid-cols-2 lg:grid-c
