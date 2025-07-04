@@ -117,20 +117,4 @@
   body {
     @apply bg-background text-foreground;
   }
-
-  /* Mantenha esta regra geral, ela é boa prática */
-  img {
-    max-width: 100%; /* Garante que a imagem nunca ultrapasse a largura do seu contêiner pai */
-    height: auto;    /* Mantém a proporção da imagem */
-  }
 }
-
-/* === NOVA REGRA PARA FORÇAR O TAMANHO DA LOGO === */
-/* Cole este bloco APÓS o fechamento do @layer base { ... } */
-img[src="/images/logo_inksa.svg"] {
-  width: 150px !important; /* Defina uma largura fixa e use !important para forçar */
-  height: auto !important; /* Mantém a proporção e força a altura */
-  display: block; /* Garante que a imagem se comporte como um bloco para layout */
-  margin: 0 auto; /* Tenta centralizar a logo horizontalmente */
-}
-/* ============================================== */
