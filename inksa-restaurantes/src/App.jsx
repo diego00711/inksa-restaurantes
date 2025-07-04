@@ -22,7 +22,8 @@ import {
 } from 'lucide-react';
 
 // --- CORREÇÃO ---
-// Os imports para 'logo.png' e 'App.css' foram removidos pois não podem ser resolvidos neste ambiente.
+// A importação do App.css foi removida para corrigir o erro de compilação.
+// O import da logo também foi removido para evitar erros de compilação.
 // import logoImg from './assets/logo.png'; 
 // import './App.css';
 
@@ -68,7 +69,6 @@ function LoginPage({ onLogin }) {
         
         <div className="text-center mb-8">
           <img 
-            // --- CORREÇÃO --- Usei uma URL pública para a logo.
             src="https://placehold.co/128x128/F97316/FFFFFF.png?text=Inksa&font=montserrat"
             alt="Logo da Inksa Restaurantes"
             className="w-24 h-24 mx-auto mb-4 rounded-full shadow-md object-contain p-2"
@@ -151,7 +151,6 @@ function Header({ restaurantName, onLogout }) {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <img 
-            // --- CORREÇÃO --- Usei uma URL pública para a logo.
             src="https://placehold.co/64x64/F97316/FFFFFF.png?text=I&font=montserrat"
             alt="Inksa Logo" 
             className="w-10 h-10 rounded-lg object-contain"
