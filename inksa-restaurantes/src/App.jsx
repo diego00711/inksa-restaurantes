@@ -1,14 +1,5 @@
 import React, { useState, useEffect } from 'react';
 
-// Imports dos componentes UI do shadcn/ui.
-// Certifique-se de que a sua pasta 'components/ui' existe em 'src/'.
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
 // Imports de bibliotecas de terceiros
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -34,7 +25,26 @@ const chartData = [
   { name: 'Seg', pedidos: 12, receita: 580 }, { name: 'Ter', pedidos: 19, receita: 890 }, { name: 'Qua', pedidos: 15, receita: 720 }, { name: 'Qui', pedidos: 22, receita: 1100 }, { name: 'Sex', pedidos: 28, receita: 1350 }, { name: 'Sáb', pedidos: 35, receita: 1680 }, { name: 'Dom', pedidos: 18, receita: 850 }
 ];
 
-// --- Componentes ---
+// --- Componentes UI Simples ---
+const Card = ({ children, className }) => <div className={`bg-white rounded-lg border shadow-sm ${className}`}>{children}</div>;
+const CardHeader = ({ children, className }) => <div className={`p-6 ${className}`}>{children}</div>;
+const CardTitle = ({ children, className }) => <h3 className={`text-2xl font-semibold leading-none tracking-tight ${className}`}>{children}</h3>;
+const CardDescription = ({ children, className }) => <p className={`text-sm text-gray-500 ${className}`}>{children}</p>;
+const CardContent = ({ children, className }) => <div className={`p-6 pt-0 ${className}`}>{children}</div>;
+const Button = ({ children, className, variant, size, ...props }) => {
+    const baseClasses = "inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50";
+    const sizeClasses = size === 'sm' ? 'h-9 px-3' : 'h-10 px-4 py-2';
+    const variantClasses = variant === 'outline' ? 'border border-input bg-background hover:bg-accent hover:text-accent-foreground' : 'bg-orange-500 text-white hover:bg-orange-600';
+    return <button className={`${baseClasses} ${sizeClasses} ${variantClasses} ${className}`} {...props}>{children}</button>;
+};
+const Input = ({ className, ...props }) => <input className={`flex h-10 w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm ${className}`} {...props} />;
+const Label = ({ children, className, ...props }) => <label className={`text-sm font-medium leading-none ${className}`} {...props}>{children}</label>;
+const Badge = ({ children, className }) => <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors ${className}`}>{children}</span>;
+const Tabs = ({ children, className, ...props }) => <div className={className} {...props}>{children}</div>;
+const TabsList = ({ children, className, ...props }) => <div className={`inline-flex h-10 items-center justify-center rounded-md bg-gray-100 p-1 text-gray-500 ${className}`} {...props}>{children}</div>;
+const TabsTrigger = ({ children, className, 'data-state': dataState, ...props }) => <button className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm ${className}`} data-state={dataState} {...props}>{children}</button>;
+const TabsContent = ({ children, className, value: tabValue, ...props }) => <div className={className} {...props}>{children}</div>;
+
 
 const InksaLogo = ({ className }) => (
   <div className={`mx-auto flex items-center justify-center rounded-full bg-orange-500 shadow-md ${className}`}>
@@ -83,7 +93,7 @@ function LoginPage({ onLogin }) {
                 <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
               </div>
             </div>
-            <Button type="submit" className="w-full mt-6 bg-orange-500 hover:bg-orange-600 text-white" disabled={loading}>
+            <Button type="submit" className="w-full mt-6" disabled={loading}>
               {loading ? 'Entrando...' : 'Acessar Painel'}
             </Button>
           </form>
@@ -142,7 +152,7 @@ function OrderCard({ order, onUpdateStatus }) {
       <div className="mb-4"><h4>Itens:</h4><ul>{order.items.map((item, i) => <li key={i}>• {item}</li>)}</ul></div>
       <div className="flex items-center space-x-2 mb-4"><MapPin className="w-4 h-4" /><span>{order.address}</span></div>
       <div className="flex items-center space-x-2 mb-4"><Phone className="w-4 h-4" /><span>{order.phone}</span></div>
-      <div className="flex justify-between items-center"><span className="text-xl font-bold">R$ {order.total.toFixed(2)}</span>{order.status !== 'delivered' && <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white" onClick={() => onUpdateStatus(order.id, getNextStatus(order.status))}>{getNextStatusText(order.status)}</Button>}</div>
+      <div className="flex justify-between items-center"><span className="text-xl font-bold">R$ {order.total.toFixed(2)}</span>{order.status !== 'delivered' && <Button size="sm" onClick={() => onUpdateStatus(order.id, getNextStatus(order.status))}>{getNextStatusText(order.status)}</Button>}</div>
     </CardContent></Card>
   );
 }
