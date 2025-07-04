@@ -132,4 +132,123 @@ function StatsCards() {
 
 function OrderCard({ order, onUpdateStatus }) {
   const getStatusColor = (status) => ({ pending: 'bg-yellow-100 text-yellow-800', preparing: 'bg-blue-100 text-blue-800', ready: 'bg-green-100 text-green-800', delivered: 'bg-gray-100 text-gray-800' }[status] || 'bg-gray-100');
-  const getStatusText = (status) => ({ pending: 'Pende
+  const getStatusText = (status) => ({ pending: 'Pendente', preparing: 'Preparando', ready: 'Pronto', delivered: 'Entregue' }[status] || 'Desconhecido');
+  const getNextStatus = (status) => ({ pending: 'preparing', preparing: 'ready', ready: 'delivered' }[status] || status);
+  const getNextStatusText = (status) => ({ pending: 'Iniciar Preparo', preparing: 'Marcar como Pronto', ready: 'Marcar como Entregue' }[status] || '');
+
+  return (
+    <Card><CardContent className="p-6">
+      <div className="flex justify-between items-start mb-4"><div><h3 className="font-semibold">{order.id}</h3><p>{order.customer}</p><p className="text-sm text-gray-500">{order.time}</p></div><Badge className={getStatusColor(order.status)}>{getStatusText(order.status)}</Badge></div>
+      <div className="mb-4"><h4>Itens:</h4><ul>{order.items.map((item, i) => <li key={i}>• {item}</li>)}</ul></div>
+      <div className="flex items-center space-x-2 mb-4"><MapPin className="w-4 h-4" /><span>{order.address}</span></div>
+      <div className="flex items-center space-x-2 mb-4"><Phone className="w-4 h-4" /><span>{order.phone}</span></div>
+      <div className="flex justify-between items-center"><span className="text-xl font-bold">R$ {order.total.toFixed(2)}</span>{order.status !== 'delivered' && <Button size="sm" className="bg-orange-600 hover:bg-orange-700 text-white" onClick={() => onUpdateStatus(order.id, getNextStatus(order.status))}>{getNextStatusText(order.status)}</Button>}</div>
+    </CardContent></Card>
+  );
+}
+
+function ChartsSection() {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <Card><CardHeader><CardTitle>Pedidos por Dia</CardTitle><CardDescription>Últimos 7 dias</CardDescription></CardHeader><CardContent><ResponsiveContainer width="100%" height={300}><BarChart data={chartData}><CartesianGrid /><XAxis dataKey="name" /><YAxis /><Tooltip /><Bar dataKey="pedidos" fill="#ea580c" /></BarChart></ResponsiveContainer></CardContent></Card>
+      <Card><CardHeader><CardTitle>Receita por Dia</CardTitle><CardDescription>Últimos 7 dias</CardDescription></CardHeader><CardContent><ResponsiveContainer width="100%" height={300}><LineChart data={chartData}><CartesianGrid /><XAxis dataKey="name" /><YAxis /><Tooltip formatter={(v) => [`R$ ${v}`, 'Receita']}/><Line type="monotone" dataKey="receita" stroke="#ea580c" /></LineChart></ResponsiveContainer></CardContent></Card>
+    </div>
+  );
+}
+
+function RestaurantDashboard({ onLogout }) {
+  const [orders, setOrders] = useState(mockOrders);
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const handleUpdateOrderStatus = (orderId, newStatus) => setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+  const filterOrdersByStatus = (status) => orders.filter(o => o.status === status);
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Header restaurantName="Restaurante Exemplo" onLogout={onLogout} />
+      <main className="p-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="dashboard" data-state={activeTab === 'dashboard' ? 'active' : ''}>Dashboard</TabsTrigger>
+            <TabsTrigger value="orders" data-state={activeTab === 'orders' ? 'active' : ''}>Pedidos</TabsTrigger>
+            <TabsTrigger value="analytics" data-state={activeTab === 'analytics' ? 'active' : ''}>Relatórios</TabsTrigger>
+            <TabsTrigger value="menu" data-state={activeTab === 'menu' ? 'active' : ''}>Cardápio</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="dashboard" className="space-y-6 mt-4">
+            <StatsCards />
+            <ChartsSection />
+            <Card>
+              <CardHeader><CardTitle>Pedidos Recentes</CardTitle></CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {orders.slice(0, 3).map(o => <OrderCard key={o.id} order={o} onUpdateStatus={handleUpdateOrderStatus} />)}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="orders" className="space-y-6 mt-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Gerenciar Pedidos</h2>
+              <div className="flex space-x-2">
+                <Button variant="outline" size="sm"><Filter className="w-4 h-4 mr-2" />Filtros</Button>
+                <Button variant="outline" size="sm"><Download className="w-4 h-4 mr-2" />Exportar</Button>
+              </div>
+            </div>
+            <Tabs defaultValue="all">
+              <TabsList>
+                <TabsTrigger value="all">Todos ({orders.length})</TabsTrigger>
+                <TabsTrigger value="pending">Pendentes ({filterOrdersByStatus('pending').length})</TabsTrigger>
+                <TabsTrigger value="preparing">Preparando ({filterOrdersByStatus('preparing').length})</TabsTrigger>
+                <TabsTrigger value="ready">Prontos ({filterOrdersByStatus('ready').length})</TabsTrigger>
+              </TabsList>
+              {['all', 'pending', 'preparing', 'ready', 'delivered'].map(status => (
+                <TabsContent key={status} value={status}>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {(status === 'all' ? orders : filterOrdersByStatus(status)).map(o => 
+                      <OrderCard key={o.id} order={o} onUpdateStatus={handleUpdateOrderStatus} />
+                    )}
+                  </div>
+                </TabsContent>
+              ))}
+            </Tabs>
+          </TabsContent>
+          
+          <TabsContent value="analytics" className="space-y-6 mt-4">
+            <h2 className="text-2xl font-bold">Relatórios e Analytics</h2>
+            <StatsCards />
+            <ChartsSection />
+          </TabsContent>
+          
+          <TabsContent value="menu" className="space-y-6 mt-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Gerenciar Cardápio</h2>
+              <Button><Plus className="w-4 h-4 mr-2" />Adicionar Item</Button>
+            </div>
+            <Card>
+              <CardContent className="p-12 text-center text-gray-500">
+                <Package className="w-16 h-16 mx-auto mb-4" />
+                <h3>Gerenciamento de Cardápio</h3>
+                <p>Funcionalidade em breve.</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </main>
+    </div>
+  );
+}
+
+function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  useEffect(() => { setIsLoggedIn(localStorage.getItem('restaurantLoggedIn') === 'true'); }, []);
+  const handleLogin = (status) => setIsLoggedIn(status);
+  const handleLogout = () => { localStorage.removeItem('restaurantLoggedIn'); setIsLoggedIn(false); };
+
+  if (!isLoggedIn) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
+  return <RestaurantDashboard onLogout={handleLogout} />;
+}
+
+export default App;
