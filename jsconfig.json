@@ -1,0 +1,12 @@
+// inksa-restaurantes/jsconfig.json - CRIE ESTE ARQUIVO MANUALMENTE!
+
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"] // Mapeia '@/' para a pasta 'src/'
+    },
+    "jsx": "react-jsx" // Necessário para projetos React JavaScript
+  },
+  "include": ["src"] // Inclui todos os arquivos da pasta src para o IntelliSense
+}
