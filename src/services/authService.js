@@ -1,4 +1,4 @@
-// Arquivo: src/services/authService.js (VERSÃO FINAL E CORRIGIDA)
+// Arquivo: src/services/authService.js (VERSÃO FINAL COM GAMIFICAÇÃO)
 
 import { API_BASE_URL, AUTH_TOKEN_KEY, USER_DATA_KEY, processResponse, createAuthHeaders } from './api';
 
@@ -72,11 +72,9 @@ export const authService = {
      * Busca o perfil do restaurante no backend.
      */
     getProfile: async () => {
-        // ✅ CORREÇÃO 1: URL ajustado para a rota correta do perfil do restaurante.
         const response = await fetch(`${API_BASE_URL}/restaurant/profile`, { 
             headers: createAuthHeaders() 
         });
-        // ✅ CORREÇÃO 2: Retorna a resposta completa para a página tratar.
         return processResponse(response);
     },
 
@@ -84,13 +82,11 @@ export const authService = {
      * Atualiza o perfil do restaurante.
      */
     updateProfile: async (profileData) => {
-        // ✅ CORREÇÃO 3: URL ajustado para a rota correta.
         const response = await fetch(`${API_BASE_URL}/restaurant/profile`, {
             method: 'PUT',
             headers: { ...createAuthHeaders(), 'Content-Type': 'application/json' },
             body: JSON.stringify(profileData),
         });
-        // ✅ CORREÇÃO 4: Retorna a resposta completa.
         return processResponse(response);
     },
 
@@ -99,15 +95,44 @@ export const authService = {
      */
     uploadRestaurantLogo: async (file) => {
         const formData = new FormData();
-        // O backend espera o campo 'logo', não 'file'.
         formData.append('logo', file); 
-        // ✅ CORREÇÃO 5: URL ajustado para a rota correta.
         const response = await fetch(`${API_BASE_URL}/restaurant/upload-logo`, {
             method: 'POST',
             headers: createAuthHeaders(),
             body: formData,
         });
-        // ✅ CORREÇÃO 6: Retorna a resposta completa.
+        return processResponse(response);
+    },
+
+    // --- NOVAS FUNÇÕES DE GAMIFICAÇÃO ---
+
+    /**
+     * Busca os pontos e o nível de um usuário.
+     */
+    getGamificationStats: async (userId) => {
+        const response = await fetch(`${API_BASE_URL}/gamification/${userId}/points-level`, {
+            headers: createAuthHeaders()
+        });
+        return processResponse(response);
+    },
+
+    /**
+     * Busca as conquistas (badges) de um usuário.
+     */
+    getUserBadges: async (userId) => {
+        const response = await fetch(`${API_BASE_URL}/gamification/${userId}/badges`, {
+            headers: createAuthHeaders()
+        });
+        return processResponse(response);
+    },
+
+    /**
+     * Busca os rankings globais, filtrados por tipo de perfil.
+     */
+    getGlobalRankings: async (profileType) => {
+        const response = await fetch(`${API_BASE_URL}/gamification/rankings?type=${profileType}`, {
+            headers: createAuthHeaders()
+        });
         return processResponse(response);
     },
 };

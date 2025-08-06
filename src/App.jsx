@@ -1,4 +1,4 @@
-// src/App.jsx (CORRIGIDO)
+// src/App.jsx
 
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom'; 
@@ -6,12 +6,15 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 // --- Páginas ---
 import { LoginPage } from './pages/LoginPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage'; 
-import {RegisterPage} from './pages/RegisterPage';
+import { RegisterPage } from './pages/RegisterPage';
 import { OrdersPage } from './pages/OrdersPage';
 import { MenuPage } from './pages/MenuPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { CategoryManagementPage } from './pages/CategoryManagementPage';
+// <<< MUDANÇA 1: Importar a nova página de gamificação >>>
+// (Assumindo que o ficheiro está em src/pages/RestaurantGamificationPage.jsx)
+import RestaurantGamificationPage from './pages/RestaurantGamificationPage';
 
 // --- Componentes e Contextos ---
 import { PortalLayout } from './components/restaurant-portal/PortalLayout';
@@ -25,7 +28,6 @@ export default function App() {
   return (
     <AuthProvider>
       <ToastProvider>
-        {/* ✅ CORREÇÃO: O ProfileProvider agora envolve as rotas que precisam dele */}
         <ProfileProvider>
           <Routes>
             {/* Rotas PÚBLICAS */}
@@ -37,7 +39,6 @@ export default function App() {
             <Route 
               path="/" 
               element={
-                // ProtectedRoute agora está dentro dos provedores que ele usa
                 <ProtectedRoute>
                   <PortalLayout />
                 </ProtectedRoute>
@@ -50,6 +51,8 @@ export default function App() {
               <Route path="analytics" element={<AnalyticsPage />} />
               <Route path="configuracoes" element={<SettingsPage />} />
               <Route path="categorias" element={<CategoryManagementPage />} />
+              {/* <<< MUDANÇA 2: Adicionar a nova rota para a gamificação >>> */}
+              <Route path="gamificacao" element={<RestaurantGamificationPage />} />
             </Route>
 
             {/* Redirecionamento legado */}

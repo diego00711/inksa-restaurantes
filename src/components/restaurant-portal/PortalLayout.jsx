@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
-import { ListOrdered, Utensils, Settings, LogOut, BarChart2, Tag } from 'lucide-react';
+// <<< MUDANÇA 1: Importar o ícone 'Trophy' para a gamificação >>>
+import { ListOrdered, Utensils, Settings, LogOut, BarChart2, Tag, Trophy } from 'lucide-react';
 import { authService } from '../../services/authService.js';
 import { useProfile } from '../../context/ProfileContext'; 
 import { useToast } from '../../context/ToastContext.jsx'; 
@@ -15,7 +16,9 @@ export function PortalLayout() {
   const navItems = [
     { name: 'Pedidos', icon: ListOrdered, path: '/pedidos' },
     { name: 'Cardápio', icon: Utensils, path: '/cardapio' },
-    { name: 'Analytics', icon: BarChart2, path: '/analytics' }, 
+    { name: 'Analytics', icon: BarChart2, path: '/analytics' },
+    // <<< MUDANÇA 2: Adicionar o novo item de menu para a gamificação >>>
+    { name: 'Gamificação', icon: Trophy, path: '/gamificacao' },
     { name: 'Configurações', icon: Settings, path: '/configuracoes' },
     { name: 'Categorias', icon: Tag, path: '/categorias' },
   ];
@@ -27,28 +30,18 @@ export function PortalLayout() {
   const handleToggleIsOpen = async () => {
     if (loading || !profile) return;
     const newIsOpenStatus = !profile.is_open;
-
     try {
-      // ✅ CORREÇÃO: Ordem correta dos parâmetros -> (tipo, mensagem)
       addToast('info', `A atualizar status para ${newIsOpenStatus ? 'Aberto' : 'Fechado'}...`);
-      
       const updatedProfileResponse = await authService.updateProfile({ is_open: newIsOpenStatus });
-      
-      console.log("Resposta completa recebida do backend:", updatedProfileResponse);
-      console.log("Dados do perfil que serão salvos no context:", updatedProfileResponse.data);
-      
       updateProfileInContext(updatedProfileResponse.data); 
-      
-      // ✅ CORREÇÃO: Ordem correta dos parâmetros -> (tipo, mensagem)
       addToast('success', `Restaurante agora está ${newIsOpenStatus ? 'Aberto' : 'Fechado'}!`);
-      
     } catch (error) {
       console.error("Erro ao alternar status 'is_open':", error);
-      // ✅ CORREÇÃO: Ordem correta dos parâmetros -> (tipo, mensagem)
       addToast('error', error.message || "Falha ao atualizar status do restaurante.");
     }
   };
 
+  // O resto do seu código JSX continua aqui sem alterações...
   return (
     <div className="flex min-h-screen bg-orange-50 font-sans">
       {/* Sidebar */}
