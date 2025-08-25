@@ -1,4 +1,4 @@
-// services/authService.js - INKSA RESTAURANTES
+// services/authService.js - INKSA RESTAURANTES (VERSÃO CORRIGIDA)
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://inksa-auth-flask-dev.onrender.com';
 const AUTH_TOKEN_KEY = 'restaurantAuthToken';
 const RESTAURANT_USER_DATA_KEY = 'restaurantUser';
@@ -98,83 +98,61 @@ const authService = {
         }
     },
 
-    async getRestaurantDetails() {
+    async forgotPassword(email) {
         try {
-            const token = localStorage.getItem(AUTH_TOKEN_KEY);
-            const response = await fetch(`${API_BASE_URL}/api/restaurant/details`, {
-                method: 'GET',
+            const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
+                method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
                 },
+                body: JSON.stringify({ email }),
             });
 
             return await processResponse(response);
         } catch (error) {
-            console.error('Erro ao buscar detalhes do restaurante:', error);
+            console.error('Erro ao solicitar recuperação de senha:', error);
             throw error;
         }
     },
 
-    async updateRestaurant(restaurantData) {
+    async resetPassword(token, newPassword) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ token, new_password: newPassword }),
+            });
+
+            return await processResponse(response);
+        } catch (error) {
+            console.error('Erro ao resetar senha:', error);
+            throw error;
+        }
+    },
+
+    async updateProfile(profileData) {
         try {
             const token = localStorage.getItem(AUTH_TOKEN_KEY);
-            const response = await fetch(`${API_BASE_URL}/api/restaurant/update`, {
+            const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(restaurantData),
+                body: JSON.stringify(profileData),
             });
 
             const data = await processResponse(response);
             
-            if (data && data.restaurant) {
-                localStorage.setItem(RESTAURANT_USER_DATA_KEY, JSON.stringify(data.restaurant));
+            if (data && data.user) {
+                localStorage.setItem(RESTAURANT_USER_DATA_KEY, JSON.stringify(data.user));
             }
             
             return data;
         } catch (error) {
-            console.error('Erro ao atualizar restaurante:', error);
-            throw error;
-        }
-    },
-
-    async updateOpeningHours(hours) {
-        try {
-            const token = localStorage.getItem(AUTH_TOKEN_KEY);
-            const response = await fetch(`${API_BASE_URL}/api/restaurant/hours`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ hours }),
-            });
-
-            return await processResponse(response);
-        } catch (error) {
-            console.error('Erro ao atualizar horário:', error);
-            throw error;
-        }
-    },
-
-    async toggleStatus(isOpen) {
-        try {
-            const token = localStorage.getItem(AUTH_TOKEN_KEY);
-            const response = await fetch(`${API_BASE_URL}/api/restaurant/status`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ is_open: isOpen }),
-            });
-
-            return await processResponse(response);
-        } catch (error) {
-            console.error('Erro ao alterar status:', error);
+            console.error('Erro ao atualizar perfil:', error);
             throw error;
         }
     },
@@ -183,9 +161,9 @@ const authService = {
         return localStorage.getItem(AUTH_TOKEN_KEY);
     },
 
-    getCurrentRestaurant() {
-        const restaurantStr = localStorage.getItem(RESTAURANT_USER_DATA_KEY);
-        return restaurantStr ? JSON.parse(restaurantStr) : null;
+    getCurrentUser() {
+        const userStr = localStorage.getItem(RESTAURANT_USER_DATA_KEY);
+        return userStr ? JSON.parse(userStr) : null;
     },
 
     isAuthenticated() {
@@ -193,4 +171,8 @@ const authService = {
     }
 };
 
+// EXPORTAÇÃO COMO NAMED EXPORT (com chaves)
+export { authService };
+
+// TAMBÉM EXPORTAR COMO DEFAULT PARA COMPATIBILIDADE
 export default authService;
