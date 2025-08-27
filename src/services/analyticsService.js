@@ -1,24 +1,30 @@
-// Arquivo: src/services/analyticsService.js (NOVO)
+// src/services/analyticsService.js
+// Serviço de Analytics do Portal do Restaurante
 
-import { API_BASE_URL, processResponse, createAuthHeaders } from './api';
+import { RESTAURANT_API_URL, processResponse, createAuthHeaders } from './api';
 
 export const analyticsService = {
-    /**
-     * Busca os dados de analytics do backend.
-     * Chama a rota GET /api/analytics que criámos no backend.
-     */
-    getAnalytics: async () => {
-        const headers = createAuthHeaders();
-        // Validação para garantir que o token existe antes de fazer a chamada
-        if (!headers.Authorization) {
-            throw new Error("Utilizador não autenticado. Impossível buscar dados de analytics.");
-        }
+  /**
+   * Busca os dados de analytics do backend.
+   * GET /api/analytics
+   * @param {AbortSignal} [signal] - opcional para cancelar a requisição
+   * @returns {Promise<any>}
+   */
+  getAnalytics: async (signal) => {
+    const headers = createAuthHeaders();
 
-        const response = await fetch(`${API_BASE_URL}/analytics`, { 
-            headers: headers 
-        });
-        
-        const data = await processResponse(response);
-        return data.data; // Retorna o objeto de dados da resposta
-    },
+    // Garante que o usuário está autenticado
+    if (!headers.Authorization) {
+      throw new Error('Utilizador não autenticado. Impossível buscar dados de analytics.');
+    }
+
+    const response = await fetch(`${RESTAURANT_API_URL}/api/analytics`, {
+      headers,
+      signal,
+    });
+
+    const data = await processResponse(response);
+    // Alguns backends retornam { data: ... }, outros já retornam o objeto direto
+    return data?.data ?? data;
+  },
 };
