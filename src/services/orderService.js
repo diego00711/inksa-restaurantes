@@ -1,45 +1,61 @@
-// Arquivo: src/services/orderService.js (VERSÃO FINAL)
+// src/services/orderService.js
+// Serviço de pedidos do Portal do Restaurante
 
-import { API_BASE_URL, processResponse, createAuthHeaders } from './api';
+import { RESTAURANT_API_URL, processResponse, createAuthHeaders } from './api';
 
 export const orderService = {
-    /**
-     * Busca a lista de pedidos, aplicando filtros.
-     * @param {URLSearchParams} params - Os parâmetros de filtro (datas, ordenação).
-     */
-    getOrders: async (params) => {
-        // Construímos a URL com os parâmetros de busca
-        const response = await fetch(`${API_BASE_URL}/orders?${params.toString()}`, {
-            headers: createAuthHeaders()
-        });
-        const data = await processResponse(response);
-        return data.data;
-    },
+  /**
+   * Busca a lista de pedidos, aplicando filtros.
+   * @param {URLSearchParams|Object} [params] - Parâmetros de filtro (datas, ordenação, etc.)
+   * @param {AbortSignal} [signal] - Opcional para cancelar a requisição
+   */
+  getOrders: async (params, signal) => {
+    const qs =
+      params && typeof params.toString === 'function'
+        ? params.toString()
+        : new URLSearchParams(params || {}).toString();
 
-    /**
-     * Busca os detalhes de um pedido específico.
-     * @param {string} orderId - O ID do pedido.
-     */
-    getOrderDetails: async (orderId) => {
-        const response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
-            headers: createAuthHeaders()
-        });
-        const data = await processResponse(response);
-        return data.data;
-    },
+    const url = `${RESTAURANT_API_URL}/api/orders${qs ? `?${qs}` : ''}`;
 
-    /**
-     * Atualiza o status de um pedido.
-     * @param {string} orderId - O ID do pedido a ser atualizado.
-     * @param {string} newStatus - O novo status do pedido.
-     */
-    updateOrderStatus: async (orderId, newStatus) => {
-        const response = await fetch(`${API_BASE_URL}/orders/${orderId}/status`, {
-            // ✅ CORREÇÃO: Alterado de 'POST' para 'PUT' para corresponder ao backend.
-            method: 'PUT',
-            headers: { ...createAuthHeaders(), 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: newStatus }),
-        });
-        return processResponse(response);
-    },
+    const response = await fetch(url, {
+      headers: createAuthHeaders(),
+      signal,
+    });
+    const data = await processResponse(response);
+    return data?.data ?? data;
+  },
+
+  /**
+   * Busca os detalhes de um pedido específico.
+   * @param {string} orderId - O ID do pedido.
+   * @param {AbortSignal} [signal] - Opcional para cancelar a requisição
+   */
+  getOrderDetails: async (orderId, signal) => {
+    const response = await fetch(
+      `${RESTAURANT_API_URL}/api/orders/${encodeURIComponent(orderId)}`,
+      {
+        headers: createAuthHeaders(),
+        signal,
+      }
+    );
+    const data = await processResponse(response);
+    return data?.data ?? data;
+  },
+
+  /**
+   * Atualiza o status de um pedido.
+   * @param {string} orderId - O ID do pedido a ser atualizado.
+   * @param {string} newStatus - O novo status do pedido.
+   */
+  updateOrderStatus: async (orderId, newStatus) => {
+    const response = await fetch(
+      `${RESTAURANT_API_URL}/api/orders/${encodeURIComponent(orderId)}/status`,
+      {
+        method: 'PUT', // alinhado ao backend
+        headers: { ...createAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      }
+    );
+    return processResponse(response);
+  },
 };
