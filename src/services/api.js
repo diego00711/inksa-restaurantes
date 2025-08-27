@@ -1,63 +1,56 @@
-// src/services/categoryService.js
-// Serviço de categorias do Portal do Restaurante
+// src/services/api.js
+// Centraliza URLs de API e utilitários de chamadas
 
-import { RESTAURANT_API_URL, processResponse, createAuthHeaders } from './api';
+// Se você tiver um único backend para tudo, use só VITE_API_URL.
+// Caso contrário, use as duas variáveis abaixo.
+const AUTH_API_URL =
+  import.meta.env.VITE_AUTH_API_URL ||
+  import.meta.env.VITE_API_URL || // fallback para setup com 1 backend
+  '';
 
-export const categoryService = {
-  /**
-   * Busca todas as categorias do restaurante.
-   * GET /api/categories
-   */
-  getCategories: async (signal) => {
-    const response = await fetch(`${RESTAURANT_API_URL}/api/categories`, {
-      headers: createAuthHeaders(),
-      signal,
-    });
-    const data = await processResponse(response);
-    return data?.data ?? data;
-  },
+const RESTAURANT_API_URL =
+  import.meta.env.VITE_RESTAURANT_API_URL ||
+  import.meta.env.VITE_API_URL || // fallback para setup com 1 backend
+  '';
 
-  /**
-   * Adiciona uma nova categoria.
-   * POST /api/categories
-   */
-  addCategory: async (categoryName) => {
-    const response = await fetch(`${RESTAURANT_API_URL}/api/categories`, {
-      method: 'POST',
-      headers: { ...createAuthHeaders(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: categoryName }),
-    });
-    return processResponse(response);
-  },
+// Chaves para armazenamento local (mantido por compatibilidade)
+const AUTH_TOKEN_KEY = 'restaurantAuthToken';
+const USER_DATA_KEY = 'restaurantUser';
 
-  /**
-   * Atualiza o nome de uma categoria.
-   * PUT /api/categories/:categoryId
-   */
-  updateCategory: async (categoryId, newName) => {
-    const response = await fetch(
-      `${RESTAURANT_API_URL}/api/categories/${encodeURIComponent(categoryId)}`,
-      {
-        method: 'PUT',
-        headers: { ...createAuthHeaders(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newName }),
-      }
-    );
-    return processResponse(response);
-  },
+// Tratamento padrão das respostas
+export const processResponse = async (response) => {
+  if (response.status === 401) {
+    // sessão expirada
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    localStorage.removeItem(USER_DATA_KEY);
+    // redireciona para login
+    window.location.href = '/login';
+    return null;
+  }
 
-  /**
-   * Apaga uma categoria.
-   * DELETE /api/categories/:categoryId
-   */
-  deleteCategory: async (categoryId) => {
-    const response = await fetch(
-      `${RESTAURANT_API_URL}/api/categories/${encodeURIComponent(categoryId)}`,
-      {
-        method: 'DELETE',
-        headers: createAuthHeaders(),
-      }
-    );
-    return processResponse(response);
-  },
+  if (!response.ok) {
+    // tenta extrair mensagem de erro do backend
+    const error = await response.json().catch(() => ({}));
+    const message = error.message || error.error || `HTTP ${response.status}`;
+    throw new Error(message);
+  }
+
+  // 204 no content
+  if (response.status === 204) return null;
+
+  return response.json();
+};
+
+// Cabeçalhos autenticados
+export const createAuthHeaders = () => {
+  const token = localStorage.getItem(AUTH_TOKEN_KEY);
+  if (!token) return {};
+  return { Authorization: `Bearer ${token}` };
+};
+
+export {
+  AUTH_API_URL,
+  RESTAURANT_API_URL,
+  AUTH_TOKEN_KEY,
+  USER_DATA_KEY,
 };
