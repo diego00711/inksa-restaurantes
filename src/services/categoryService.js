@@ -1,56 +1,63 @@
-// Arquivo: src/services/categoryService.js (NOVO)
+// src/services/categoryService.js
+// Serviço de categorias do Portal do Restaurante
 
-import { API_BASE_URL, processResponse, createAuthHeaders } from './api';
+import { RESTAURANT_API_URL, processResponse, createAuthHeaders } from './api';
 
 export const categoryService = {
-    /**
-     * Busca todas as categorias do restaurante.
-     * Chama a rota GET /api/categories que está no seu menu.py.
-     */
-    getCategories: async () => {
-        const response = await fetch(`${API_BASE_URL}/categories`, { 
-            headers: createAuthHeaders() 
-        });
-        const data = await processResponse(response);
-        return data.data;
-    },
+  /**
+   * Busca todas as categorias do restaurante.
+   * GET /api/categories
+   */
+  getCategories: async (signal) => {
+    const response = await fetch(`${RESTAURANT_API_URL}/api/categories`, {
+      headers: createAuthHeaders(),
+      signal,
+    });
+    const data = await processResponse(response);
+    return data?.data ?? data;
+  },
 
-    /**
-     * Adiciona uma nova categoria.
-     * Chama a rota POST /api/categories.
-     */
-    addCategory: async (categoryName) => {
-        const response = await fetch(`${API_BASE_URL}/categories`, {
-            method: 'POST',
-            headers: { ...createAuthHeaders(), 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: categoryName }),
-        });
-        return processResponse(response);
-    },
+  /**
+   * Adiciona uma nova categoria.
+   * POST /api/categories
+   */
+  addCategory: async (categoryName) => {
+    const response = await fetch(`${RESTAURANT_API_URL}/api/categories`, {
+      method: 'POST',
+      headers: { ...createAuthHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: categoryName }),
+    });
+    return processResponse(response);
+  },
 
-    /**
-     * Atualiza o nome de uma categoria.
-     * @param {string} categoryId - O ID da categoria.
-     * @param {string} newName - O novo nome da categoria.
-     */
-    updateCategory: async (categoryId, newName) => {
-        const response = await fetch(`${API_BASE_URL}/categories/${categoryId}`, {
-            method: 'PUT',
-            headers: { ...createAuthHeaders(), 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: newName }),
-        });
-        return processResponse(response);
-    },
+  /**
+   * Atualiza o nome de uma categoria.
+   * PUT /api/categories/:categoryId
+   */
+  updateCategory: async (categoryId, newName) => {
+    const response = await fetch(
+      `${RESTAURANT_API_URL}/api/categories/${encodeURIComponent(categoryId)}`,
+      {
+        method: 'PUT',
+        headers: { ...createAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName }),
+      }
+    );
+    return processResponse(response);
+  },
 
-    /**
-     * Apaga uma categoria.
-     * @param {string} categoryId - O ID da categoria.
-     */
-    deleteCategory: async (categoryId) => {
-        const response = await fetch(`${API_BASE_URL}/categories/${categoryId}`, {
-            method: 'DELETE',
-            headers: createAuthHeaders(),
-        });
-        return processResponse(response);
-    },
+  /**
+   * Apaga uma categoria.
+   * DELETE /api/categories/:categoryId
+   */
+  deleteCategory: async (categoryId) => {
+    const response = await fetch(
+      `${RESTAURANT_API_URL}/api/categories/${encodeURIComponent(categoryId)}`,
+      {
+        method: 'DELETE',
+        headers: createAuthHeaders(),
+      }
+    );
+    return processResponse(response);
+  },
 };
