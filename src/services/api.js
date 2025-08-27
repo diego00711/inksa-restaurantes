@@ -1,61 +1,71 @@
-// Arquivo: src/services/api.js (NOVO)
+// src/services/api.js
+// Configuração central de APIs e utilitários de requisições para o Portal do Restaurante.
+// Observação: as variáveis VITE_* devem apontar para o domínio (sem o sufixo /api).
+// Ex.: VITE_API_URL=https://api.inksadelivery.com.br
 
-// O endereço base da sua API. Note que já inclui o /api que corrigimos no backend.
-const API_BASE_URL = 'http://127.0.0.1:5000/api';
+// Caso você use um único backend para tudo (auth + restaurante), basta definir VITE_API_URL.
+// Caso use serviços separados, defina VITE_AUTH_API_URL e VITE_RESTAURANT_API_URL.
 
-// As chaves que usamos para guardar dados no localStorage do navegador.
+const AUTH_API_URL =
+  import.meta.env.VITE_AUTH_API_URL ||
+  import.meta.env.VITE_API_URL ||
+  'https://api.inksadelivery.com.br';
+
+const RESTAURANT_API_URL =
+  import.meta.env.VITE_RESTAURANT_API_URL ||
+  import.meta.env.VITE_API_URL ||
+  'https://api.inksadelivery.com.br';
+
+// Compatibilidade com código legado que ainda importa { API_BASE_URL }.
+// Por padrão, considere a base de "restaurante".
+const API_BASE_URL = RESTAURANT_API_URL;
+
+// Chaves usadas no armazenamento local
 const AUTH_TOKEN_KEY = 'restaurantAuthToken';
 const USER_DATA_KEY = 'restaurantUser';
 
 /**
  * Processa a resposta de uma chamada fetch.
- * Lida com erros comuns como 401 (Não Autorizado) e outros erros HTTP,
- * e converte a resposta para JSON se for bem-sucedida.
+ * - Redireciona para /login em caso de 401 (sessão expirada).
+ * - Tenta extrair mensagem de erro quando !ok.
+ * - Suporta 204 (sem conteúdo).
  */
 export const processResponse = async (response) => {
-    // Se a sessão expirou (erro 401), limpa os dados do utilizador e redireciona para o login.
-    if (response.status === 401) {
-        localStorage.removeItem(AUTH_TOKEN_KEY);
-        localStorage.removeItem(USER_DATA_KEY);
-        // Descomente a linha abaixo se quiser que o redirecionamento seja automático.
-        // window.location.href = '/login'; 
-        throw new Error('Sessão expirada. Por favor, faça login novamente.');
-    }
+  if (response.status === 401) {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    localStorage.removeItem(USER_DATA_KEY);
+    // Redireciona imediatamente para a tela de login
+    window.location.href = '/login';
+    throw new Error('Sessão expirada. Por favor, faça login novamente.');
+  }
 
-    // Se a resposta não for 'ok' (ex: erro 404, 500), tenta extrair uma mensagem de erro.
-    if (!response.ok) {
-        try {
-            const errorData = await response.json();
-            const errorMessage = errorData.message || errorData.error || `Erro ${response.status}`;
-            throw new Error(errorMessage);
-        } catch (jsonError) {
-            // Caso a resposta de erro não seja um JSON válido.
-            throw new Error(`Erro HTTP ${response.status}`);
-        }
-    }
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}));
+    const message =
+      errorBody.message || errorBody.error || `Erro HTTP ${response.status}`;
+    throw new Error(message);
+  }
 
-    // Se a resposta for 204 (No Content), não há corpo para processar.
-    if (response.status === 204) {
-        return null;
-    }
+  if (response.status === 204) {
+    return null;
+  }
 
-    // Se tudo correu bem, retorna o corpo da resposta em formato JSON.
-    return response.json();
+  return response.json();
 };
 
 /**
- * Cria o cabeçalho de Autorização para ser usado em chamadas a rotas protegidas.
+ * Cria o cabeçalho de Autorização para rotas protegidas.
  */
 export const createAuthHeaders = () => {
-    const token = localStorage.getItem(AUTH_TOKEN_KEY);
-    if (!token) {
-        // Retorna um objeto de cabeçalho vazio se não houver token.
-        // A função que chama é responsável por decidir o que fazer se o token for necessário.
-        return {};
-    }
-    // Retorna o cabeçalho no formato 'Bearer Token'.
-    return { 'Authorization': `Bearer ${token}` };
+  const token = localStorage.getItem(AUTH_TOKEN_KEY);
+  if (!token) return {};
+  return { Authorization: `Bearer ${token}` };
 };
 
-// Exportamos as constantes para que possam ser usadas em outros arquivos, se necessário.
-export { API_BASE_URL, AUTH_TOKEN_KEY, USER_DATA_KEY };
+export {
+  AUTH_API_URL,
+  RESTAURANT_API_URL,
+  API_BASE_URL, // legado
+  AUTH_TOKEN_KEY,
+  USER_DATA_KEY,
+};
