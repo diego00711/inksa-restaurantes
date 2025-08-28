@@ -12,10 +12,19 @@ import {
 // Use the AUTH_API_URL from environment variables, with fallback
 const API_BASE_URL = AUTH_API_URL || 'https://inksa-auth-flask-dev.onrender.com';
 
+// Debug logging for development
+console.log('🔐 authService initialized with base URL:', API_BASE_URL);
+if (!AUTH_API_URL) {
+  console.warn('⚠️ AUTH_API_URL environment variable not set. Using fallback URL. Set VITE_AUTH_API_URL for production.');
+}
+
 const authService = {
   async login(email, password) {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      const loginUrl = `${API_BASE_URL}/api/auth/login`;
+      console.log('🚀 Attempting login to:', loginUrl);
+      
+      const response = await fetch(loginUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, user_type: 'restaurante' }),
@@ -26,18 +35,26 @@ const authService = {
       if (data && data.token) {
         localStorage.setItem(AUTH_TOKEN_KEY, data.token);
         localStorage.setItem(USER_DATA_KEY, JSON.stringify(data.user));
+        console.log('✅ Login successful');
         return data;
       }
 
       throw new Error('Token não recebido');
     } catch (error) {
-      console.error('Erro no login:', error);
+      console.error('❌ Erro no login:', error);
+      // Provide more specific error messages based on error type
+      if (error.message === 'Failed to fetch') {
+        throw new Error(`Não foi possível conectar ao servidor de autenticação. Verifique se o backend está rodando em: ${API_BASE_URL}`);
+      }
       throw error;
     }
   },
 
   async register(restaurantData) {
-    const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+    const registerUrl = `${API_BASE_URL}/api/auth/register`;
+    console.log('🚀 Attempting registration to:', registerUrl);
+    
+    const response = await fetch(registerUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...restaurantData, user_type: 'restaurante' }),
@@ -46,6 +63,7 @@ const authService = {
     if (data && data.token) {
       localStorage.setItem(AUTH_TOKEN_KEY, data.token);
       localStorage.setItem(USER_DATA_KEY, JSON.stringify(data.user));
+      console.log('✅ Registration successful');
     }
     return data;
   },
