@@ -80,7 +80,7 @@ export const menuService = {
       {
         method: 'POST',
         headers: {
-          // Não defina Content-Type manualmente em multipart; o browser define o boundary.
+          // Não definir Content-Type manualmente para multipart
           ...createAuthHeaders(),
         },
         body: formData,
