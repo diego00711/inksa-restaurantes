@@ -27,6 +27,7 @@ const authService = {
       const response = await fetch(loginUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email, password, user_type: 'restaurante' }),
       });
 
@@ -43,29 +44,39 @@ const authService = {
     } catch (error) {
       console.error('❌ Erro no login:', error);
       // Provide more specific error messages based on error type
-      if (error.message === 'Failed to fetch') {
-        throw new Error(`Não foi possível conectar ao servidor de autenticação. Verifique se o backend está rodando em: ${API_BASE_URL}`);
+      if (error.message === 'Failed to fetch' || error.name === 'TypeError') {
+        throw new Error('Não foi possível conectar ao servidor de autenticação. Verifique se o backend está disponível e as configurações de CORS estão corretas.');
       }
       throw error;
     }
   },
 
   async register(restaurantData) {
-    const registerUrl = `${API_BASE_URL}/api/auth/register`;
-    console.log('🚀 Attempting registration to:', registerUrl);
-    
-    const response = await fetch(registerUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...restaurantData, user_type: 'restaurante' }),
-    });
-    const data = await processResponse(response);
-    if (data && data.token) {
-      localStorage.setItem(AUTH_TOKEN_KEY, data.token);
-      localStorage.setItem(USER_DATA_KEY, JSON.stringify(data.user));
-      console.log('✅ Registration successful');
+    try {
+      const registerUrl = `${API_BASE_URL}/api/auth/register`;
+      console.log('🚀 Attempting registration to:', registerUrl);
+      
+      const response = await fetch(registerUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ ...restaurantData, user_type: 'restaurante' }),
+      });
+      const data = await processResponse(response);
+      if (data && data.token) {
+        localStorage.setItem(AUTH_TOKEN_KEY, data.token);
+        localStorage.setItem(USER_DATA_KEY, JSON.stringify(data.user));
+        console.log('✅ Registration successful');
+      }
+      return data;
+    } catch (error) {
+      console.error('❌ Erro no registro:', error);
+      // Provide more specific error messages based on error type
+      if (error.message === 'Failed to fetch' || error.name === 'TypeError') {
+        throw new Error('Não foi possível conectar ao servidor de autenticação. Verifique se o backend está disponível e as configurações de CORS estão corretas.');
+      }
+      throw error;
     }
-    return data;
   },
 
   async logout() {
@@ -78,6 +89,7 @@ const authService = {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
+          credentials: 'include',
         }).catch(() => {});
       }
     } catch (e) {
@@ -93,6 +105,7 @@ const authService = {
     const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ email }),
     });
     return processResponse(response);
@@ -102,6 +115,7 @@ const authService = {
     const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ token, new_password: newPassword }),
     });
     return processResponse(response);
@@ -115,6 +129,7 @@ const authService = {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
+      credentials: 'include',
       body: JSON.stringify(profileData),
     });
     const data = await processResponse(response);
