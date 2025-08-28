@@ -14,14 +14,30 @@ export const authService = {
    */
   login: async (email, password) => {
     try {
-      // Mantendo a função original com dois parâmetros separados
+      console.log("Tentando login com:", email); // Log para debug
+      console.log("URL da API:", `${API_BASE}/api/auth/login`); // Log para debug
+      
       const response = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        // Garante que os dados sejam enviados no formato correto
+        body: JSON.stringify({ 
+          email: email, 
+          password: password 
+        }),
       });
+      
+      // Log para debug
+      console.log("Status da resposta:", response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Erro de login:", response.status, errorText);
+        throw new Error(errorText || `Erro ${response.status}`);
+      }
+      
       return processResponse(response);
     } catch (error) {
       console.error('Erro ao realizar login:', error);
@@ -42,6 +58,13 @@ export const authService = {
         },
         body: JSON.stringify(restaurantData),
       });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Erro de registro:", response.status, errorText);
+        throw new Error(errorText || `Erro ${response.status}`);
+      }
+      
       return processResponse(response);
     } catch (error) {
       console.error('Erro ao registrar restaurante:', error);
