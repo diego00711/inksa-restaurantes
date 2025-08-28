@@ -18,7 +18,7 @@ const authService = {
         body: JSON.stringify({
           email,
           password,
-          // user_type não é usado pelo backend, mas não atrapalha
+          // Mantido por compatibilidade, backend pode ignorar
           user_type: 'restaurante',
         }),
       });
@@ -67,7 +67,7 @@ const authService = {
     try {
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
       if (token) {
-        // Se o backend ainda não tiver /logout, ignoramos erro 404
+        // Se o backend não tiver /logout ainda, ignoramos erro
         await fetch(`${AUTH_API_URL}/logout`, {
           method: 'POST',
           headers: {
@@ -87,7 +87,6 @@ const authService = {
 
   async forgotPassword(email) {
     try {
-      // Garanta que esta rota exista no backend ou ajuste conforme necessário
       const response = await fetch(`${AUTH_API_URL}/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -103,7 +102,6 @@ const authService = {
 
   async resetPassword(token, newPassword) {
     try {
-      // Garanta que esta rota exista no backend ou ajuste conforme necessário
       const response = await fetch(`${AUTH_API_URL}/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -119,7 +117,6 @@ const authService = {
 
   async updateProfile(profileData) {
     try {
-      // Garanta que esta rota exista no backend ou ajuste conforme necessário
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
       const response = await fetch(`${AUTH_API_URL}/profile`, {
         method: 'PUT',
@@ -144,4 +141,6 @@ const authService = {
   },
 };
 
+// Exporte como nomeado e default para compatibilidade com imports existentes
+export { authService };
 export default authService;
