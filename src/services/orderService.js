@@ -6,8 +6,8 @@ import { RESTAURANT_API_URL, processResponse, createAuthHeaders } from './api';
 export const orderService = {
   /**
    * Busca a lista de pedidos, aplicando filtros.
-   * @param {URLSearchParams|Object} [params] - Parâmetros de filtro (datas, ordenação, etc.)
-   * @param {AbortSignal} [signal] - Opcional para cancelar a requisição
+   * @param {URLSearchParams|Object} [params]
+   * @param {AbortSignal} [signal]
    */
   getOrders: async (params, signal) => {
     const qs =
@@ -27,8 +27,8 @@ export const orderService = {
 
   /**
    * Busca os detalhes de um pedido específico.
-   * @param {string} orderId - O ID do pedido.
-   * @param {AbortSignal} [signal] - Opcional para cancelar a requisição
+   * @param {string} orderId
+   * @param {AbortSignal} [signal]
    */
   getOrderDetails: async (orderId, signal) => {
     const response = await fetch(
@@ -44,14 +44,14 @@ export const orderService = {
 
   /**
    * Atualiza o status de um pedido.
-   * @param {string} orderId - O ID do pedido a ser atualizado.
-   * @param {string} newStatus - O novo status do pedido.
+   * @param {string} orderId
+   * @param {string} newStatus
    */
   updateOrderStatus: async (orderId, newStatus) => {
     const response = await fetch(
       `${RESTAURANT_API_URL}/api/orders/${encodeURIComponent(orderId)}/status`,
       {
-        method: 'PUT', // alinhado ao backend
+        method: 'PUT',
         headers: { ...createAuthHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
       }
