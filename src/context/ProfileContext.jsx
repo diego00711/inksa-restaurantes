@@ -1,166 +1,56 @@
-// src/services/authService.js
-// Serviço de autenticação do Portal do Restaurante
+// src/context/ProfileContext.jsx
 
-import { RESTAURANT_API_URL, AUTH_API_URL, processResponse, createAuthHeaders } from './api';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import { authService } from '../services/authService';
+import { useAuth } from './AuthContext';
 
-// Constante para definir de onde vêm as requisições de autenticação
-// Se AUTH_API_URL não estiver definido, use o RESTAURANT_API_URL como fallback
-const API_BASE = AUTH_API_URL || RESTAURANT_API_URL;
+const ProfileContext = createContext(null);
 
-export const authService = {
-  /**
-   * Realiza login do restaurante.
-   * POST /api/auth/login
-   */
-  login: async (credentials) => {
-    const response = await fetch(`${API_BASE}/api/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(credentials),
-    });
-    return processResponse(response);
-  },
+export const useProfile = () => useContext(ProfileContext);
 
-  /**
-   * Realiza o cadastro de um novo restaurante.
-   * POST /api/auth/register
-   */
-  register: async (restaurantData) => {
-    const response = await fetch(`${API_BASE}/api/auth/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(restaurantData),
-    });
-    return processResponse(response);
-  },
+export const ProfileProvider = ({ children }) => {
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const { isAuthenticated } = useAuth();
 
-  /**
-   * Realiza logout do usuário atual.
-   * POST /api/auth/logout
-   */
-  logout: async () => {
-    const response = await fetch(`${API_BASE}/api/auth/logout`, {
-      method: 'POST',
-      headers: createAuthHeaders(),
-    });
-    return processResponse(response);
-  },
-
-  /**
-   * Solicita redefinição de senha.
-   * POST /api/auth/forgot-password
-   */
-  forgotPassword: async (email) => {
-    const response = await fetch(`${API_BASE}/api/auth/forgot-password`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email }),
-    });
-    return processResponse(response);
-  },
-
-  /**
-   * Redefine a senha com o token recebido.
-   * POST /api/auth/reset-password
-   */
-  resetPassword: async (token, newPassword) => {
-    const response = await fetch(`${API_BASE}/api/auth/reset-password`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ token, password: newPassword }),
-    });
-    return processResponse(response);
-  },
-
-  /**
-   * Verifica se o token atual é válido.
-   * GET /api/auth/validate-token
-   */
-  validateToken: async () => {
-    const response = await fetch(`${API_BASE}/api/auth/validate-token`, {
-      headers: createAuthHeaders(),
-    });
-    return processResponse(response);
-  },
-
-  /**
-   * Obtém o perfil do restaurante autenticado.
-   * GET /api/auth/profile
-   */
-  getProfile: async () => {
-    try {
-      // Recupera o ID do restaurante do localStorage
-      const userDataStr = localStorage.getItem('restaurantUser');
-      let restaurantId;
-      
-      try {
-        if (userDataStr) {
-          const userData = JSON.parse(userDataStr);
-          restaurantId = userData.id;
-        }
-      } catch (err) {
-        console.error('Erro ao obter ID do restaurante:', err);
-      }
-      
-      // Adiciona o ID do restaurante como parâmetro de consulta
-      const url = new URL(`${API_BASE}/api/auth/profile`);
-      if (restaurantId) {
-        url.searchParams.append('restaurant_id', restaurantId);
-      }
-      
-      const response = await fetch(url.toString(), {
-        headers: createAuthHeaders(),
-      });
-      
-      return processResponse(response);
-    } catch (error) {
-      console.error('Erro ao buscar perfil do restaurante:', error);
-      throw error;
+  const fetchProfile = useCallback(async () => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      setProfile(null);
+      return;
     }
-  },
+    setLoading(true);
+    try {
+      const response = await authService.getProfile();
+      // A resposta de getProfile já contém o objeto do perfil
+      setProfile(response.data);
+    } catch (error) {
+      console.error("Erro ao carregar perfil no context:", error);
+      setProfile(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [isAuthenticated]);
 
-  /**
-   * Atualiza o perfil do restaurante.
-   * PUT /api/auth/profile
-   */
-  updateProfile: async (profileData) => {
-    const response = await fetch(`${API_BASE}/api/auth/profile`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        ...createAuthHeaders(),
-      },
-      body: JSON.stringify(profileData),
-    });
-    return processResponse(response);
-  },
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
-  /**
-   * Atualiza a senha do usuário autenticado.
-   * PUT /api/auth/change-password
-   */
-  changePassword: async (currentPassword, newPassword) => {
-    const response = await fetch(`${API_BASE}/api/auth/change-password`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        ...createAuthHeaders(),
-      },
-      body: JSON.stringify({
-        currentPassword,
-        newPassword,
-      }),
-    });
-    return processResponse(response);
-  },
+  const updateProfileInContext = (newProfileData) => {
+    // Esta função espera receber apenas o objeto do perfil para atualizar o estado
+    setProfile(prevProfile => ({ ...prevProfile, ...newProfileData }));
+  };
+
+  const value = {
+    profile,
+    loading,
+    fetchProfile,
+    updateProfileInContext,
+  };
+
+  return (
+    <ProfileContext.Provider value={value}>
+      {children}
+    </ProfileContext.Provider>
+  );
 };
-
-export default authService;
