@@ -3,13 +3,14 @@
 // Espelhado no cliente: força base absoluta + rotas /api/auth/*
 
 import {
+  AUTH_API_URL,
   AUTH_TOKEN_KEY,
   USER_DATA_KEY,
   processResponse,
 } from './api';
 
-// Hotfix: garantir base absoluta para evitar fetch relativo no Vercel
-const API_BASE_URL = 'https://inksa-auth-flask-dev.onrender.com';
+// Use the AUTH_API_URL from environment variables, with fallback
+const API_BASE_URL = AUTH_API_URL || 'https://inksa-auth-flask-dev.onrender.com';
 
 const authService = {
   async login(email, password) {
