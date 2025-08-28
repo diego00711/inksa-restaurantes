@@ -18,6 +18,26 @@ cp .env.example .env.local
   - Exemplo para desenvolvimento: `http://localhost:5000`
   - Exemplo para produção: `https://inksa-auth-flask-dev.onrender.com`
 
+- **VITE_RESTAURANT_API_URL**: URL do backend das APIs do restaurante (menu, pedidos, analytics, categorias)
+  - Exemplo para desenvolvimento: `http://localhost:5000`
+  - Exemplo para produção: `https://inksa-auth-flask-dev.onrender.com`
+  - **IMPORTANTE**: Se não configurada, a aplicação usa `https://inksa-auth-flask-dev.onrender.com` como padrão
+
+#### Variáveis Opcionais
+
+- **VITE_API_URL**: URL única para todos os serviços (substitui as anteriores se definida)
+  - Use quando autenticação e APIs do restaurante estão no mesmo backend
+  - Exemplo: `https://your-unified-backend.onrender.com`
+
+### Backend API Setup
+
+O sistema requer dois grupos de APIs:
+
+1. **APIs de Autenticação**: `/api/auth/*` (login, register, logout, etc.)
+2. **APIs do Restaurante**: `/api/*` (menu, orders, analytics, categories)
+
+Ambos podem estar no mesmo backend ou em serviços separados.
+
 ### API de Autenticação
 
 O sistema utiliza um backend separado para autenticação que deve estar configurado adequadamente:
@@ -69,6 +89,19 @@ npm run lint
 ```
 
 ## Solução de Problemas
+
+### Erros HTTP 404 em APIs do Restaurante
+
+Se você receber erros 404 para APIs como `/api/orders`, `/api/menu`, `/api/analytics`, `/api/categories`:
+
+**Causa**: As variáveis de ambiente `VITE_RESTAURANT_API_URL` ou `VITE_API_URL` não estão configuradas, fazendo com que a aplicação use caminhos relativos que apontam para o frontend (Vercel) em vez do backend.
+
+**Solução**: 
+1. Configure `VITE_RESTAURANT_API_URL` nas variáveis de ambiente da Vercel
+2. Ou configure `VITE_API_URL` se usar um backend único
+3. Redesplante a aplicação na Vercel
+
+**Nota**: A aplicação usa `https://inksa-auth-flask-dev.onrender.com` como fallback quando as variáveis não estão definidas.
 
 ### Erros de CORS
 
