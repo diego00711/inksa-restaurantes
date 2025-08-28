@@ -28,7 +28,6 @@ export const menuService = {
       url.searchParams.append('restaurant_id', restaurantId);
     }
     
-    // Faz a requisição com o ID do restaurante
     const response = await fetch(url.toString(), {
       headers: createAuthHeaders(),
       signal,
@@ -38,7 +37,6 @@ export const menuService = {
     return data?.data ?? data;
   },
 
-  // O resto do serviço permanece igual
   /**
    * Adiciona um novo item ao cardápio.
    * POST /api/menu
@@ -130,3 +128,5 @@ export const menuService = {
     return processResponse(response);
   },
 };
+
+export default menuService;
