@@ -9,26 +9,67 @@ export const menuService = {
    * GET /api/menu
    */
   getMenuItems: async (signal) => {
-    const response = await fetch(`${RESTAURANT_API_URL}/api/menu`, {
+    // Recupera o ID do restaurante do usuário logado
+    const userDataStr = localStorage.getItem('restaurantUser');
+    let restaurantId;
+    
+    try {
+      if (userDataStr) {
+        const userData = JSON.parse(userDataStr);
+        restaurantId = userData.id;
+      }
+    } catch (err) {
+      console.error('Erro ao obter ID do restaurante:', err);
+    }
+    
+    // Adiciona o ID do restaurante como parâmetro de consulta
+    const url = new URL(`${RESTAURANT_API_URL}/api/menu`);
+    if (restaurantId) {
+      url.searchParams.append('restaurant_id', restaurantId);
+    }
+    
+    // Faz a requisição com o ID do restaurante
+    const response = await fetch(url.toString(), {
       headers: createAuthHeaders(),
       signal,
     });
+    
     const data = await processResponse(response);
     return data?.data ?? data;
   },
 
+  // O resto do serviço permanece igual
   /**
    * Adiciona um novo item ao cardápio.
    * POST /api/menu
    */
   addMenuItem: async (itemData) => {
+    // Recupera o ID do restaurante do usuário logado
+    const userDataStr = localStorage.getItem('restaurantUser');
+    let restaurantId;
+    
+    try {
+      if (userDataStr) {
+        const userData = JSON.parse(userDataStr);
+        restaurantId = userData.id;
+      }
+    } catch (err) {
+      console.error('Erro ao obter ID do restaurante:', err);
+    }
+    
+    // Adiciona o ID do restaurante ao item
+    const completeItemData = {
+      ...itemData,
+      restaurant_id: restaurantId
+    };
+
     const response = await fetch(`${RESTAURANT_API_URL}/api/menu`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...createAuthHeaders(),
       },
-      body: JSON.stringify(itemData),
+      body: JSON.stringify(completeItemData),
     });
     return processResponse(response);
   },
