@@ -1,31 +1,28 @@
 // src/services/authService.js
 // Serviço de autenticação do Portal do Restaurante
-// Backend único expõe rotas SEM prefixo /api e SEM /auth no caminho (ex.: POST /login)
+// Espelhado no cliente: força base absoluta + rotas /api/auth/*
 
 import {
-  AUTH_API_URL,
   AUTH_TOKEN_KEY,
   USER_DATA_KEY,
   processResponse,
 } from './api';
 
+// Hotfix: garantir base absoluta para evitar fetch relativo no Vercel
+const API_BASE_URL = 'https://inksa-auth-flask-dev.onrender.com';
+
 const authService = {
   async login(email, password) {
     try {
-      const response = await fetch(`${AUTH_API_URL}/login`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          password,
-          // Mantido por compatibilidade, backend pode ignorar
-          user_type: 'restaurante',
-        }),
+        body: JSON.stringify({ email, password, user_type: 'restaurante' }),
       });
 
       const data = await processResponse(response);
 
-      if (data?.token) {
+      if (data && data.token) {
         localStorage.setItem(AUTH_TOKEN_KEY, data.token);
         localStorage.setItem(USER_DATA_KEY, JSON.stringify(data.user));
         return data;
@@ -39,36 +36,24 @@ const authService = {
   },
 
   async register(restaurantData) {
-    try {
-      const response = await fetch(`${AUTH_API_URL}/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...restaurantData,
-          user_type: 'restaurante',
-        }),
-      });
-
-      const data = await processResponse(response);
-
-      if (data?.token) {
-        localStorage.setItem(AUTH_TOKEN_KEY, data.token);
-        localStorage.setItem(USER_DATA_KEY, JSON.stringify(data.user));
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Erro no registro:', error);
-      throw error;
+    const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...restaurantData, user_type: 'restaurante' }),
+    });
+    const data = await processResponse(response);
+    if (data && data.token) {
+      localStorage.setItem(AUTH_TOKEN_KEY, data.token);
+      localStorage.setItem(USER_DATA_KEY, JSON.stringify(data.user));
     }
+    return data;
   },
 
   async logout() {
     try {
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
       if (token) {
-        // Se o backend não tiver /logout ainda, ignoramos erro
-        await fetch(`${AUTH_API_URL}/logout`, {
+        await fetch(`${API_BASE_URL}/api/auth/logout`, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -76,8 +61,8 @@ const authService = {
           },
         }).catch(() => {});
       }
-    } catch (error) {
-      console.error('Erro no logout:', error);
+    } catch (e) {
+      console.error('Erro no logout:', e);
     } finally {
       localStorage.removeItem(AUTH_TOKEN_KEY);
       localStorage.removeItem(USER_DATA_KEY);
@@ -86,61 +71,54 @@ const authService = {
   },
 
   async forgotPassword(email) {
-    try {
-      const response = await fetch(`${AUTH_API_URL}/forgot-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-
-      return await processResponse(response);
-    } catch (error) {
-      console.error('Erro ao solicitar recuperação de senha:', error);
-      throw error;
-    }
+    const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    return processResponse(response);
   },
 
   async resetPassword(token, newPassword) {
-    try {
-      const response = await fetch(`${AUTH_API_URL}/reset-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, new_password: newPassword }),
-      });
-
-      return await processResponse(response);
-    } catch (error) {
-      console.error('Erro ao resetar senha:', error);
-      throw error;
-    }
+    const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, new_password: newPassword }),
+    });
+    return processResponse(response);
   },
 
   async updateProfile(profileData) {
-    try {
-      const token = localStorage.getItem(AUTH_TOKEN_KEY);
-      const response = await fetch(`${AUTH_API_URL}/profile`, {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(profileData),
-      });
-
-      const data = await processResponse(response);
-
-      if (data?.user) {
-        localStorage.setItem(USER_DATA_KEY, JSON.stringify(data.user));
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Erro ao atualizar perfil:', error);
-      throw error;
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+    const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(profileData),
+    });
+    const data = await processResponse(response);
+    if (data?.user) {
+      localStorage.setItem(USER_DATA_KEY, JSON.stringify(data.user));
     }
+    return data;
+  },
+
+  getToken() {
+    return localStorage.getItem(AUTH_TOKEN_KEY);
+  },
+  getCurrentUser() {
+    try {
+      return JSON.parse(localStorage.getItem(USER_DATA_KEY));
+    } catch {
+      return null;
+    }
+  },
+  isAuthenticated() {
+    return !!localStorage.getItem(AUTH_TOKEN_KEY);
   },
 };
 
-// Exporte como nomeado e default para compatibilidade com imports existentes
 export { authService };
 export default authService;
