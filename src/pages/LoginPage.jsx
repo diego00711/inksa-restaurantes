@@ -17,10 +17,11 @@ export function LoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await authService.login(email, password);
+      // CORREÇÃO AQUI: Passando como um único objeto de credenciais
+      const response = await authService.login({ email, password });
 
-      // DEBUG: Veja o que chega do backend
-      // console.log('Resposta do backend:', response);
+      // Adicionando logs para depuração
+      console.log('Resposta do backend:', response);
 
       // Corrigido para checar 'response.user' e 'response.token'
       if (response && response.user && response.token) {
