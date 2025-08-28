@@ -1,5 +1,6 @@
 // src/services/authService.js
 // Serviço de autenticação do Portal do Restaurante
+// Backend único expõe rotas SEM prefixo /api e SEM /auth no caminho (ex.: POST /login)
 
 import {
   AUTH_API_URL,
@@ -11,12 +12,13 @@ import {
 const authService = {
   async login(email, password) {
     try {
-      const response = await fetch(`${AUTH_API_URL}/api/auth/login`, {
+      const response = await fetch(`${AUTH_API_URL}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email,
           password,
+          // user_type não é usado pelo backend, mas não atrapalha
           user_type: 'restaurante',
         }),
       });
@@ -38,7 +40,7 @@ const authService = {
 
   async register(restaurantData) {
     try {
-      const response = await fetch(`${AUTH_API_URL}/api/auth/register`, {
+      const response = await fetch(`${AUTH_API_URL}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -65,13 +67,14 @@ const authService = {
     try {
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
       if (token) {
-        await fetch(`${AUTH_API_URL}/api/auth/logout`, {
+        // Se o backend ainda não tiver /logout, ignoramos erro 404
+        await fetch(`${AUTH_API_URL}/logout`, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
-        });
+        }).catch(() => {});
       }
     } catch (error) {
       console.error('Erro no logout:', error);
@@ -84,7 +87,8 @@ const authService = {
 
   async forgotPassword(email) {
     try {
-      const response = await fetch(`${AUTH_API_URL}/api/auth/forgot-password`, {
+      // Garanta que esta rota exista no backend ou ajuste conforme necessário
+      const response = await fetch(`${AUTH_API_URL}/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
@@ -99,7 +103,8 @@ const authService = {
 
   async resetPassword(token, newPassword) {
     try {
-      const response = await fetch(`${AUTH_API_URL}/api/auth/reset-password`, {
+      // Garanta que esta rota exista no backend ou ajuste conforme necessário
+      const response = await fetch(`${AUTH_API_URL}/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, new_password: newPassword }),
@@ -114,8 +119,9 @@ const authService = {
 
   async updateProfile(profileData) {
     try {
+      // Garanta que esta rota exista no backend ou ajuste conforme necessário
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
-      const response = await fetch(`${AUTH_API_URL}/api/auth/profile`, {
+      const response = await fetch(`${AUTH_API_URL}/profile`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -136,21 +142,6 @@ const authService = {
       throw error;
     }
   },
-
-  getToken() {
-    return localStorage.getItem(AUTH_TOKEN_KEY);
-  },
-
-  getCurrentUser() {
-    const userStr = localStorage.getItem(USER_DATA_KEY);
-    return userStr ? JSON.parse(userStr) : null;
-  },
-
-  isAuthenticated() {
-    return !!localStorage.getItem(AUTH_TOKEN_KEY);
-  },
 };
 
-// Exportações para compatibilidade
-export { authService };
 export default authService;
