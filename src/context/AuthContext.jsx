@@ -1,4 +1,4 @@
-// src/context/AuthContext.jsx - VERSÃO FINAL E CORRIGIDA
+// src/context/AuthContext.jsx - VERSÃO FINAL E CORRIGIDA 
 
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import authService from '../services/authService';
