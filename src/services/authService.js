@@ -1,4 +1,4 @@
-// src/services/authService.js - VERSÃO FINAL CORRIGIDA
+// src/services/authService.js - VERSÃO FINAL E CORRIGIDA
 
 import { 
   RESTAURANT_API_URL, 
@@ -9,7 +9,6 @@ import {
   USER_DATA_KEY
 } from './api';
 
-// A API de autenticação é usada para login/perfil, mas a de restaurante para updates.
 const AUTH_BASE = AUTH_API_URL || RESTAURANT_API_URL;
 const RESTAURANT_BASE = RESTAURANT_API_URL || AUTH_API_URL;
 
@@ -35,22 +34,23 @@ export const authService = {
       
       const processedResponse = await processResponse(response);
 
-      if (processedResponse && processedResponse.data) {
-        return processedResponse.data; 
+      // ✅ CORREÇÃO: Ser rigoroso com a resposta.
+      // A resposta DEVE ter 'data' e 'data.token'. Se não tiver, é um erro.
+      if (processedResponse && processedResponse.data && processedResponse.data.token) {
+        return processedResponse.data; // Retorna { token, user, message }
       }
 
+      // Se a resposta não tiver o formato esperado, lança um erro explícito.
       throw new Error("Resposta de login inválida do servidor.");
 
     } catch (error) {
-      console.error('Falha no login:', error);
+      // Loga o erro para debug, mas o mais importante é relançá-lo.
+      console.error('Falha no serviço de login:', error);
       throw error;
     }
   },
 
-  /**
-   * Busca o perfil do usuário autenticado.
-   * GET /api/auth/profile
-   */
+  // ... (o resto do arquivo: getProfile, updateProfile, etc., continua o mesmo)
   getProfile: async () => {
     try {
       const response = await fetch(`${AUTH_BASE}/api/auth/profile`, {
@@ -63,10 +63,6 @@ export const authService = {
     }
   },
 
-  /**
-   * ✅ NOVO: Atualiza o perfil do restaurante.
-   * PUT /api/restaurant/profile
-   */
   updateProfile: async (profileData) => {
     try {
       const response = await fetch(`${RESTAURANT_BASE}/api/restaurant/profile`, {
@@ -84,10 +80,6 @@ export const authService = {
     }
   },
 
-  /**
-   * ✅ NOVO: Faz upload do logo do restaurante.
-   * POST /api/restaurant/upload-logo
-   */
   uploadRestaurantLogo: async (logoFile) => {
     try {
       const formData = new FormData();
@@ -95,10 +87,7 @@ export const authService = {
 
       const response = await fetch(`${RESTAURANT_BASE}/api/restaurant/upload-logo`, {
         method: 'POST',
-        headers: {
-          // 'Content-Type' é definido automaticamente pelo navegador para FormData
-          ...createAuthHeaders(), 
-        },
+        headers: createAuthHeaders(),
         body: formData,
       });
       return processResponse(response);
@@ -108,9 +97,6 @@ export const authService = {
     }
   },
 
-  /**
-   * Realiza o logout do usuário no frontend.
-   */
   logout: () => {
     try {
       console.log("Realizando logout...");
