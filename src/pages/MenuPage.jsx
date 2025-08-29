@@ -1,4 +1,4 @@
-// src/pages/MenuPage.jsx (VERSÃO FINAL COM ATUALIZAÇÃO EM TEMPO REAL)
+// src/pages/MenuPage.jsx - VERSÃO FINAL E ROBUSTA
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { PlusCircle, Edit, Trash2, Image as ImageIcon } from 'lucide-react';
@@ -18,9 +18,11 @@ export function MenuPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await menuService.getMenuItems();
-      setMenuItems(response.data || []);
+      // ✅ GARANTIA: A função de serviço agora sempre retorna um array.
+      const items = await menuService.getMenuItems();
+      setMenuItems(items); // Define o estado diretamente com o array retornado.
     } catch (err) {
+      console.error("Falha ao carregar o cardápio na página:", err);
       setError(err.message);
       addToast(err.message || "Erro ao carregar cardápio.", 'error'); 
     } finally {
@@ -32,14 +34,11 @@ export function MenuPage() {
     fetchMenuItems();
   }, [fetchMenuItems]);
 
-  // ✅ AJUSTE FINAL: Esta função agora atualiza a lista em tempo real.
   const handleItemAdded = (newItem) => {
-    // Adiciona o novo item no topo da lista para um feedback visual instantâneo.
     setMenuItems(prevItems => [newItem, ...prevItems]);
   };
 
   const handleItemUpdated = (updatedItem) => {
-    // Atualiza o item na lista para refletir as mudanças instantaneamente.
     setMenuItems(prevItems => 
       prevItems.map(item => (item.id === updatedItem.id ? updatedItem : item))
     );
@@ -68,7 +67,6 @@ export function MenuPage() {
     setEditingItem(null); 
   };
 
-  // O resto do seu código JSX continua aqui sem alterações...
   return (
     <div>
         <div className="flex justify-between items-center mb-6">
