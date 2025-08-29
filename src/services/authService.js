@@ -1,16 +1,14 @@
-// src/services/authService.js - VERSÃO FINAL COM LOGOUT
+// src/services/authService.js - VERSÃO CORRIGIDA
 
 import { 
   RESTAURANT_API_URL, 
   AUTH_API_URL, 
   processResponse, 
   createAuthHeaders,
-  // Importando as chaves do localStorage para consistência
   AUTH_TOKEN_KEY,
   USER_DATA_KEY
 } from './api';
 
-// Usa a URL de autenticação como primária, com fallback para a URL do restaurante.
 const API_BASE = AUTH_API_URL || RESTAURANT_API_URL;
 
 export const authService = {
@@ -33,11 +31,20 @@ export const authService = {
         body: JSON.stringify({ email: emailValue, password: passwordValue }),
       });
       
-      // A função processResponse já lida com erros HTTP.
-      return processResponse(response);
+      const processedResponse = await processResponse(response);
+
+      // ✅ CORREÇÃO: Verifica se a resposta tem a estrutura { data: {...} }
+      // e retorna apenas o conteúdo de 'data'.
+      if (processedResponse && processedResponse.data) {
+        return processedResponse.data; 
+      }
+
+      // Se a resposta não tiver o formato esperado, lança um erro.
+      throw new Error("Resposta de login inválida do servidor.");
 
     } catch (error) {
-      console.error('Erro ao realizar login:', error);
+      console.error('Falha no login:', error);
+      // Re-lança o erro para que o componente que chamou a função possa tratá-lo.
       throw error;
     }
   },
@@ -45,7 +52,6 @@ export const authService = {
   /**
    * Busca o perfil do usuário autenticado.
    * GET /api/auth/profile
-   * A API identifica o usuário pelo token, sem necessidade de parâmetros.
    */
   getProfile: async () => {
     try {
@@ -53,6 +59,7 @@ export const authService = {
         headers: createAuthHeaders(),
       });
       
+      // A função processResponse já retorna o JSON, que agora será { status, data }
       return processResponse(response);
     } catch (error) {
       console.error('Erro ao buscar perfil do usuário:', error);
@@ -62,26 +69,20 @@ export const authService = {
 
   /**
    * Realiza o logout do usuário no frontend.
-   * Limpa os dados de autenticação do localStorage e redireciona para o login.
    */
   logout: () => {
     try {
       console.log("Realizando logout...");
-      // 1. Remove o token e os dados do usuário do armazenamento local.
       localStorage.removeItem(AUTH_TOKEN_KEY);
       localStorage.removeItem(USER_DATA_KEY);
-      
-      // 2. Redireciona o usuário para a página de login.
-      // O 'replace' impede que o usuário volte para a página anterior (protegida) usando o botão "Voltar" do navegador.
       window.location.replace('/login');
     } catch (error) {
       console.error("Erro durante o processo de logout:", error);
-      // Mesmo com erro, tenta forçar o redirecionamento.
       window.location.href = '/login';
     }
   },
 
-  // Adicione aqui outras funções do seu authService se houver (ex: updateProfile, etc.)
+  // Adicione aqui outras funções do seu authService se houver
 };
 
 export default authService;
