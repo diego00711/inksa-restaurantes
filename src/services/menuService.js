@@ -1,5 +1,4 @@
-// src/services/menuService.js
-// Serviço de cardápio do Portal do Restaurante
+// src/services/menuService.js - VERSÃO CORRIGIDA E SIMPLIFICADA
 
 import { RESTAURANT_API_URL, processResponse, createAuthHeaders } from './api';
 
@@ -7,34 +6,21 @@ export const menuService = {
   /**
    * Busca todos os itens do cardápio do restaurante logado.
    * GET /api/menu
+   * O backend identifica o restaurante pelo token.
    */
   getMenuItems: async (signal) => {
-    // Recupera o ID do restaurante do usuário logado
-    const userDataStr = localStorage.getItem('restaurantUser');
-    let restaurantId;
-    
     try {
-      if (userDataStr) {
-        const userData = JSON.parse(userDataStr);
-        restaurantId = userData.id;
-      }
-    } catch (err) {
-      console.error('Erro ao obter ID do restaurante:', err);
+      const response = await fetch(`${RESTAURANT_API_URL}/api/menu`, {
+        headers: createAuthHeaders(),
+        signal,
+      });
+      
+      const data = await processResponse(response);
+      return data?.data ?? data; // Retorna o array de itens dentro da chave 'data'
+    } catch (error) {
+      console.error('Erro ao buscar itens do cardápio:', error);
+      throw error;
     }
-    
-    // Adiciona o ID do restaurante como parâmetro de consulta
-    const url = new URL(`${RESTAURANT_API_URL}/api/menu`);
-    if (restaurantId) {
-      url.searchParams.append('restaurant_id', restaurantId);
-    }
-    
-    const response = await fetch(url.toString(), {
-      headers: createAuthHeaders(),
-      signal,
-    });
-    
-    const data = await processResponse(response);
-    return data?.data ?? data;
   },
 
   /**
@@ -42,32 +28,14 @@ export const menuService = {
    * POST /api/menu
    */
   addMenuItem: async (itemData) => {
-    // Recupera o ID do restaurante do usuário logado
-    const userDataStr = localStorage.getItem('restaurantUser');
-    let restaurantId;
-    
-    try {
-      if (userDataStr) {
-        const userData = JSON.parse(userDataStr);
-        restaurantId = userData.id;
-      }
-    } catch (err) {
-      console.error('Erro ao obter ID do restaurante:', err);
-    }
-    
-    // Adiciona o ID do restaurante ao item
-    const completeItemData = {
-      ...itemData,
-      restaurant_id: restaurantId
-    };
-
+    // O backend já sabe o user_id pelo token, não precisamos enviá-lo no corpo.
     const response = await fetch(`${RESTAURANT_API_URL}/api/menu`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...createAuthHeaders(),
       },
-      body: JSON.stringify(completeItemData),
+      body: JSON.stringify(itemData),
     });
     return processResponse(response);
   },
@@ -118,10 +86,7 @@ export const menuService = {
       `${RESTAURANT_API_URL}/api/menu/upload-image`,
       {
         method: 'POST',
-        headers: {
-          // Não definir Content-Type manualmente para multipart
-          ...createAuthHeaders(),
-        },
+        headers: createAuthHeaders(), // Não defina 'Content-Type' aqui
         body: formData,
       }
     );
