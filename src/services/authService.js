@@ -34,23 +34,18 @@ export const authService = {
       
       const processedResponse = await processResponse(response);
 
-      // ✅ CORREÇÃO: Ser rigoroso com a resposta.
-      // A resposta DEVE ter 'data' e 'data.token'. Se não tiver, é um erro.
       if (processedResponse && processedResponse.data && processedResponse.data.token) {
-        return processedResponse.data; // Retorna { token, user, message }
+        return processedResponse.data;
       }
 
-      // Se a resposta não tiver o formato esperado, lança um erro explícito.
       throw new Error("Resposta de login inválida do servidor.");
 
     } catch (error) {
-      // Loga o erro para debug, mas o mais importante é relançá-lo.
       console.error('Falha no serviço de login:', error);
       throw error;
     }
   },
 
-  // ... (o resto do arquivo: getProfile, updateProfile, etc., continua o mesmo)
   getProfile: async () => {
     try {
       const response = await fetch(`${AUTH_BASE}/api/auth/profile`, {
@@ -97,15 +92,26 @@ export const authService = {
     }
   },
 
+  /**
+   * Realiza o logout do usuário no frontend.
+   * Limpa os dados de autenticação e redireciona para a página de login.
+   */
   logout: () => {
     try {
       console.log("Realizando logout...");
       localStorage.removeItem(AUTH_TOKEN_KEY);
       localStorage.removeItem(USER_DATA_KEY);
-      window.location.replace('/login');
+      
+      // ✅ CORREÇÃO: Garante que o redirecionamento seja para a raiz do domínio,
+      // que por sua vez deve redirecionar para '/login' se o usuário não estiver autenticado.
+      // Esta é a abordagem mais segura para Single Page Applications (SPAs).
+      // Se isso não funcionar, a segunda opção é window.location.replace('/login');
+      window.location.href = '/';
+
     } catch (error) {
       console.error("Erro durante o processo de logout:", error);
-      window.location.href = '/login';
+      // Fallback de segurança
+      window.location.href = '/';
     }
   },
 };
