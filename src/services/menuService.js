@@ -1,4 +1,4 @@
-// src/services/menuService.js - VERSÃO CORRIGIDA E SIMPLIFICADA
+// src/services/menuService.js - VERSÃO FINAL E ROBUSTA
 
 import { RESTAURANT_API_URL, processResponse, createAuthHeaders } from './api';
 
@@ -6,7 +6,6 @@ export const menuService = {
   /**
    * Busca todos os itens do cardápio do restaurante logado.
    * GET /api/menu
-   * O backend identifica o restaurante pelo token.
    */
   getMenuItems: async (signal) => {
     try {
@@ -15,11 +14,26 @@ export const menuService = {
         signal,
       });
       
-      const data = await processResponse(response);
-      return data?.data ?? data; // Retorna o array de itens dentro da chave 'data'
+      const processedData = await processResponse(response);
+      
+      // ✅ GARANTIA: Lida com ambos os formatos de resposta: { data: [...] } ou [...]
+      // Se a API enviar um objeto com a chave 'data', nós a extraímos.
+      if (processedData && processedData.data && Array.isArray(processedData.data)) {
+        return processedData.data;
+      }
+      
+      // Se a API enviar um array diretamente, nós o retornamos.
+      if (Array.isArray(processedData)) {
+        return processedData;
+      }
+
+      // Como fallback, se a resposta for inesperada, retorna um array vazio para não quebrar o app.
+      console.warn("Resposta da API de menu não era um array:", processedData);
+      return [];
+
     } catch (error) {
-      console.error('Erro ao buscar itens do cardápio:', error);
-      throw error;
+      console.error('Erro detalhado ao buscar itens do cardápio:', error);
+      throw error; // Relança o erro para o componente poder tratá-lo.
     }
   },
 
@@ -28,7 +42,6 @@ export const menuService = {
    * POST /api/menu
    */
   addMenuItem: async (itemData) => {
-    // O backend já sabe o user_id pelo token, não precisamos enviá-lo no corpo.
     const response = await fetch(`${RESTAURANT_API_URL}/api/menu`, {
       method: 'POST',
       headers: {
@@ -86,7 +99,7 @@ export const menuService = {
       `${RESTAURANT_API_URL}/api/menu/upload-image`,
       {
         method: 'POST',
-        headers: createAuthHeaders(), // Não defina 'Content-Type' aqui
+        headers: createAuthHeaders(),
         body: formData,
       }
     );
