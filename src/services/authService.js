@@ -97,7 +97,7 @@ export const authService = {
         method: 'POST',
         headers: {
           // 'Content-Type' é definido automaticamente pelo navegador para FormData
-          ...createAuthHeaders(),
+          ...createAuthHeaders(), 
         },
         body: formData,
       });
