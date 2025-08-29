@@ -1,4 +1,4 @@
-// src/services/authService.js - VERSÃO FINAL E CORRIGIDA
+// src/services/authService.js - VERSÃO CORRIGIDA PARA O PAINEL DO RESTAURANTE
 
 import { 
   RESTAURANT_API_URL, 
@@ -13,23 +13,12 @@ const AUTH_BASE = AUTH_API_URL || RESTAURANT_API_URL;
 const RESTAURANT_BASE = RESTAURANT_API_URL || AUTH_API_URL;
 
 export const authService = {
-  /**
-   * Realiza login do restaurante.
-   * POST /api/auth/login
-   */
   login: async (email, password) => {
     try {
-      const emailValue = (typeof email === 'object' && email !== null) ? email.email : email;
-      const passwordValue = (typeof email === 'object' && email !== null) ? email.password : password;
-
-      if (!emailValue || !passwordValue) {
-        throw new Error("Email e senha são obrigatórios");
-      }
-      
       const response = await fetch(`${AUTH_BASE}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: emailValue, password: passwordValue }),
+        body: JSON.stringify({ email, password }),
       });
       
       const processedResponse = await processResponse(response);
@@ -37,18 +26,22 @@ export const authService = {
       if (processedResponse && processedResponse.data && processedResponse.data.token) {
         return processedResponse.data;
       }
-
       throw new Error("Resposta de login inválida do servidor.");
-
     } catch (error) {
       console.error('Falha no serviço de login:', error);
       throw error;
     }
   },
 
+  /**
+   * Busca o perfil do restaurante logado.
+   */
   getProfile: async () => {
     try {
-      const response = await fetch(`${AUTH_BASE}/api/auth/profile`, {
+      // ✅ CORREÇÃO: A URL agora aponta para a rota específica do restaurante.
+      // Antes era: /api/auth/profile
+      // Agora é: /api/restaurant/profile
+      const response = await fetch(`${RESTAURANT_BASE}/api/restaurant/profile`, {
         headers: createAuthHeaders(),
       });
       return processResponse(response);
@@ -60,6 +53,7 @@ export const authService = {
 
   updateProfile: async (profileData) => {
     try {
+      // Esta já estava correta, apontando para a rota do restaurante.
       const response = await fetch(`${RESTAURANT_BASE}/api/restaurant/profile`, {
         method: 'PUT',
         headers: {
@@ -92,26 +86,14 @@ export const authService = {
     }
   },
 
-  /**
-   * Realiza o logout do usuário no frontend.
-   * Limpa os dados de autenticação e redireciona para a página de login.
-   */
   logout: () => {
     try {
-      console.log("Realizando logout...");
       localStorage.removeItem(AUTH_TOKEN_KEY);
       localStorage.removeItem(USER_DATA_KEY);
-      
-      // ✅ CORREÇÃO: Garante que o redirecionamento seja para a raiz do domínio,
-      // que por sua vez deve redirecionar para '/login' se o usuário não estiver autenticado.
-      // Esta é a abordagem mais segura para Single Page Applications (SPAs).
-      // Se isso não funcionar, a segunda opção é window.location.replace('/login');
-      window.location.href = '/';
-
+      window.location.href = '/login'; // Redireciona para a página de login
     } catch (error) {
       console.error("Erro durante o processo de logout:", error);
-      // Fallback de segurança
-      window.location.href = '/';
+      window.location.href = '/login';
     }
   },
 };
