@@ -1,9 +1,10 @@
-// src/pages/AnalyticsPage.jsx - VERSÃO FINAL E CONECTADA
+// src/pages/AnalyticsPage.jsx - VERSÃO FINAL COM GRÁFICO
 
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, ShoppingBag, PieChart } from 'lucide-react';
 import { analyticsService } from '../services/analyticsService';
 import { useToast } from '../context/ToastContext.jsx';
+import { SalesChart } from '../components/SalesChart'; // ✅ 1. Importa o novo componente de gráfico
 
 export function AnalyticsPage() {
   const [analyticsData, setAnalyticsData] = useState(null);
@@ -30,6 +31,7 @@ export function AnalyticsPage() {
     fetchAnalytics();
   }, [addToast]);
 
+  // O JSX para loading, error e os cards continua o mesmo...
   if (isLoading) {
     return (
       <div className="p-6">
@@ -57,7 +59,6 @@ export function AnalyticsPage() {
     );
   }
 
-  // Formata os valores para exibição
   const formattedTotalSales = new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL'
@@ -67,6 +68,7 @@ export function AnalyticsPage() {
     <div className="p-6 bg-gray-50 min-h-screen">
       <h1 className="text-3xl font-bold text-gray-800 mb-8">Dashboard de Analytics</h1>
 
+      {/* Cards de Resumo (sem alteração) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <div className="bg-white rounded-lg shadow-md p-6 flex items-center justify-between">
           <div>
@@ -75,7 +77,6 @@ export function AnalyticsPage() {
           </div>
           <TrendingUp size={48} className="text-orange-300" />
         </div>
-
         <div className="bg-white rounded-lg shadow-md p-6 flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-gray-500">Total de Pedidos Concluídos</p>
@@ -83,7 +84,6 @@ export function AnalyticsPage() {
           </div>
           <ShoppingBag size={48} className="text-green-300" />
         </div>
-
         <div className="bg-white rounded-lg shadow-md p-6 flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-gray-500">Item Mais Vendido</p>
@@ -93,21 +93,15 @@ export function AnalyticsPage() {
         </div>
       </div>
 
+      {/* ✅ 2. Seção do Gráfico */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-2xl font-bold text-gray-800 mb-4">Vendas nos Últimos 7 Dias</h2>
         {analyticsData.vendas_por_dia && analyticsData.vendas_por_dia.length > 0 ? (
-          <ul className="space-y-3">
-            {analyticsData.vendas_por_dia.map((item) => (
-              <li key={item.dia} className="flex justify-between items-center border-b pb-2 last:border-b-0">
-                <span className="text-gray-700 font-medium">{new Date(item.dia + 'T00:00:00').toLocaleDateString('pt-BR')}</span>
-                <span className="text-gray-600">
-                  Total: <span className="font-semibold">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.total || 0)}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
+          // Renderiza o componente do gráfico, passando os dados
+          <SalesChart data={analyticsData.vendas_por_dia} />
         ) : (
-          <p className="text-gray-500">Não há dados de vendas por dia para exibir.</p>
+          // Mensagem exibida se não houver dados de vendas
+          <p className="text-gray-500">Não há dados de vendas nos últimos 7 dias para exibir.</p>
         )}
       </div>
     </div>
