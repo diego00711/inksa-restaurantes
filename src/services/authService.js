@@ -1,4 +1,4 @@
-// src/services/authService.js - VERSÃO CORRIGIDA
+// src/services/authService.js - VERSÃO FINAL CORRIGIDA
 
 import { 
   RESTAURANT_API_URL, 
@@ -9,7 +9,9 @@ import {
   USER_DATA_KEY
 } from './api';
 
-const API_BASE = AUTH_API_URL || RESTAURANT_API_URL;
+// A API de autenticação é usada para login/perfil, mas a de restaurante para updates.
+const AUTH_BASE = AUTH_API_URL || RESTAURANT_API_URL;
+const RESTAURANT_BASE = RESTAURANT_API_URL || AUTH_API_URL;
 
 export const authService = {
   /**
@@ -25,7 +27,7 @@ export const authService = {
         throw new Error("Email e senha são obrigatórios");
       }
       
-      const response = await fetch(`${API_BASE}/api/auth/login`, {
+      const response = await fetch(`${AUTH_BASE}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: emailValue, password: passwordValue }),
@@ -33,18 +35,14 @@ export const authService = {
       
       const processedResponse = await processResponse(response);
 
-      // ✅ CORREÇÃO: Verifica se a resposta tem a estrutura { data: {...} }
-      // e retorna apenas o conteúdo de 'data'.
       if (processedResponse && processedResponse.data) {
         return processedResponse.data; 
       }
 
-      // Se a resposta não tiver o formato esperado, lança um erro.
       throw new Error("Resposta de login inválida do servidor.");
 
     } catch (error) {
       console.error('Falha no login:', error);
-      // Re-lança o erro para que o componente que chamou a função possa tratá-lo.
       throw error;
     }
   },
@@ -55,14 +53,57 @@ export const authService = {
    */
   getProfile: async () => {
     try {
-      const response = await fetch(`${API_BASE}/api/auth/profile`, {
+      const response = await fetch(`${AUTH_BASE}/api/auth/profile`, {
         headers: createAuthHeaders(),
       });
-      
-      // A função processResponse já retorna o JSON, que agora será { status, data }
       return processResponse(response);
     } catch (error) {
       console.error('Erro ao buscar perfil do usuário:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * ✅ NOVO: Atualiza o perfil do restaurante.
+   * PUT /api/restaurant/profile
+   */
+  updateProfile: async (profileData) => {
+    try {
+      const response = await fetch(`${RESTAURANT_BASE}/api/restaurant/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...createAuthHeaders(),
+        },
+        body: JSON.stringify(profileData),
+      });
+      return processResponse(response);
+    } catch (error) {
+      console.error('Erro ao atualizar o perfil:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * ✅ NOVO: Faz upload do logo do restaurante.
+   * POST /api/restaurant/upload-logo
+   */
+  uploadRestaurantLogo: async (logoFile) => {
+    try {
+      const formData = new FormData();
+      formData.append('logo', logoFile);
+
+      const response = await fetch(`${RESTAURANT_BASE}/api/restaurant/upload-logo`, {
+        method: 'POST',
+        headers: {
+          // 'Content-Type' é definido automaticamente pelo navegador para FormData
+          ...createAuthHeaders(),
+        },
+        body: formData,
+      });
+      return processResponse(response);
+    } catch (error) {
+      console.error('Erro ao fazer upload do logo:', error);
       throw error;
     }
   },
@@ -81,8 +122,6 @@ export const authService = {
       window.location.href = '/login';
     }
   },
-
-  // Adicione aqui outras funções do seu authService se houver
 };
 
 export default authService;
