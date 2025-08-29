@@ -1,4 +1,4 @@
-// src/pages/SettingsPage.jsx
+// src/pages/SettingsPage.jsx - VERSÃO FINAL CORRIGIDA
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { authService } from '../services/authService'; 
@@ -45,7 +45,7 @@ export function SettingsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [addToast]);
+  }, [addToast, updateProfileInContext]); // Adicionado updateProfileInContext às dependências
 
   useEffect(() => {
     fetchProfile();
@@ -67,30 +67,51 @@ export function SettingsPage() {
     }
   };
 
+  // ✅ FUNÇÃO `handleSubmit` CORRIGIDA E MELHORADA
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSaving) return;
     setIsSaving(true);
+
     try {
       let finalProfileData = { ...profileData };
 
+      // 1. Se um novo logo foi selecionado, faz o upload primeiro.
       if (logoFile) {
+        addToast('info', 'Enviando novo logo...');
+        // CORREÇÃO: Chamada correta da função `uploadRestaurantLogo`
         const uploadResponse = await authService.uploadRestaurantLogo(logoFile);
-        finalProfileData.logo_url = uploadResponse.logo_url;
-        addToast('info', "Logo atualizado com sucesso!");
+
+        // Verifica se o upload retornou a URL e a adiciona aos dados a serem salvos.
+        if (uploadResponse && uploadResponse.data && uploadResponse.data.logo_url) {
+          finalProfileData.logo_url = uploadResponse.data.logo_url;
+          addToast('success', 'Logo enviado com sucesso!');
+        } else {
+          throw new Error("Falha ao processar o upload do logo.");
+        }
       }
       
+      // 2. Atualiza o perfil com todos os dados (incluindo a nova URL do logo, se houver).
+      addToast('info', 'Salvando alterações do perfil...');
       const response = await authService.updateProfile(finalProfileData);
-      const updatedProfile = response.data;
       
-      setProfileData(updatedProfile);
-      if (updatedProfile.logo_url) {
-        setLogoPreview(updatedProfile.logo_url);
+      // 3. Processa a resposta final e atualiza o estado da aplicação.
+      if (response && response.data) {
+        const updatedProfile = response.data;
+        
+        setProfileData(updatedProfile); // Atualiza os dados do formulário com a resposta do servidor
+        if (updatedProfile.logo_url) {
+          setLogoPreview(updatedProfile.logo_url); // Garante que a preview do logo seja a mais recente
+        }
+        updateProfileInContext(updatedProfile); // Atualiza o perfil no contexto global da aplicação
+        
+        addToast('success', "Perfil atualizado com sucesso!");
+        setLogoFile(null); // Limpa o estado do arquivo para evitar re-uploads acidentais
+      } else {
+        throw new Error("Resposta inválida do servidor ao atualizar o perfil.");
       }
-      updateProfileInContext(updatedProfile);
-      addToast('success', "Perfil atualizado com sucesso!");
-      setLogoFile(null); 
-    } catch (err) { // ✅ CORREÇÃO: Adicionadas as chaves {} ao redor do bloco catch
+
+    } catch (err) {
       console.error("Erro ao salvar perfil:", err);
       addToast('error', err.message || "Falha ao atualizar o perfil.");
     } finally {
@@ -191,6 +212,7 @@ export function SettingsPage() {
             {/* Secção de Endereço */}
             <div className="border-t pt-8">
               <h2 className="text-xl font-semibold mb-4 text-gray-700">Endereço do Restaurante</h2>
+              {/* O restante do JSX do formulário permanece o mesmo */}
               <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
                 <div className="col-span-6 md:col-span-4">
                   <label htmlFor="address_street" className="block text-sm font-medium text-gray-700">Rua</label>
