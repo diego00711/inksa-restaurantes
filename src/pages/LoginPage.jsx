@@ -1,42 +1,50 @@
+// src/pages/LoginPage.jsx - VERSÃO FINAL CORRIGIDA
+
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '../services/authService';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useToast } from '../context/ToastContext.jsx'; // Importando o useToast
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(null);
+  // Removido o estado de erro local para usar o toast, que é mais moderno.
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { addToast } = useToast(); // Usando o hook de toast
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError(null);
+    if (isLoading) return;
     setIsLoading(true);
 
     try {
-      // CORREÇÃO AQUI: Passando como um único objeto de credenciais
-      const response = await authService.login({ email, password });
+      // ✅ CORREÇÃO PRINCIPAL: Passando email e password como argumentos separados,
+      // como a função authService.login espera.
+      const loginData = await authService.login(email, password);
 
-      // Adicionando logs para depuração
-      console.log('Resposta do backend:', response);
-
-      // Corrigido para checar 'response.user' e 'response.token'
-      if (response && response.user && response.token) {
+      // A resposta (loginData) já é o objeto { token, user, message }
+      if (loginData && loginData.user && loginData.token) {
         // Atualiza o contexto global de autenticação
-        login(response.user, response.token);
-        // Redireciona para a página principal logada
+        login(loginData.user, loginData.token);
+        
+        addToast('Login realizado com sucesso!', 'success');
+        
+        // Redireciona para a página de pedidos após o login
         navigate('/pedidos');
       } else {
-        throw new Error(response.message || 'Resposta de login inválida do servidor.');
+        // Fallback de segurança caso a resposta não venha como esperado
+        throw new Error('Resposta de login inválida do servidor.');
       }
       
     } catch (err) {
-      setError(err.message || 'Email ou senha inválidos. Por favor, tente novamente.');
+      // Usa o sistema de toast para exibir o erro de forma não-bloqueante
+      addToast(err.message || 'Email ou senha inválidos.', 'error');
       console.error("Falha no login:", err);
     } finally {
+      // Garante que o botão de login seja reativado
       setIsLoading(false);
     }
   };
@@ -80,7 +88,7 @@ export function LoginPage() {
             />
           </div>
 
-          {error && <p className="text-red-500 text-center text-sm">{error}</p>}
+          {/* O erro agora é tratado pelo Toast, então o <p> de erro pode ser removido se preferir */}
 
           <div>
             <button
