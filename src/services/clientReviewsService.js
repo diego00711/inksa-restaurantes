@@ -1,6 +1,5 @@
 import axios from "axios";
-
-const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000/api/review";
+import { RESTAURANT_API_URL } from "./api";
 
 export async function postClientReview({
   clientId,
@@ -10,7 +9,7 @@ export async function postClientReview({
   token,
 }) {
   const res = await axios.post(
-    `${API_BASE}/clients/${clientId}/reviews`,
+    `${RESTAURANT_API_URL}/api/review/clients/${clientId}/reviews`,
     { order_id: orderId, rating, comment },
     { headers: { Authorization: `Bearer ${token}` } }
   );
@@ -18,6 +17,6 @@ export async function postClientReview({
 }
 
 export async function getClientReviews(clientId) {
-  const res = await axios.get(`${API_BASE}/clients/${clientId}/reviews`);
+  const res = await axios.get(`${RESTAURANT_API_URL}/api/review/clients/${clientId}/reviews`);
   return res.data; // {reviews, average_rating, total_reviews}
 }
