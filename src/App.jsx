@@ -1,5 +1,3 @@
-// src/App.jsx
-
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom'; 
 
@@ -12,10 +10,9 @@ import { MenuPage } from './pages/MenuPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { CategoryManagementPage } from './pages/CategoryManagementPage';
-// <<< MUDANÇA 1: Importar a nova página de gamificação >>>
 import RestaurantGamificationPage from './pages/RestaurantGamificationPage';
-// <<< IMPORTAR PÁGINA DE AVALIAÇÕES >>>
-import RestaurantReviewsPage from './pages/RestaurantReviewsPage';
+// <<< NOVO: Importar Central de Avaliações >>>
+import RestaurantEvaluationsCenter from './pages/RestaurantEvaluationsCenter';
 
 // --- Componentes e Contextos ---
 import { PortalLayout } from './components/restaurant-portal/PortalLayout';
@@ -23,7 +20,6 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { ToastProvider } from './context/ToastContext.jsx'; 
 import { ProfileProvider } from './context/ProfileContext.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
-
 
 export default function App() {
   return (
@@ -52,10 +48,9 @@ export default function App() {
               <Route path="analytics" element={<AnalyticsPage />} />
               <Route path="configuracoes" element={<SettingsPage />} />
               <Route path="categorias" element={<CategoryManagementPage />} />
-              {/* <<< MUDANÇA 2: Rota para gamificação >>> */}
               <Route path="gamificacao" element={<RestaurantGamificationPage />} />
-              {/* <<< NOVA ROTA DE AVALIAÇÕES >>> */}
-              <Route path="avaliacoes" element={<RestaurantReviewsPage />} />
+              {/* <<< CENTRAL DE AVALIAÇÕES >>> */}
+              <Route path="avaliacoes" element={<RestaurantEvaluationsCenter />} />
             </Route>
 
             {/* Redirecionamento legado */}
