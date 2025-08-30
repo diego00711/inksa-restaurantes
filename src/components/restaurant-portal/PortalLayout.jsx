@@ -2,8 +2,7 @@
 
 import React from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
-// <<< MUDANÇA 1: Importar o ícone 'Trophy' para a gamificação >>>
-import { ListOrdered, Utensils, Settings, LogOut, BarChart2, Tag, Trophy } from 'lucide-react';
+import { ListOrdered, Utensils, Settings, LogOut, BarChart2, Tag, Trophy, Star } from 'lucide-react';
 import { authService } from '../../services/authService.js';
 import { useProfile } from '../../context/ProfileContext'; 
 import { useToast } from '../../context/ToastContext.jsx'; 
@@ -17,7 +16,7 @@ export function PortalLayout() {
     { name: 'Pedidos', icon: ListOrdered, path: '/pedidos' },
     { name: 'Cardápio', icon: Utensils, path: '/cardapio' },
     { name: 'Analytics', icon: BarChart2, path: '/analytics' },
-    // <<< MUDANÇA 2: Adicionar o novo item de menu para a gamificação >>>
+    { name: 'Avaliações', icon: Star, path: '/avaliacoes' }, // <<< AVALIAÇÕES ADICIONADO AQUI
     { name: 'Gamificação', icon: Trophy, path: '/gamificacao' },
     { name: 'Configurações', icon: Settings, path: '/configuracoes' },
     { name: 'Categorias', icon: Tag, path: '/categorias' },
@@ -41,7 +40,6 @@ export function PortalLayout() {
     }
   };
 
-  // O resto do seu código JSX continua aqui sem alterações...
   return (
     <div className="flex min-h-screen bg-orange-50 font-sans">
       {/* Sidebar */}
