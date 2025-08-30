@@ -13,8 +13,9 @@ import { AnalyticsPage } from './pages/AnalyticsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { CategoryManagementPage } from './pages/CategoryManagementPage';
 // <<< MUDANÇA 1: Importar a nova página de gamificação >>>
-// (Assumindo que o ficheiro está em src/pages/RestaurantGamificationPage.jsx)
 import RestaurantGamificationPage from './pages/RestaurantGamificationPage';
+// <<< IMPORTAR PÁGINA DE AVALIAÇÕES >>>
+import RestaurantReviewsPage from './pages/RestaurantReviewsPage';
 
 // --- Componentes e Contextos ---
 import { PortalLayout } from './components/restaurant-portal/PortalLayout';
@@ -51,8 +52,10 @@ export default function App() {
               <Route path="analytics" element={<AnalyticsPage />} />
               <Route path="configuracoes" element={<SettingsPage />} />
               <Route path="categorias" element={<CategoryManagementPage />} />
-              {/* <<< MUDANÇA 2: Adicionar a nova rota para a gamificação >>> */}
+              {/* <<< MUDANÇA 2: Rota para gamificação >>> */}
               <Route path="gamificacao" element={<RestaurantGamificationPage />} />
+              {/* <<< NOVA ROTA DE AVALIAÇÕES >>> */}
+              <Route path="avaliacoes" element={<RestaurantReviewsPage />} />
             </Route>
 
             {/* Redirecionamento legado */}
