@@ -1,22 +1,28 @@
-import axios from "axios";
-import { RESTAURANT_API_URL } from "./api";
+import { RESTAURANT_API_URL, processResponse, createAuthHeaders } from './api';
 
-export async function postClientReview({
-  clientId,
-  orderId,
-  rating,
-  comment,
-  token,
-}) {
-  const res = await axios.post(
-    `${RESTAURANT_API_URL}/api/review/clients/${clientId}/reviews`,
-    { order_id: orderId, rating, comment },
-    { headers: { Authorization: `Bearer ${token}` } }
+// Busca avaliações do cliente
+export async function getClientReviews(clientId) {
+  const response = await fetch(
+    `${RESTAURANT_API_URL}/api/review/clients/${encodeURIComponent(clientId)}/reviews`,
+    {
+      headers: createAuthHeaders(),
+    }
   );
-  return res.data;
+  return processResponse(response);
 }
 
-export async function getClientReviews(clientId) {
-  const res = await axios.get(`${RESTAURANT_API_URL}/api/review/clients/${clientId}/reviews`);
-  return res.data; // {reviews, average_rating, total_reviews}
+// Envia uma avaliação para o cliente
+export async function postClientReview({ clientId, orderId, rating, comment }) {
+  const response = await fetch(
+    `${RESTAURANT_API_URL}/api/review/clients/${encodeURIComponent(clientId)}/reviews`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...createAuthHeaders(),
+      },
+      body: JSON.stringify({ order_id: orderId, rating, comment }),
+    }
+  );
+  return processResponse(response);
 }
