@@ -4,7 +4,7 @@ import { useProfile } from "../context/ProfileContext";
 
 export default function RestaurantReviewsPage() {
   const { profile, loading } = useProfile();
-  console.log("Profile carregado:", profile);
+  console.log("Profile carregado:", profile, "ID:", profile?.restaurant_id);
 
   if (loading) return <div>Carregando perfil...</div>;
   if (!profile) return <div>Perfil não encontrado.</div>;
