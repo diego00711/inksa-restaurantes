@@ -11,7 +11,7 @@ export default function RestaurantReviewsPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-4">Avaliações Recebidas</h1>
-      <RestaurantReviewsList restaurantId={profile.restaurant_id} />
+     <RestaurantReviewsList restaurantId={profile.id} />
     </div>
   );
 }
