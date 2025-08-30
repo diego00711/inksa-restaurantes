@@ -2,28 +2,22 @@ import axios from "axios";
 
 const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000/api/review";
 
-export async function postRestaurantReview({
-  restaurantId,
+export async function postClientReview({
+  clientId,
   orderId,
   rating,
   comment,
   token,
-}: {
-  restaurantId: string;
-  orderId: string;
-  rating: number;
-  comment?: string;
-  token: string;
 }) {
   const res = await axios.post(
-    `${API_BASE}/restaurants/${restaurantId}/reviews`,
+    `${API_BASE}/clients/${clientId}/reviews`,
     { order_id: orderId, rating, comment },
     { headers: { Authorization: `Bearer ${token}` } }
   );
   return res.data;
 }
 
-export async function getRestaurantReviews(restaurantId: string) {
-  const res = await axios.get(`${API_BASE}/restaurants/${restaurantId}/reviews`);
+export async function getClientReviews(clientId) {
+  const res = await axios.get(`${API_BASE}/clients/${clientId}/reviews`);
   return res.data; // {reviews, average_rating, total_reviews}
 }
