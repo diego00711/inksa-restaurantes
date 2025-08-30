@@ -1,28 +1,23 @@
-import React, { useEffect, useState } from "react";
-import { getRestaurantReviews } from "../services/restaurantReviewsService";
+import axios from "axios";
 
-export default function RestaurantReviewsList({ restaurantId }) {
-  const [data, setData] = useState(null);
+const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000/api/review";
 
-  useEffect(() => {
-    getRestaurantReviews(restaurantId).then(setData);
-  }, [restaurantId]);
-
-  if (!data) return <div>Carregando avaliações...</div>;
-
-  return (
-    <div>
-      <h2>Avaliações ({data.total_reviews})</h2>
-      <p>Média: {data.average_rating?.toFixed(2)}</p>
-      <ul>
-        {data.reviews.map((rev, i) => (
-          <li key={i}>
-            <strong>Nota:</strong> {rev.rating} <br />
-            <strong>Comentário:</strong> {rev.comment} <br />
-            <small>{new Date(rev.created_at).toLocaleString()}</small>
-          </li>
-        ))}
-      </ul>
-    </div>
+export async function postRestaurantReview({
+  restaurantId,
+  orderId,
+  rating,
+  comment,
+  token,
+}) {
+  const res = await axios.post(
+    `${API_BASE}/restaurants/${restaurantId}/reviews`,
+    { order_id: orderId, rating, comment },
+    { headers: { Authorization: `Bearer ${token}` } }
   );
+  return res.data;
+}
+
+export async function getRestaurantReviews(restaurantId) {
+  const res = await axios.get(`${API_BASE}/restaurants/${restaurantId}/reviews`);
+  return res.data; // {reviews, average_rating, total_reviews}
 }
