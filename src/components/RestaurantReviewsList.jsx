@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Star, MessageSquare, Calendar, TrendingUp, Award } from "lucide-react";
-import { getRestaurantReviews } from "../services/restaurantReviewsService";
+import { restaurantReviewService, reviewUtils } from "../services/reviewServices";
 
 // Componente para renderizar estrelas
 const StarRating = ({ rating, size = "w-5 h-5" }) => {
@@ -44,11 +44,20 @@ const RatingProgressBar = ({ rating, count, total }) => {
 export default function RestaurantReviewsList({ restaurantId }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!restaurantId) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
-    getRestaurantReviews(restaurantId)
+    setError(null);
+    
+    restaurantReviewService.getRestaurantReviews(restaurantId)
       .then(setData)
+      .catch(err => setError(err.message))
       .finally(() => setLoading(false));
   }, [restaurantId]);
 
@@ -68,15 +77,33 @@ export default function RestaurantReviewsList({ restaurantId }) {
     );
   }
 
-  if (!data) {
+  if (error) {
     return (
       <div className="text-center py-12">
         <div className="text-red-500 text-6xl mb-4">⚠️</div>
         <h3 className="text-lg font-semibold text-gray-600 mb-2">
           Erro ao carregar avaliações
         </h3>
+        <p className="text-gray-500 mb-4">{error}</p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          Tentar novamente
+        </button>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="text-center py-12">
+        <Star className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+        <h3 className="text-lg font-semibold text-gray-600 mb-2">
+          Nenhuma avaliação encontrada
+        </h3>
         <p className="text-gray-500">
-          Tente recarregar a página ou entre em contato com o suporte
+          As avaliações do restaurante aparecerão aqui
         </p>
       </div>
     );
@@ -136,21 +163,23 @@ export default function RestaurantReviewsList({ restaurantId }) {
       </div>
 
       {/* Rating Distribution */}
-      <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">
-          Distribuição das Avaliações
-        </h3>
-        <div className="space-y-3">
-          {ratingDistribution.map((item) => (
-            <RatingProgressBar
-              key={item.rating}
-              rating={item.rating}
-              count={item.count}
-              total={data.total_reviews}
-            />
-          ))}
+      {data.total_reviews > 0 && (
+        <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">
+            Distribuição das Avaliações
+          </h3>
+          <div className="space-y-3">
+            {ratingDistribution.map((item) => (
+              <RatingProgressBar
+                key={item.rating}
+                rating={item.rating}
+                count={item.count}
+                total={data.total_reviews}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Reviews List */}
       {data.reviews && data.reviews.length > 0 ? (
@@ -167,12 +196,10 @@ export default function RestaurantReviewsList({ restaurantId }) {
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="bg-gradient-to-r from-blue-500 to-purple-500 w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold">
-                      {review.client_name?.charAt(0) || "C"}
+                      C
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-800">
-                        {review.client_name || "Cliente"}
-                      </p>
+                      <p className="font-semibold text-gray-800">Cliente</p>
                       <StarRating rating={review.rating} size="w-4 h-4" />
                     </div>
                   </div>
@@ -180,7 +207,7 @@ export default function RestaurantReviewsList({ restaurantId }) {
                   <div className="flex items-center gap-2 text-gray-500">
                     <Calendar className="w-4 h-4" />
                     <span className="text-sm">
-                      {new Date(review.created_at).toLocaleDateString("pt-BR")}
+                      {reviewUtils.formatReviewDate(review.created_at)}
                     </span>
                   </div>
                 </div>
