@@ -50,9 +50,13 @@ export default function App() {
               <Route path="configuracoes" element={<SettingsPage />} />
               <Route path="categorias" element={<CategoryManagementPage />} />
               <Route path="gamificacao" element={<RestaurantGamificationPage />} />
+              
               {/* <<< CENTRAL DE AVALIAÇÕES >>> */}
               <Route path="avaliacoes" element={<RestaurantEvaluationsCenter />} />
-              <TestReviewServices />
+              
+              {/* <<< ROTA DE TESTE CORRIGIDA >>> */}
+              {/* O componente de teste agora tem sua própria rota */}
+              <Route path="teste-avaliacoes" element={<TestReviewServices />} />
             </Route>
 
             {/* Redirecionamento legado */}
