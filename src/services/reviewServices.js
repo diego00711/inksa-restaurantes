@@ -1,53 +1,77 @@
-// services/reviewServices.js - VERSÃO MÍNIMA PARA DEBUG
+// src/services/reviewServices.js
 
-console.log('reviewServices.js carregado com sucesso!');
+// Importa as funções reais dos arquivos de serviço específicos
+import { getRestaurantReviews, postRestaurantReview } from './restaurantReviewApi';
+import { getClientReviews, postClientReview } from './clientReviewApi';
+import { getDeliveryReviews, postDeliveryReview } from './deliveryReviewApi';
 
-// Serviços mais básicos possíveis
+/**
+ * Serviço para gerenciar avaliações de RESTAURANTES.
+ * Conecta os componentes React com as chamadas de API reais.
+ */
 export const restaurantReviewService = {
-  async getRestaurantReviews(restaurantId) {
-    console.log('getRestaurantReviews chamado para:', restaurantId);
-    
-    // Por enquanto retorna dados simulados
-    return {
-      reviews: [
-        {
-          rating: 5,
-          comment: "Teste de avaliação",
-          created_at: new Date().toISOString()
-        }
-      ],
-      average_rating: 5.0,
-      total_reviews: 1
-    };
-  }
+  // Mapeia a função que busca dados da API
+  getRestaurantReviews: getRestaurantReviews,
+  // Mapeia a função que cria uma nova avaliação
+  createReview: postRestaurantReview,
 };
 
+/**
+ * Serviço para gerenciar avaliações de CLIENTES.
+ * (Ainda não utilizado no frontend, mas pronto para uso futuro)
+ */
 export const clientReviewService = {
-  async createReview(clientId, reviewData) {
-    console.log('Tentando avaliar cliente:', clientId, reviewData);
-    
-    // Simula sucesso
-    return { message: 'Avaliação simulada enviada!' };
-  }
+  getClientReviews: getClientReviews,
+  createReview: postClientReview,
 };
 
+/**
+ * Serviço para gerenciar avaliações de ENTREGADORES.
+ * (Ainda não utilizado no frontend, mas pronto para uso futuro)
+ */
 export const deliveryReviewService = {
-  async createReview(deliveryId, reviewData) {
-    console.log('Tentando avaliar entregador:', deliveryId, reviewData);
-    
-    // Simula sucesso
-    return { message: 'Avaliação simulada enviada!' };
-  }
+  getDeliveryReviews: getDeliveryReviews,
+  createReview: postDeliveryReview,
 };
 
+/**
+ * Funções utilitárias para formatação e validação de dados de avaliações.
+ */
 export const reviewUtils = {
+  /**
+   * Formata uma string de data (ISO) para o padrão brasileiro (dd/mm/aaaa).
+   * @param {string} dateString - A data em formato de string.
+   * @returns {string} A data formatada ou uma mensagem de erro.
+   */
   formatReviewDate(dateString) {
-    return new Date(dateString).toLocaleDateString('pt-BR');
+    if (!dateString) return 'Data inválida';
+    try {
+      return new Date(dateString).toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      });
+    } catch (error) {
+      return 'Data inválida';
+    }
   },
   
+  /**
+   * Valida os dados de uma nova avaliação.
+   * @param {number} rating - A nota da avaliação.
+   * @param {string} orderId - O ID do pedido associado.
+   * @returns {string[]} Um array de mensagens de erro. Vazio se for válido.
+   */
   validateReviewData(rating, orderId) {
-    return []; // Sem validação por enquanto
+    const errors = [];
+    if (!rating || rating < 1 || rating > 5) {
+      errors.push('A nota da avaliação deve ser um número entre 1 e 5.');
+    }
+    if (!orderId) {
+      errors.push('A referência do pedido é obrigatória para a avaliação.');
+    }
+    return errors;
   }
 };
 
-console.log('Todos os serviços exportados com sucesso!');
+console.log('✅ reviewServices.js (API REAL) carregado com sucesso!');
