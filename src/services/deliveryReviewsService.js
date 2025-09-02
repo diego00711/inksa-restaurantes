@@ -2,14 +2,9 @@
 
 import { RESTAURANT_API_URL, processResponse, createAuthHeaders } from './api';
 
-/**
- * Envia uma nova avaliação para um entregador.
- * @param {object} reviewData - Contém deliverymanId, orderId, rating, e comment.
- * @returns {Promise<object>} A resposta da API.
- */
 export async function postDeliveryReview({ deliverymanId, orderId, rating, comment }) {
-  // URL CORRIGIDA: Aponta para /delivery/... como no backend.
-  const url = `${RESTAURANT_API_URL}/delivery/${encodeURIComponent(deliverymanId)}/reviews`;
+  // CORREÇÃO FINAL: Adicionado o prefixo /api/review/ e corrigido para 'delivery'
+  const url = `${RESTAURANT_API_URL}/api/review/delivery/${encodeURIComponent(deliverymanId)}/reviews`;
 
   const response = await fetch(url, {
     method: 'POST',
