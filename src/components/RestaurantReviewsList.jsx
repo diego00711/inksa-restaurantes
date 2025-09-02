@@ -1,8 +1,10 @@
+// src/components/RestaurantReviewsList.jsx
 import React, { useEffect, useState } from "react";
 import { Star, MessageSquare, Calendar, TrendingUp, Award } from "lucide-react";
+// Importa o serviço centralizado que já está conectado à API real
 import { restaurantReviewService, reviewUtils } from "../services/reviewServices";
 
-// Componente para renderizar estrelas
+// ... (Os componentes StarRating e RatingProgressBar continuam os mesmos) ...
 const StarRating = ({ rating, size = "w-5 h-5" }) => {
   return (
     <div className="flex items-center gap-1">
@@ -20,7 +22,6 @@ const StarRating = ({ rating, size = "w-5 h-5" }) => {
   );
 };
 
-// Componente para barra de progresso das avaliações
 const RatingProgressBar = ({ rating, count, total }) => {
   const percentage = total > 0 ? (count / total) * 100 : 0;
   
@@ -41,12 +42,13 @@ const RatingProgressBar = ({ rating, count, total }) => {
   );
 };
 
+
 export default function RestaurantReviewsList({ restaurantId }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
+  const fetchReviews = () => {
     if (!restaurantId) {
       setLoading(false);
       return;
@@ -56,15 +58,25 @@ export default function RestaurantReviewsList({ restaurantId }) {
     setError(null);
     
     restaurantReviewService.getRestaurantReviews(restaurantId)
-      .then(setData)
-      .catch(err => setError(err.message))
+      .then(response => {
+        // A API retorna um objeto com 'reviews', 'average_rating', etc.
+        setData(response);
+      })
+      .catch(err => {
+        // CORREÇÃO: Exibe a mensagem de erro específica da API
+        setError(err.message || "Falha ao buscar avaliações. Tente novamente.");
+      })
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchReviews();
   }, [restaurantId]);
 
   if (loading) {
+    // ... (Skeleton de carregamento continua o mesmo) ...
     return (
       <div className="space-y-6">
-        {/* Loading skeleton */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
             <div key={i} className="bg-gray-100 rounded-xl p-6 animate-pulse">
@@ -78,6 +90,7 @@ export default function RestaurantReviewsList({ restaurantId }) {
   }
 
   if (error) {
+    // ... (Componente de erro agora usa o botão para tentar novamente) ...
     return (
       <div className="text-center py-12">
         <div className="text-red-500 text-6xl mb-4">⚠️</div>
@@ -86,7 +99,7 @@ export default function RestaurantReviewsList({ restaurantId }) {
         </h3>
         <p className="text-gray-500 mb-4">{error}</p>
         <button 
-          onClick={() => window.location.reload()}
+          onClick={fetchReviews} // CORREÇÃO: Chama a função de busca novamente
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
         >
           Tentar novamente
@@ -95,7 +108,8 @@ export default function RestaurantReviewsList({ restaurantId }) {
     );
   }
 
-  if (!data) {
+  if (!data || data.total_reviews === 0) {
+    // ... (Componente de "nenhuma avaliação" continua o mesmo) ...
     return (
       <div className="text-center py-12">
         <Star className="h-16 w-16 text-gray-300 mx-auto mb-4" />
@@ -103,13 +117,14 @@ export default function RestaurantReviewsList({ restaurantId }) {
           Nenhuma avaliação encontrada
         </h3>
         <p className="text-gray-500">
-          As avaliações do restaurante aparecerão aqui
+          As avaliações do seu restaurante aparecerão aqui.
         </p>
       </div>
     );
   }
 
-  // Simulando distribuição de notas (você pode adaptar conforme seus dados)
+  // ... (O resto do JSX para exibir os dados continua o mesmo) ...
+  // NOTA: A distribuição de notas simulada pode ser substituída por dados reais se a API os fornecer.
   const ratingDistribution = [
     { rating: 5, count: Math.floor(data.total_reviews * 0.6) },
     { rating: 4, count: Math.floor(data.total_reviews * 0.25) },
@@ -241,17 +256,7 @@ export default function RestaurantReviewsList({ restaurantId }) {
             ))}
           </div>
         </div>
-      ) : (
-        <div className="text-center py-12">
-          <Star className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-600 mb-2">
-            Nenhuma avaliação ainda
-          </h3>
-          <p className="text-gray-500">
-            Quando os clientes avaliarem seu restaurante, as avaliações aparecerão aqui
-          </p>
-        </div>
-      )}
+      ) : null}
     </div>
   );
 }
