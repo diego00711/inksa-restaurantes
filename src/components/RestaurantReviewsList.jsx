@@ -41,49 +41,69 @@ const RatingProgressBar = ({ rating, count, total }) => {
   );
 };
 
-// --- Componente Principal (com a correção) ---
-export default function RestaurantReviewsList({ restaurantId, onDataLoaded }) { // ✅ 1. Aceita a nova prop 'onDataLoaded'
+// --- Componente Principal (com a correção de limpeza de efeito) ---
+export default function RestaurantReviewsList({ restaurantId, onDataLoaded }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchReviews = () => {
+  useEffect(() => {
     if (!restaurantId) {
       setLoading(false);
+      if (onDataLoaded) {
+        onDataLoaded({ total_reviews: 0, average_rating: 0, reviews: [] });
+      }
       return;
     }
-    setLoading(true);
-    setError(null);
-    
-    restaurantReviewService.getRestaurantReviews(restaurantId)
-      .then(response => {
-        setData(response);
-        // ✅ 2. Envia os dados para o componente pai assim que eles chegam
-        if (onDataLoaded) {
-          onDataLoaded(response);
-        }
-      })
-      .catch(err => {
-        setError(err.message || "Falha ao buscar avaliações. Tente novamente.");
-        // Envia 'null' para o pai em caso de erro
-        if (onDataLoaded) {
-          onDataLoaded(null);
-        }
-      })
-      .finally(() => setLoading(false));
-  };
 
-  useEffect(() => {
+    // Variável de controle para evitar atualização de estado em componente desmontado
+    let isMounted = true;
+
+    const fetchReviews = () => {
+      setLoading(true);
+      setError(null);
+      
+      restaurantReviewService.getRestaurantReviews(restaurantId)
+        .then(response => {
+          if (isMounted) {
+            setData(response);
+            if (onDataLoaded) {
+              onDataLoaded(response);
+            }
+          }
+        })
+        .catch(err => {
+          if (isMounted) {
+            setError(err.message || "Falha ao buscar avaliações.");
+            if (onDataLoaded) {
+              onDataLoaded(null);
+            }
+          }
+        })
+        .finally(() => {
+          if (isMounted) {
+            setLoading(false);
+          }
+        });
+    };
+
     fetchReviews();
-  }, [restaurantId]);
 
-  // --- Lógica de Renderização (sem alterações) ---
+    // Função de limpeza: é executada quando o componente é removido da tela.
+    // Isso previne o erro "Can't perform a React state update on an unmounted component".
+    return () => {
+      isMounted = false;
+    };
+  }, [restaurantId, onDataLoaded]); // Dependências do useEffect
+
+  // --- Lógica de Renderização ---
+
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="space-y-6 animate-pulse">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-gray-100 rounded-xl p-6 animate-pulse">
+            <div key={i} className="bg-gray-100 rounded-xl p-6">
               <div className="h-4 bg-gray-300 rounded w-3/4 mb-3"></div>
               <div className="h-8 bg-gray-300 rounded w-1/2"></div>
             </div>
@@ -99,25 +119,21 @@ export default function RestaurantReviewsList({ restaurantId, onDataLoaded }) { 
         <div className="text-red-500 text-6xl mb-4">⚠️</div>
         <h3 className="text-lg font-semibold text-gray-600 mb-2">Erro ao carregar avaliações</h3>
         <p className="text-gray-500 mb-4">{error}</p>
+        {/* O botão para tentar novamente já está implementado na função fetchReviews,
+            mas como o useEffect depende de restaurantId, uma nova tentativa
+            requeriria uma mudança no ID ou um botão com lógica própria.
+            Para simplificar, recarregar a página é uma opção viável. */}
         <button 
-          onClick={fetchReviews}
+          onClick={() => window.location.reload()}
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
         >
-          Tentar novamente
+          Recarregar Página
         </button>
       </div>
     );
   }
 
-  // ✅ 3. Condição ajustada para também chamar onDataLoaded se não houver dados
   if (!data || data.total_reviews === 0) {
-    // Chama onDataLoaded com dados zerados para que os cards no pai mostrem '0'
-    useEffect(() => {
-      if (onDataLoaded) {
-        onDataLoaded({ total_reviews: 0, average_rating: 0, reviews: [] });
-      }
-    }, [onDataLoaded]);
-
     return (
       <div className="text-center py-12">
         <Star className="h-16 w-16 text-gray-300 mx-auto mb-4" />
@@ -127,7 +143,7 @@ export default function RestaurantReviewsList({ restaurantId, onDataLoaded }) { 
     );
   }
 
-  // O resto do JSX para exibir os dados continua o mesmo...
+  // NOTA: A distribuição de notas simulada pode ser substituída por dados reais se a API os fornecer.
   const ratingDistribution = [
     { rating: 5, count: Math.floor(data.total_reviews * 0.6) },
     { rating: 4, count: Math.floor(data.total_reviews * 0.25) },
@@ -138,7 +154,7 @@ export default function RestaurantReviewsList({ restaurantId, onDataLoaded }) { 
 
   return (
     <div className="space-y-8">
-      {/* Estes cards de resumo são específicos deste componente, não os da página principal */}
+      {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-6 border border-yellow-200">
           <div className="flex items-center justify-between">
@@ -172,7 +188,7 @@ export default function RestaurantReviewsList({ restaurantId, onDataLoaded }) { 
         </div>
       </div>
 
-      {/* O resto do componente continua igual... */}
+      {/* Rating Distribution */}
       {data.total_reviews > 0 && (
         <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">Distribuição das Avaliações</h3>
@@ -183,6 +199,8 @@ export default function RestaurantReviewsList({ restaurantId, onDataLoaded }) { 
           </div>
         </div>
       )}
+
+      {/* Reviews List */}
       {data.reviews && data.reviews.length > 0 ? (
         <div className="space-y-4">
           <h3 className="text-xl font-semibold text-gray-800 mb-4">Avaliações Recentes</h3>
