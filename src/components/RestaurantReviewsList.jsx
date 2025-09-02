@@ -1,10 +1,10 @@
 // src/components/RestaurantReviewsList.jsx
+
 import React, { useEffect, useState } from "react";
 import { Star, MessageSquare, Calendar, TrendingUp, Award } from "lucide-react";
-// Importa o serviço centralizado que já está conectado à API real
 import { restaurantReviewService, reviewUtils } from "../services/reviewServices";
 
-// ... (Os componentes StarRating e RatingProgressBar continuam os mesmos) ...
+// --- Componentes Internos (sem alterações) ---
 const StarRating = ({ rating, size = "w-5 h-5" }) => {
   return (
     <div className="flex items-center gap-1">
@@ -24,7 +24,6 @@ const StarRating = ({ rating, size = "w-5 h-5" }) => {
 
 const RatingProgressBar = ({ rating, count, total }) => {
   const percentage = total > 0 ? (count / total) * 100 : 0;
-  
   return (
     <div className="flex items-center gap-3">
       <div className="flex items-center gap-1 w-12">
@@ -32,7 +31,7 @@ const RatingProgressBar = ({ rating, count, total }) => {
         <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
       </div>
       <div className="flex-1 bg-gray-200 rounded-full h-2">
-        <div 
+        <div
           className="bg-gradient-to-r from-yellow-400 to-orange-400 h-2 rounded-full transition-all duration-300"
           style={{ width: `${percentage}%` }}
         ></div>
@@ -42,8 +41,8 @@ const RatingProgressBar = ({ rating, count, total }) => {
   );
 };
 
-
-export default function RestaurantReviewsList({ restaurantId }) {
+// --- Componente Principal (com a correção) ---
+export default function RestaurantReviewsList({ restaurantId, onDataLoaded }) { // ✅ 1. Aceita a nova prop 'onDataLoaded'
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -53,18 +52,23 @@ export default function RestaurantReviewsList({ restaurantId }) {
       setLoading(false);
       return;
     }
-
     setLoading(true);
     setError(null);
     
     restaurantReviewService.getRestaurantReviews(restaurantId)
       .then(response => {
-        // A API retorna um objeto com 'reviews', 'average_rating', etc.
         setData(response);
+        // ✅ 2. Envia os dados para o componente pai assim que eles chegam
+        if (onDataLoaded) {
+          onDataLoaded(response);
+        }
       })
       .catch(err => {
-        // CORREÇÃO: Exibe a mensagem de erro específica da API
         setError(err.message || "Falha ao buscar avaliações. Tente novamente.");
+        // Envia 'null' para o pai em caso de erro
+        if (onDataLoaded) {
+          onDataLoaded(null);
+        }
       })
       .finally(() => setLoading(false));
   };
@@ -73,8 +77,8 @@ export default function RestaurantReviewsList({ restaurantId }) {
     fetchReviews();
   }, [restaurantId]);
 
+  // --- Lógica de Renderização (sem alterações) ---
   if (loading) {
-    // ... (Skeleton de carregamento continua o mesmo) ...
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -90,16 +94,13 @@ export default function RestaurantReviewsList({ restaurantId }) {
   }
 
   if (error) {
-    // ... (Componente de erro agora usa o botão para tentar novamente) ...
     return (
       <div className="text-center py-12">
         <div className="text-red-500 text-6xl mb-4">⚠️</div>
-        <h3 className="text-lg font-semibold text-gray-600 mb-2">
-          Erro ao carregar avaliações
-        </h3>
+        <h3 className="text-lg font-semibold text-gray-600 mb-2">Erro ao carregar avaliações</h3>
         <p className="text-gray-500 mb-4">{error}</p>
         <button 
-          onClick={fetchReviews} // CORREÇÃO: Chama a função de busca novamente
+          onClick={fetchReviews}
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
         >
           Tentar novamente
@@ -108,23 +109,25 @@ export default function RestaurantReviewsList({ restaurantId }) {
     );
   }
 
+  // ✅ 3. Condição ajustada para também chamar onDataLoaded se não houver dados
   if (!data || data.total_reviews === 0) {
-    // ... (Componente de "nenhuma avaliação" continua o mesmo) ...
+    // Chama onDataLoaded com dados zerados para que os cards no pai mostrem '0'
+    useEffect(() => {
+      if (onDataLoaded) {
+        onDataLoaded({ total_reviews: 0, average_rating: 0, reviews: [] });
+      }
+    }, [onDataLoaded]);
+
     return (
       <div className="text-center py-12">
         <Star className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-gray-600 mb-2">
-          Nenhuma avaliação encontrada
-        </h3>
-        <p className="text-gray-500">
-          As avaliações do seu restaurante aparecerão aqui.
-        </p>
+        <h3 className="text-lg font-semibold text-gray-600 mb-2">Nenhuma avaliação encontrada</h3>
+        <p className="text-gray-500">As avaliações do seu restaurante aparecerão aqui.</p>
       </div>
     );
   }
 
-  // ... (O resto do JSX para exibir os dados continua o mesmo) ...
-  // NOTA: A distribuição de notas simulada pode ser substituída por dados reais se a API os fornecer.
+  // O resto do JSX para exibir os dados continua o mesmo...
   const ratingDistribution = [
     { rating: 5, count: Math.floor(data.total_reviews * 0.6) },
     { rating: 4, count: Math.floor(data.total_reviews * 0.25) },
@@ -135,122 +138,82 @@ export default function RestaurantReviewsList({ restaurantId }) {
 
   return (
     <div className="space-y-8">
-      {/* Overview Cards */}
+      {/* Estes cards de resumo são específicos deste componente, não os da página principal */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-6 border border-yellow-200">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-yellow-700 text-sm font-medium mb-1">Média Geral</p>
               <div className="flex items-center gap-2">
-                <span className="text-3xl font-bold text-yellow-800">
-                  {data.average_rating?.toFixed(1) || "0.0"}
-                </span>
+                <span className="text-3xl font-bold text-yellow-800">{data.average_rating?.toFixed(1) || "0.0"}</span>
                 <StarRating rating={Math.round(data.average_rating || 0)} size="w-4 h-4" />
               </div>
             </div>
             <Award className="h-8 w-8 text-yellow-500" />
           </div>
         </div>
-
         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-blue-700 text-sm font-medium mb-1">Total de Avaliações</p>
-              <span className="text-3xl font-bold text-blue-800">
-                {data.total_reviews}
-              </span>
+              <span className="text-3xl font-bold text-blue-800">{data.total_reviews}</span>
             </div>
             <MessageSquare className="h-8 w-8 text-blue-500" />
           </div>
         </div>
-
         <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-green-700 text-sm font-medium mb-1">Satisfação</p>
-              <span className="text-3xl font-bold text-green-800">
-                {data.average_rating ? Math.round((data.average_rating / 5) * 100) : 0}%
-              </span>
+              <span className="text-3xl font-bold text-green-800">{data.average_rating ? Math.round((data.average_rating / 5) * 100) : 0}%</span>
             </div>
             <TrendingUp className="h-8 w-8 text-green-500" />
           </div>
         </div>
       </div>
 
-      {/* Rating Distribution */}
+      {/* O resto do componente continua igual... */}
       {data.total_reviews > 0 && (
         <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">
-            Distribuição das Avaliações
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Distribuição das Avaliações</h3>
           <div className="space-y-3">
             {ratingDistribution.map((item) => (
-              <RatingProgressBar
-                key={item.rating}
-                rating={item.rating}
-                count={item.count}
-                total={data.total_reviews}
-              />
+              <RatingProgressBar key={item.rating} rating={item.rating} count={item.count} total={data.total_reviews} />
             ))}
           </div>
         </div>
       )}
-
-      {/* Reviews List */}
       {data.reviews && data.reviews.length > 0 ? (
         <div className="space-y-4">
-          <h3 className="text-xl font-semibold text-gray-800 mb-4">
-            Avaliações Recentes
-          </h3>
+          <h3 className="text-xl font-semibold text-gray-800 mb-4">Avaliações Recentes</h3>
           <div className="space-y-4">
             {data.reviews.map((review, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200"
-              >
+              <div key={index} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="bg-gradient-to-r from-blue-500 to-purple-500 w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold">
-                      C
-                    </div>
+                    <div className="bg-gradient-to-r from-blue-500 to-purple-500 w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold">C</div>
                     <div>
                       <p className="font-semibold text-gray-800">Cliente</p>
                       <StarRating rating={review.rating} size="w-4 h-4" />
                     </div>
                   </div>
-                  
                   <div className="flex items-center gap-2 text-gray-500">
                     <Calendar className="w-4 h-4" />
-                    <span className="text-sm">
-                      {reviewUtils.formatReviewDate(review.created_at)}
-                    </span>
+                    <span className="text-sm">{reviewUtils.formatReviewDate(review.created_at)}</span>
                   </div>
                 </div>
-
                 {review.comment && (
                   <div className="bg-gray-50 rounded-lg p-4 mt-4">
-                    <p className="text-gray-700 leading-relaxed">
-                      "{review.comment}"
-                    </p>
+                    <p className="text-gray-700 leading-relaxed">"{review.comment}"</p>
                   </div>
                 )}
-
                 <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
                   <div className="flex items-center gap-2">
-                    <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      review.rating >= 4 
-                        ? "bg-green-100 text-green-700" 
-                        : review.rating >= 3 
-                        ? "bg-yellow-100 text-yellow-700" 
-                        : "bg-red-100 text-red-700"
-                    }`}>
+                    <div className={`px-3 py-1 rounded-full text-sm font-medium ${review.rating >= 4 ? "bg-green-100 text-green-700" : review.rating >= 3 ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"}`}>
                       {review.rating >= 4 ? "Positiva" : review.rating >= 3 ? "Neutra" : "Negativa"}
                     </div>
                   </div>
-                  
-                  <button className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors">
-                    Responder
-                  </button>
+                  <button className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors">Responder</button>
                 </div>
               </div>
             ))}
