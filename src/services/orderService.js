@@ -58,4 +58,23 @@ export const orderService = {
     );
     return processResponse(response);
   },
+
+  /**
+   * ✅ NOVA FUNÇÃO ADICIONADA
+   * Busca os pedidos que foram entregues e estão pendentes de avaliação.
+   * @param {string} restaurantId - O ID do restaurante logado.
+   * @param {AbortSignal} [signal]
+   */
+  getOrdersPendingReview: async (restaurantId, signal) => {
+    // IMPORTANTE: Confirme se a URL do seu backend para esta funcionalidade é esta.
+    const url = `${RESTAURANT_API_URL}/api/orders/pending-review`;
+
+    const response = await fetch(url, {
+      headers: createAuthHeaders(),
+      signal,
+    });
+    const data = await processResponse(response);
+    // Retorna o array de pedidos diretamente.
+    return data?.data ?? data;
+  },
 };
