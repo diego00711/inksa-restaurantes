@@ -48,6 +48,8 @@ export const orderService = {
    * @param {string} newStatus
    */
   updateOrderStatus: async (orderId, newStatus) => {
+    console.log(`🔄 Atualizando status do pedido ${orderId} para: ${newStatus}`);
+    
     const response = await fetch(
       `${RESTAURANT_API_URL}/api/orders/${encodeURIComponent(orderId)}/status`,
       {
@@ -56,11 +58,21 @@ export const orderService = {
         body: JSON.stringify({ status: newStatus }),
       }
     );
-    return processResponse(response);
+    
+    console.log(`📊 Resposta da API: ${response.status} ${response.statusText}`);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
+      console.error(`❌ Erro ao atualizar status:`, errorData);
+      throw new Error(errorData.error || `Erro ${response.status}: ${response.statusText}`);
+    }
+    
+    const result = await processResponse(response);
+    console.log(`✅ Status atualizado com sucesso:`, result);
+    return result;
   },
 
   /**
-   * ✅ NOVA FUNÇÃO ADICIONADA
    * Busca os pedidos que foram entregues e estão pendentes de avaliação.
    * @param {string} restaurantId - O ID do restaurante logado.
    * @param {AbortSignal} [signal]
