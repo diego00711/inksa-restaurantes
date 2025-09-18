@@ -48,14 +48,29 @@ export const orderService = {
    * @param {string} newStatus
    */
   updateOrderStatus: async (orderId, newStatus) => {
-    console.log(`🔄 Atualizando status do pedido ${orderId} para: ${newStatus}`);
+    // Mapeamento de status PT -> EN para o backend
+    const statusMapping = {
+      'Pendente': 'pending',
+      'Aceito': 'accepted',
+      'Preparando': 'preparing',
+      'Pronto': 'ready',
+      'Saiu para entrega': 'delivering',
+      'Entregue': 'delivered',
+      'Cancelado': 'cancelled'
+    };
+
+    // Converte o status para inglês antes de enviar
+    const statusForBackend = statusMapping[newStatus] || newStatus;
+    
+    console.log(`🔄 Atualizando status do pedido ${orderId}`);
+    console.log(`📝 Frontend (PT): ${newStatus} → Backend (EN): ${statusForBackend}`);
     
     const response = await fetch(
       `${RESTAURANT_API_URL}/api/orders/${encodeURIComponent(orderId)}/status`,
       {
         method: 'PUT',
         headers: { ...createAuthHeaders(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ status: statusForBackend }),
       }
     );
     
