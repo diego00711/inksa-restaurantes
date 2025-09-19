@@ -1,90 +1,104 @@
-// src/services/api.js
+// src/services/api.js (Versão Híbrida)
 
 import axios from 'axios';
 
-// --- Configuração das URLs da API ---
-// Define a URL base para as chamadas da API do restaurante.
-// Usa a variável de ambiente VITE_RESTAURANT_API_URL, com um fallback para VITE_API_URL.
+// --- Configuração de URLs e Chaves (sem alterações) ---
 const RESTAURANT_API_URL =
   import.meta.env.VITE_RESTAURANT_API_URL ||
   import.meta.env.VITE_API_URL ||
   '';
 
-// (Opcional) URL para o serviço de autenticação, se for separado.
 const AUTH_API_URL =
   import.meta.env.VITE_AUTH_API_URL ||
-  RESTAURANT_API_URL || // Fallback para a mesma URL do restaurante
+  RESTAURANT_API_URL ||
   '';
 
-// --- Chaves para o Local Storage ---
-// Usadas para armazenar o token de autenticação e os dados do usuário.
 const AUTH_TOKEN_KEY = 'restaurantAuthToken';
 const USER_DATA_KEY = 'restaurantUser';
 
-// --- Instância Centralizada do Axios ---
-// Cria uma instância do axios que será usada em todo o aplicativo.
-// Todas as chamadas feitas com `api.get()`, `api.post()`, etc., usarão esta configuração.
+// =======================================================================
+// PARTE 1: SUPORTE AO CÓDIGO ANTIGO (fetch)
+// As funções que estavam faltando são adicionadas de volta e exportadas.
+// =======================================================================
+
+/**
+ * Cria os cabeçalhos de autenticação para chamadas `fetch`.
+ * @returns {object} - Objeto de cabeçalho com ou sem token.
+ */
+export const createAuthHeaders = () => {
+  const token = localStorage.getItem(AUTH_TOKEN_KEY);
+  if (!token) return {};
+  return { Authorization: `Bearer ${token}` };
+};
+
+/**
+ * Processa a resposta de uma chamada `fetch`.
+ * @param {Response} response - O objeto de resposta do fetch.
+ * @returns {Promise<any>} - Os dados da resposta em JSON.
+ */
+export const processResponse = async (response) => {
+  // Trata erro de autenticação (token expirado/inválido)
+  if (response.status === 401) {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    localStorage.removeItem(USER_DATA_KEY);
+    window.location.href = '/login';
+    return null;
+  }
+
+  // Trata outros erros HTTP
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    const message = error.message || error.error || `HTTP ${response.status}`;
+    throw new Error(message);
+  }
+
+  // Trata respostas sem conteúdo (ex: DELETE bem-sucedido)
+  if (response.status === 204) {
+    return null;
+  }
+
+  return response.json();
+};
+
+
+// =======================================================================
+// PARTE 2: SUPORTE AO CÓDIGO NOVO (axios)
+// A instância `api` do axios continua aqui para o `orderService`.
+// =======================================================================
+
 const api = axios.create({
-  baseURL: RESTAURANT_API_URL, // Define a URL base para todas as requisições
+  baseURL: RESTAURANT_API_URL,
 });
 
-// --- Interceptor de Requisição (Request Interceptor) ---
-// Este código é executado ANTES de cada requisição ser enviada.
-// É a maneira mais eficiente de adicionar o token de autenticação.
+// Interceptor para adicionar o token automaticamente nas chamadas do `axios`.
 api.interceptors.request.use(
   (config) => {
-    // Pega o token do localStorage
     const token = localStorage.getItem(AUTH_TOKEN_KEY);
-    
-    // Se o token existir, adiciona ao cabeçalho 'Authorization'
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
-    // Retorna a configuração da requisição para que ela possa continuar
     return config;
   },
-  (error) => {
-    // Se houver um erro na configuração da requisição, ele é rejeitado
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// --- Interceptor de Resposta (Response Interceptor) ---
-// Este código é executado DEPOIS que uma resposta da API é recebida.
-// Ideal para tratar erros de forma centralizada, como tokens expirados (erro 401).
+// Interceptor para tratar erros 401 automaticamente nas chamadas do `axios`.
 api.interceptors.response.use(
-  // Função para respostas com sucesso (status 2xx)
-  (response) => {
-    // Apenas retorna a resposta se for bem-sucedida
-    return response;
-  },
-  // Função para respostas com erro
+  (response) => response,
   (error) => {
-    // Verifica se o erro é de autenticação (401 - Unauthorized)
     if (error.response && error.response.status === 401) {
-      // Limpa os dados de autenticação do localStorage
       localStorage.removeItem(AUTH_TOKEN_KEY);
       localStorage.removeItem(USER_DATA_KEY);
-      
-      // Redireciona o usuário para a página de login
-      // O `window.location.replace` impede que o usuário volte para a página anterior no histórico.
       window.location.replace('/login');
     }
-    
-    // Rejeita a promise para que o erro possa ser tratado no local da chamada (no `catch` do serviço)
     return Promise.reject(error);
   }
 );
 
-// --- Exportação Principal ---
-// Exporta a instância configurada do `api` como padrão.
-// É isso que permite `import api from './api';` funcionar em outros arquivos.
+// Exportação padrão da instância do axios
 export default api;
 
-// --- Exportações Nomeadas Adicionais ---
-// Exporta as constantes para que possam ser usadas em outros lugares se necessário
-// (por exemplo, no seu serviço de autenticação `authService.js`).
+// Exportações nomeadas para as constantes e funções antigas
 export {
   AUTH_API_URL,
   RESTAURANT_API_URL,
