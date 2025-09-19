@@ -9,6 +9,7 @@ const StatusBadge = ({ status }) => {
     'Pronto': 'bg-purple-100 text-purple-800',
     'Saiu para Entrega': 'bg-orange-100 text-orange-800',
     'Entregue': 'bg-green-100 text-green-800',
+    'Concluído': 'bg-green-100 text-green-800', // Mantendo para compatibilidade
     'Cancelado': 'bg-red-100 text-red-800',
   };
   
@@ -37,24 +38,15 @@ export default function OrderCard({ order, onUpdateStatus, onViewDetails }) {
     }
   };
 
-  const handleStatusUpdate = async (orderId, newStatus) => {
-    try {
-      // Chama a função passada pelo componente pai
-      await onUpdateStatus(orderId, newStatus);
-    } catch (error) {
-      console.error('Erro ao atualizar status:', error);
-    }
-  };
-
   const mainAction = getNextAction();
   const orderItems = order.items?.items || [];
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-4 flex flex-col justify-between gap-4 hover:shadow-lg transition-shadow duration-200 min-h-[160px]">
       {/* Informações do pedido */}
-      <div className="cursor-pointer" onClick={() => onViewDetails && onViewDetails(order)}>
+      <div className="cursor-pointer" onClick={() => onViewDetails(order)}>
         <div className="flex items-center justify-between gap-4 mb-2">
-          {/* ID do pedido truncado */}
+          {/* ID do pedido agora é menor e trunca se for muito grande */}
           <h3 className="text-base font-bold text-gray-800 truncate">
             Pedido #{order.id.substring(0, 8)}...
           </h3>
@@ -62,12 +54,11 @@ export default function OrderCard({ order, onUpdateStatus, onViewDetails }) {
         </div>
         
         <div className="text-sm text-gray-600 space-y-1 pl-1">
-          {/* Nome do cliente */}
+          {/* ID do cliente também foi truncado */}
           <p className="truncate">
-            <span className="font-semibold">Cliente:</span> {order.client_name || order.client_id || 'N/A'}
+            <span className="font-semibold">Cliente:</span> {order.client_id || 'N/A'}
           </p>
           
-          {/* Lista de itens */}
           <ul className="list-inside">
             {orderItems.map((item, index) => (
               <li key={index} className="truncate">
@@ -84,26 +75,23 @@ export default function OrderCard({ order, onUpdateStatus, onViewDetails }) {
           {new Intl.NumberFormat('pt-BR', { 
             style: 'currency', 
             currency: 'BRL' 
-          }).format(order.total_amount || 0)}
+          }).format(order.total_amount)}
         </p>
         
         <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
           {mainAction && (
             <button 
-              onClick={() => handleStatusUpdate(order.id, mainAction.nextStatus)} 
+              onClick={() => onUpdateStatus(order.id, mainAction.nextStatus)} 
               className="px-3 py-1.5 text-xs font-medium text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 whitespace-nowrap"
-              disabled={!onUpdateStatus}
             >
               {mainAction.text}
             </button>
           )}
           
-          {/* Botão de cancelar - só aparece se o pedido não estiver finalizado */}
-          {order.status !== 'Entregue' && order.status !== 'Cancelado' && (
+          {order.status !== 'Concluído' && order.status !== 'Cancelado' && order.status !== 'Entregue' && (
             <button 
-              onClick={() => handleStatusUpdate(order.id, 'Cancelado')} 
+              onClick={() => onUpdateStatus(order.id, 'Cancelado')} 
               className="px-3 py-1.5 text-xs font-medium text-white bg-red-600 rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-              disabled={!onUpdateStatus}
             >
               Cancelar
             </button>
