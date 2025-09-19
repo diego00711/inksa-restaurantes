@@ -1,25 +1,25 @@
-// src/services/orderService.js
+// src/services/orderService.js (VERSÃO COMPLETA E CORRIGIDA)
 
 import api from './api';
 
-// Mapeamento de status PT → EN (para enviar ao backend)
+// Mapeamento de status PT -> EN (para enviar ao backend)
 const statusMapping = {
   'Pendente': 'pending',
   'Aceito': 'accepted',
   'Preparando': 'preparing',
   'Pronto': 'ready',
-  'Saiu para Entrega': 'out_for_delivery',
+  'Saiu para Entrega': 'delivering', // CORRIGIDO
   'Entregue': 'delivered',
   'Cancelado': 'cancelled'
 };
 
-// Mapeamento inverso EN → PT (para exibir no frontend)
+// Mapeamento inverso EN -> PT (para exibir no frontend)
 const statusMappingReverse = {
   'pending': 'Pendente',
   'accepted': 'Aceito',
   'preparing': 'Preparando',
   'ready': 'Pronto',
-  'out_for_delivery': 'Saiu para Entrega',
+  'delivering': 'Saiu para Entrega', // CORRIGIDO
   'delivered': 'Entregue',
   'cancelled': 'Cancelado'
 };
@@ -41,26 +41,23 @@ const translateOrderStatus = (order) => {
 
 export const orderService = {
   /**
-   * Busca todos os pedidos.
-   * Garante que sempre retornará um array.
+   * Busca todos os pedidos. Garante que sempre retornará um array.
    */
   async getOrders(params) {
     try {
       const queryString = params ? `?${params.toString()}` : '';
       const response = await api.get(`/api/orders${queryString}`);
       
-      // Lógica robusta para extrair o array de pedidos
-      const responseData = response.data;
-      const ordersArray = Array.isArray(responseData)
-        ? responseData
-        : (responseData && Array.isArray(responseData.data) ? responseData.data : []);
+      // O backend agora retorna um array diretamente.
+      // Esta lógica garante que, mesmo se a resposta for inesperada, não quebre a UI.
+      const ordersArray = Array.isArray(response.data) ? response.data : [];
 
-      // Mapeia e traduz o status de cada pedido
+      // Mapeia e traduz o status de cada pedido para exibição.
       return ordersArray.map(translateOrderStatus);
 
     } catch (error) {
       console.error('Erro ao buscar pedidos:', error);
-      // Em caso de erro, retorna um array vazio para não quebrar a tela.
+      // Retorna um array vazio em caso de erro para não quebrar a tela.
       return [];
     }
   },
@@ -71,7 +68,6 @@ export const orderService = {
   async getOrderById(orderId) {
     try {
       const response = await api.get(`/api/orders/${orderId}`);
-      // Traduz o status antes de retornar
       return translateOrderStatus(response.data);
     } catch (error) {
       console.error(`Erro ao buscar pedido ${orderId}:`, error);
@@ -86,15 +82,22 @@ export const orderService = {
     try {
       const statusForBackend = statusMapping[newStatus];
       if (!statusForBackend) {
-        throw new Error(`Status inválido: ${newStatus}`);
+        throw new Error(`Status inválido para mapeamento: ${newStatus}`);
       }
       
-      const payload = { status: statusForBackend, delivery_id };
+      // CORRIGIDO: Envia o payload no formato que o backend agora espera.
+      const payload = { 
+        new_status: statusForBackend, // Chave 'new_status' com valor em inglês.
+        delivery_id: delivery_id
+      };
+      
       const response = await api.put(`/api/orders/${orderId}/status`, payload);
       
+      // Traduz a resposta para exibição no frontend.
       return translateOrderStatus(response.data);
     } catch (error) {
       console.error(`Erro ao atualizar status do pedido ${orderId}:`, error);
+      // Lança o erro para que o componente possa notificar o usuário.
       throw error;
     }
   },
@@ -117,7 +120,11 @@ export const orderService = {
    */
   async cancelOrder(orderId, reason) {
     try {
-      const payload = { status: 'cancelled', cancellation_reason: reason };
+      // Usa a mesma rota de atualização de status.
+      const payload = { 
+        new_status: 'cancelled', 
+        cancellation_reason: reason 
+      };
       const response = await api.put(`/api/orders/${orderId}/status`, payload);
       return translateOrderStatus(response.data);
     } catch (error) {
