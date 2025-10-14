@@ -1,7 +1,6 @@
-// src/pages/OrdersPage.jsx (CORRIGIDO)
+// src/pages/OrdersPage.jsx (CORRIGIDO COM 4 COLUNAS)
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-// Importando do novo orderService
 import { orderService } from '../services/orderService.js';
 import OrderCard from '../components/OrderCard'; 
 import { OrderDetailsModal } from '../components/OrderDetailsModal';
@@ -11,7 +10,7 @@ import { SlidersHorizontal } from 'lucide-react';
 export function OrdersPage() {
   const [allOrders, setAllOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { addToast } = useToast(); // Desestruturado corretamente
+  const { addToast } = useToast();
 
   const [filters, setFilters] = useState({
     startDate: '',
@@ -29,7 +28,6 @@ export function OrdersPage() {
       params.append('sort_by', currentFilters.sortBy);
       params.append('sort_order', currentFilters.sortOrder);
       
-      // Chamando a função do serviço correto
       const ordersArray = await orderService.getOrders(params);
       setAllOrders(ordersArray || []);
     } catch (err) {
@@ -51,7 +49,6 @@ export function OrdersPage() {
 
   const handleUpdateStatus = async (orderId, newStatus) => {
     try {
-      // Chamando a função do serviço correto
       await orderService.updateOrderStatus(orderId, newStatus);
       addToast(`Status do pedido atualizado para ${newStatus}!`, 'success');
       fetchOrders(filters); 
@@ -60,7 +57,6 @@ export function OrdersPage() {
     }
   };
 
-  // Handlers para filtros
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFilters(prev => ({ ...prev, [name]: value }));
@@ -76,15 +72,20 @@ export function OrdersPage() {
     fetchOrders(defaultFilters);
   };
 
-  // Organização dos pedidos em colunas - CORRIGIDO
+  // ✅ CORRIGIDO: Organização dos pedidos em 4 COLUNAS
   const columns = useMemo(() => {
-    const novos = allOrders.filter(o => o.status === 'Pendente');
-    const emPreparo = allOrders.filter(o => ['Aceito', 'Preparando'].includes(o.status));
-    const prontos = allOrders.filter(o => o.status === 'Pronto');
-    return { novos, emPreparo, prontos };
+    const novos = allOrders.filter(o => o.status === 'Pendente' || o.status === 'pending');
+    const emPreparo = allOrders.filter(o => ['Aceito', 'Preparando', 'accepted', 'preparing'].includes(o.status));
+    const prontos = allOrders.filter(o => o.status === 'Pronto' || o.status === 'ready');
+    // ✅ NOVA COLUNA: Saiu para Entrega
+    const saiuParaEntrega = allOrders.filter(o => 
+      o.status === 'Saiu para Entrega' || 
+      o.status === 'delivering' ||
+      o.status === 'Entregando'
+    );
+    return { novos, emPreparo, prontos, saiuParaEntrega };
   }, [allOrders]);
 
-  // Modal de detalhes
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
@@ -170,10 +171,10 @@ export function OrdersPage() {
         </div>
       )}
 
-      {/* Grid de Pedidos */}
-      <div className="flex-grow grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* ✅ CORRIGIDO: Grid de Pedidos com 4 COLUNAS */}
+      <div className="flex-grow grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {isLoading ? (
-          <p className="text-gray-500 text-center col-span-3 py-10">Carregando...</p>
+          <p className="text-gray-500 text-center col-span-4 py-10">Carregando...</p>
         ) : (
           <>
             {/* Coluna 1: Novos Pedidos */}
@@ -235,6 +236,27 @@ export function OrdersPage() {
                   ))
                 ) : (
                   <p className="text-sm text-center text-gray-500 pt-4">Nenhum pedido pronto.</p>
+                )}
+              </div>
+            </div>
+
+            {/* ✅ NOVA COLUNA 4: Saiu para Entrega */}
+            <div className="bg-green-100 rounded-lg p-4 flex flex-col">
+              <h2 className="text-lg font-bold text-green-700 mb-4">
+                🚗 Saiu para Entrega ({columns.saiuParaEntrega.length})
+              </h2>
+              <div className="space-y-4 overflow-y-auto">
+                {columns.saiuParaEntrega.length > 0 ? (
+                  columns.saiuParaEntrega.map(order => (
+                    <OrderCard 
+                      key={order.id} 
+                      order={order} 
+                      onUpdateStatus={handleUpdateStatus} 
+                      onViewDetails={handleViewOrderDetails}
+                    />
+                  ))
+                ) : (
+                  <p className="text-sm text-center text-gray-500 pt-4">Nenhum pedido em rota.</p>
                 )}
               </div>
             </div>
