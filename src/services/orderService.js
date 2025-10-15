@@ -1,8 +1,8 @@
-// src/services/orderService.js (VERSÃO COM CORREÇÃO DE CABEÇALHO)
+// src/services/orderService.js (VERSÃO FINAL COM SUPORTE A ARCHIVED)
 
 import api from './api';
 
-// Mapeamento de status PT -> EN (para enviar ao backend)
+// Mapeamento de status PT → EN (para enviar ao backend)
 const statusMapping = {
   'Pendente': 'pending',
   'Aceito': 'accepted',
@@ -10,10 +10,11 @@ const statusMapping = {
   'Pronto': 'ready',
   'Saiu para Entrega': 'delivering',
   'Entregue': 'delivered',
-  'Cancelado': 'cancelled'
+  'Cancelado': 'cancelled',
+  'Arquivado': 'archived'  // ✅ ADICIONADO
 };
 
-// Mapeamento inverso EN -> PT (para exibir no frontend)
+// Mapeamento inverso EN → PT (para exibir no frontend)
 const statusMappingReverse = {
   'pending': 'Pendente',
   'accepted': 'Aceito',
@@ -21,7 +22,8 @@ const statusMappingReverse = {
   'ready': 'Pronto',
   'delivering': 'Saiu para Entrega',
   'delivered': 'Entregue',
-  'cancelled': 'Cancelado'
+  'cancelled': 'Cancelado',
+  'archived': 'Arquivado'  // ✅ ADICIONADO
 };
 
 const translateOrderStatus = (order) => {
@@ -69,14 +71,12 @@ export const orderService = {
         delivery_id: delivery_id
       };
       
-      // ✅ CORREÇÃO FINAL: Adicionando a configuração do cabeçalho explicitamente.
       const config = {
         headers: {
           'Content-Type': 'application/json'
         }
       };
       
-      // Passa o payload e a configuração para o `api.put`.
       const response = await api.put(`/api/orders/${orderId}/status`, payload, config);
       
       return translateOrderStatus(response.data);
