@@ -1,11 +1,11 @@
-// src/pages/OrdersPage.jsx (CORRIGIDO COM 4 COLUNAS)
+// src/pages/OrdersPage.jsx (VERSÃO FINAL - 5 COLUNAS + REMOVER)
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { orderService } from '../services/orderService.js';
 import OrderCard from '../components/OrderCard'; 
 import { OrderDetailsModal } from '../components/OrderDetailsModal';
 import { useToast } from '../context/ToastContext.jsx';
-import { SlidersHorizontal } from 'lucide-react';
+import { SlidersHorizontal, Trash2 } from 'lucide-react';
 
 export function OrdersPage() {
   const [allOrders, setAllOrders] = useState([]);
@@ -57,6 +57,21 @@ export function OrdersPage() {
     }
   };
 
+  // ✅ NOVA FUNÇÃO: Remover pedido do grid (arquiva)
+  const handleRemoveOrder = async (orderId) => {
+    if (!window.confirm('Deseja remover este pedido do painel? Ele não aparecerá mais aqui, mas ficará no histórico para análises.')) {
+      return;
+    }
+    
+    try {
+      await orderService.updateOrderStatus(orderId, 'Arquivado');
+      addToast('Pedido removido do painel!', 'success');
+      fetchOrders(filters);
+    } catch (err) {
+      addToast(`Erro ao remover pedido: ${err.message}`, 'error');
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFilters(prev => ({ ...prev, [name]: value }));
@@ -72,18 +87,28 @@ export function OrdersPage() {
     fetchOrders(defaultFilters);
   };
 
-  // ✅ CORRIGIDO: Organização dos pedidos em 4 COLUNAS
+  // ✅ CORRIGIDO: 5 COLUNAS + Filtra arquivados
   const columns = useMemo(() => {
-    const novos = allOrders.filter(o => o.status === 'Pendente' || o.status === 'pending');
-    const emPreparo = allOrders.filter(o => ['Aceito', 'Preparando', 'accepted', 'preparing'].includes(o.status));
-    const prontos = allOrders.filter(o => o.status === 'Pronto' || o.status === 'ready');
-    // ✅ NOVA COLUNA: Saiu para Entrega
-    const saiuParaEntrega = allOrders.filter(o => 
+    // Remove pedidos arquivados automaticamente
+    const activeOrders = allOrders.filter(o => 
+      o.status !== 'Arquivado' && o.status !== 'archived'
+    );
+    
+    const novos = activeOrders.filter(o => o.status === 'Pendente' || o.status === 'pending');
+    const emPreparo = activeOrders.filter(o => ['Aceito', 'Preparando', 'accepted', 'preparing'].includes(o.status));
+    const prontos = activeOrders.filter(o => o.status === 'Pronto' || o.status === 'ready');
+    const saiuParaEntrega = activeOrders.filter(o => 
       o.status === 'Saiu para Entrega' || 
       o.status === 'delivering' ||
       o.status === 'Entregando'
     );
-    return { novos, emPreparo, prontos, saiuParaEntrega };
+    // ✅ NOVA COLUNA 5: Entregues
+    const entregues = activeOrders.filter(o => 
+      o.status === 'Entregue' || 
+      o.status === 'delivered'
+    );
+    
+    return { novos, emPreparo, prontos, saiuParaEntrega, entregues };
   }, [allOrders]);
 
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -171,16 +196,16 @@ export function OrdersPage() {
         </div>
       )}
 
-      {/* ✅ CORRIGIDO: Grid de Pedidos com 4 COLUNAS */}
-      <div className="flex-grow grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* ✅ Grid de Pedidos com 5 COLUNAS */}
+      <div className="flex-grow grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 overflow-x-auto">
         {isLoading ? (
-          <p className="text-gray-500 text-center col-span-4 py-10">Carregando...</p>
+          <p className="text-gray-500 text-center col-span-5 py-10">Carregando...</p>
         ) : (
           <>
             {/* Coluna 1: Novos Pedidos */}
-            <div className="bg-gray-100 rounded-lg p-4 flex flex-col">
-              <h2 className="text-lg font-bold text-gray-700 mb-4">
-                Novos Pedidos ({columns.novos.length})
+            <div className="bg-blue-50 rounded-lg p-4 flex flex-col min-w-[250px]">
+              <h2 className="text-lg font-bold text-blue-700 mb-4">
+                📥 Novos ({columns.novos.length})
               </h2>
               <div className="space-y-4 overflow-y-auto">
                 {columns.novos.length > 0 ? (
@@ -199,9 +224,9 @@ export function OrdersPage() {
             </div>
 
             {/* Coluna 2: Em Preparo */}
-            <div className="bg-gray-100 rounded-lg p-4 flex flex-col">
-              <h2 className="text-lg font-bold text-gray-700 mb-4">
-                Em Preparo ({columns.emPreparo.length})
+            <div className="bg-orange-50 rounded-lg p-4 flex flex-col min-w-[250px]">
+              <h2 className="text-lg font-bold text-orange-700 mb-4">
+                👨‍🍳 Preparo ({columns.emPreparo.length})
               </h2>
               <div className="space-y-4 overflow-y-auto">
                 {columns.emPreparo.length > 0 ? (
@@ -219,10 +244,10 @@ export function OrdersPage() {
               </div>
             </div>
 
-            {/* Coluna 3: Prontos para Entrega */}
-            <div className="bg-gray-100 rounded-lg p-4 flex flex-col">
-              <h2 className="text-lg font-bold text-gray-700 mb-4">
-                Prontos para Entrega ({columns.prontos.length})
+            {/* Coluna 3: Prontos */}
+            <div className="bg-yellow-50 rounded-lg p-4 flex flex-col min-w-[250px]">
+              <h2 className="text-lg font-bold text-yellow-700 mb-4">
+                📦 Prontos ({columns.prontos.length})
               </h2>
               <div className="space-y-4 overflow-y-auto">
                 {columns.prontos.length > 0 ? (
@@ -240,10 +265,10 @@ export function OrdersPage() {
               </div>
             </div>
 
-            {/* ✅ NOVA COLUNA 4: Saiu para Entrega */}
-            <div className="bg-green-100 rounded-lg p-4 flex flex-col">
-              <h2 className="text-lg font-bold text-green-700 mb-4">
-                🚗 Saiu para Entrega ({columns.saiuParaEntrega.length})
+            {/* Coluna 4: Em Rota */}
+            <div className="bg-purple-50 rounded-lg p-4 flex flex-col min-w-[250px]">
+              <h2 className="text-lg font-bold text-purple-700 mb-4">
+                🚗 Em Rota ({columns.saiuParaEntrega.length})
               </h2>
               <div className="space-y-4 overflow-y-auto">
                 {columns.saiuParaEntrega.length > 0 ? (
@@ -257,6 +282,37 @@ export function OrdersPage() {
                   ))
                 ) : (
                   <p className="text-sm text-center text-gray-500 pt-4">Nenhum pedido em rota.</p>
+                )}
+              </div>
+            </div>
+
+            {/* ✅ Coluna 5: Entregues (com botão Remover) */}
+            <div className="bg-green-50 rounded-lg p-4 flex flex-col min-w-[250px]">
+              <h2 className="text-lg font-bold text-green-700 mb-4">
+                ✅ Entregues ({columns.entregues.length})
+              </h2>
+              <div className="space-y-4 overflow-y-auto">
+                {columns.entregues.length > 0 ? (
+                  columns.entregues.map(order => (
+                    <div key={order.id}>
+                      <OrderCard 
+                        order={order} 
+                        onUpdateStatus={handleUpdateStatus} 
+                        onViewDetails={handleViewOrderDetails}
+                      />
+                      {/* ✅ Botão Remover */}
+                      <button
+                        onClick={() => handleRemoveOrder(order.id)}
+                        className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-medium rounded-md transition-colors border border-red-200"
+                        title="Remover do painel"
+                      >
+                        <Trash2 size={14} />
+                        Remover
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-center text-gray-500 pt-4">Nenhum pedido entregue.</p>
                 )}
               </div>
             </div>
