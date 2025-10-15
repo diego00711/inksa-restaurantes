@@ -1,9 +1,10 @@
-// src/pages/OrdersPage.jsx (VERSÃO FINAL - 5 COLUNAS + REMOVER)
+// src/pages/OrdersPage.jsx (VERSÃO FINAL COM MODAL DE CONFIRMAÇÃO DE RETIRADA)
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { orderService } from '../services/orderService.js';
 import OrderCard from '../components/OrderCard'; 
 import { OrderDetailsModal } from '../components/OrderDetailsModal';
+import { PickupConfirmationModal } from '../components/PickupConfirmationModal'; // ✅ NOVO
 import { useToast } from '../context/ToastContext.jsx';
 import { SlidersHorizontal, Trash2 } from 'lucide-react';
 
@@ -19,6 +20,14 @@ export function OrdersPage() {
     sortOrder: 'desc',
   });
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+
+  // ✅ Estados para modal de detalhes
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // ✅ NOVOS Estados para modal de confirmação de retirada
+  const [selectedOrderForPickup, setSelectedOrderForPickup] = useState(null);
+  const [showPickupModal, setShowPickupModal] = useState(false);
 
   const fetchOrders = useCallback(async (currentFilters) => {
     try {
@@ -57,7 +66,6 @@ export function OrdersPage() {
     }
   };
 
-  // ✅ NOVA FUNÇÃO: Remover pedido do grid (arquiva)
   const handleRemoveOrder = async (orderId) => {
     if (!window.confirm('Deseja remover este pedido do painel? Ele não aparecerá mais aqui, mas ficará no histórico para análises.')) {
       return;
@@ -70,6 +78,23 @@ export function OrdersPage() {
     } catch (err) {
       addToast(`Erro ao remover pedido: ${err.message}`, 'error');
     }
+  };
+
+  // ✅ NOVA FUNÇÃO: Abrir modal de confirmação de retirada
+  const handleOpenPickupModal = (order) => {
+    setSelectedOrderForPickup(order);
+    setShowPickupModal(true);
+  };
+
+  // ✅ NOVA FUNÇÃO: Fechar modal de confirmação de retirada
+  const handleClosePickupModal = () => {
+    setSelectedOrderForPickup(null);
+    setShowPickupModal(false);
+  };
+
+  // ✅ NOVA FUNÇÃO: Callback após confirmar retirada
+  const handlePickupSuccess = () => {
+    fetchOrders(filters); // Recarrega pedidos
   };
 
   const handleInputChange = (e) => {
@@ -87,9 +112,7 @@ export function OrdersPage() {
     fetchOrders(defaultFilters);
   };
 
-  // ✅ CORRIGIDO: 5 COLUNAS + Filtra arquivados
   const columns = useMemo(() => {
-    // Remove pedidos arquivados automaticamente
     const activeOrders = allOrders.filter(o => 
       o.status !== 'Arquivado' && o.status !== 'archived'
     );
@@ -102,7 +125,6 @@ export function OrdersPage() {
       o.status === 'delivering' ||
       o.status === 'Entregando'
     );
-    // ✅ NOVA COLUNA 5: Entregues
     const entregues = activeOrders.filter(o => 
       o.status === 'Entregue' || 
       o.status === 'delivered'
@@ -111,9 +133,6 @@ export function OrdersPage() {
     return { novos, emPreparo, prontos, saiuParaEntrega, entregues };
   }, [allOrders]);
 
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  
   const handleViewOrderDetails = (order) => { 
     setSelectedOrder(order); 
     setIsModalOpen(true); 
@@ -196,7 +215,7 @@ export function OrdersPage() {
         </div>
       )}
 
-      {/* ✅ Grid de Pedidos com 5 COLUNAS */}
+      {/* Grid de Pedidos com 5 COLUNAS */}
       <div className="flex-grow grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 overflow-x-auto">
         {isLoading ? (
           <p className="text-gray-500 text-center col-span-5 py-10">Carregando...</p>
@@ -215,6 +234,7 @@ export function OrdersPage() {
                       order={order} 
                       onUpdateStatus={handleUpdateStatus} 
                       onViewDetails={handleViewOrderDetails}
+                      onConfirmPickup={handleOpenPickupModal}
                     />
                   ))
                 ) : (
@@ -236,6 +256,7 @@ export function OrdersPage() {
                       order={order} 
                       onUpdateStatus={handleUpdateStatus} 
                       onViewDetails={handleViewOrderDetails}
+                      onConfirmPickup={handleOpenPickupModal}
                     />
                   ))
                 ) : (
@@ -257,6 +278,7 @@ export function OrdersPage() {
                       order={order} 
                       onUpdateStatus={handleUpdateStatus} 
                       onViewDetails={handleViewOrderDetails}
+                      onConfirmPickup={handleOpenPickupModal}
                     />
                   ))
                 ) : (
@@ -265,7 +287,7 @@ export function OrdersPage() {
               </div>
             </div>
 
-            {/* Coluna 4: Em Rota */}
+            {/* Coluna 4: Em Rota - ✅ AQUI É ONDE APARECE O BOTÃO CONFIRMAR RETIRADA */}
             <div className="bg-purple-50 rounded-lg p-4 flex flex-col min-w-[250px]">
               <h2 className="text-lg font-bold text-purple-700 mb-4">
                 🚗 Em Rota ({columns.saiuParaEntrega.length})
@@ -278,6 +300,7 @@ export function OrdersPage() {
                       order={order} 
                       onUpdateStatus={handleUpdateStatus} 
                       onViewDetails={handleViewOrderDetails}
+                      onConfirmPickup={handleOpenPickupModal} // ✅ Passa função
                     />
                   ))
                 ) : (
@@ -286,7 +309,7 @@ export function OrdersPage() {
               </div>
             </div>
 
-            {/* ✅ Coluna 5: Entregues (com botão Remover) */}
+            {/* Coluna 5: Entregues (com botão Remover) */}
             <div className="bg-green-50 rounded-lg p-4 flex flex-col min-w-[250px]">
               <h2 className="text-lg font-bold text-green-700 mb-4">
                 ✅ Entregues ({columns.entregues.length})
@@ -299,8 +322,9 @@ export function OrdersPage() {
                         order={order} 
                         onUpdateStatus={handleUpdateStatus} 
                         onViewDetails={handleViewOrderDetails}
+                        onConfirmPickup={handleOpenPickupModal}
                       />
-                      {/* ✅ Botão Remover */}
+                      {/* Botão Remover */}
                       <button
                         onClick={() => handleRemoveOrder(order.id)}
                         className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-medium rounded-md transition-colors border border-red-200"
@@ -325,6 +349,16 @@ export function OrdersPage() {
         <OrderDetailsModal 
           order={selectedOrder} 
           onClose={handleCloseModal} 
+        />
+      )}
+
+      {/* ✅ NOVO: Modal de Confirmação de Retirada */}
+      {showPickupModal && selectedOrderForPickup && (
+        <PickupConfirmationModal
+          order={selectedOrderForPickup}
+          isOpen={showPickupModal}
+          onClose={handleClosePickupModal}
+          onSuccess={handlePickupSuccess}
         />
       )}
     </div>
