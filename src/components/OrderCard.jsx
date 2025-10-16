@@ -1,15 +1,15 @@
-// src/components/OrderCard.jsx (COM BOTÃO CONFIRMAR RETIRADA)
+// src/components/OrderCard.jsx - COM BOTÃO CONFIRMAR RETIRADA NO STATUS CORRETO
 
 import React from 'react';
 import { Package } from 'lucide-react';
 
-// Componente para o badge de status
 const StatusBadge = ({ status }) => {
   const statusColors = {
     'Pendente': 'bg-yellow-100 text-yellow-800',
     'Aceito': 'bg-blue-100 text-blue-800',
     'Preparando': 'bg-indigo-100 text-indigo-800',
     'Pronto': 'bg-purple-100 text-purple-800',
+    'Aguardando Retirada': 'bg-pink-100 text-pink-800',  // ✅ NOVO
     'Saiu para Entrega': 'bg-orange-100 text-orange-800',
     'Entregue': 'bg-green-100 text-green-800',
     'Concluído': 'bg-green-100 text-green-800',
@@ -34,18 +34,16 @@ export default function OrderCard({ order, onUpdateStatus, onViewDetails, onConf
         return { text: 'Pronto', nextStatus: 'Pronto' };
       case 'Pronto':
         return { text: 'Saiu para Entrega', nextStatus: 'Saiu para Entrega' };
-      // ✅ REMOVIDO: Não mostramos mais botão de status para "Saiu para Entrega"
-      // O botão "Confirmar Retirada" será mostrado separadamente
+      // ✅ Sem ação automática para "Aguardando Retirada" - só botão manual
       default: 
         return null;
     }
   };
 
-  // ✅ NOVA FUNÇÃO: Verifica se deve mostrar botão de confirmar retirada
+  // ✅ Verifica se deve mostrar botão de confirmar retirada
   const shouldShowPickupButton = () => {
-    return order.status === 'Saiu para Entrega' || 
-           order.status === 'delivering' || 
-           order.status === 'Entregando';
+    return order.status === 'Aguardando Retirada' || 
+           order.status === 'accepted_by_delivery';
   };
 
   const mainAction = getNextAction();
@@ -88,7 +86,7 @@ export default function OrderCard({ order, onUpdateStatus, onViewDetails, onConf
         </p>
         
         <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-          {/* ✅ NOVO: Botão Confirmar Retirada para pedidos "Em Rota" */}
+          {/* ✅ Botão Confirmar Retirada para "Aguardando Retirada" */}
           {showPickupButton && onConfirmPickup ? (
             <button 
               onClick={() => onConfirmPickup(order)} 
