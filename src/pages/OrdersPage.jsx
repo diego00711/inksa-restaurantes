@@ -1,10 +1,10 @@
-// src/pages/OrdersPage.jsx (VERSÃO FINAL COM MODAL DE CONFIRMAÇÃO DE RETIRADA)
+// src/pages/OrdersPage.jsx (VERSÃO FINAL COM 6 COLUNAS)
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { orderService } from '../services/orderService.js';
 import OrderCard from '../components/OrderCard'; 
 import { OrderDetailsModal } from '../components/OrderDetailsModal';
-import { PickupConfirmationModal } from '../components/PickupConfirmationModal'; // ✅ NOVO
+import { PickupConfirmationModal } from '../components/PickupConfirmationModal';
 import { useToast } from '../context/ToastContext.jsx';
 import { SlidersHorizontal, Trash2 } from 'lucide-react';
 
@@ -21,11 +21,11 @@ export function OrdersPage() {
   });
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
-  // ✅ Estados para modal de detalhes
+  // Estados para modal de detalhes
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
-  // ✅ NOVOS Estados para modal de confirmação de retirada
+  // Estados para modal de confirmação de retirada
   const [selectedOrderForPickup, setSelectedOrderForPickup] = useState(null);
   const [showPickupModal, setShowPickupModal] = useState(false);
 
@@ -80,21 +80,18 @@ export function OrdersPage() {
     }
   };
 
-  // ✅ NOVA FUNÇÃO: Abrir modal de confirmação de retirada
   const handleOpenPickupModal = (order) => {
     setSelectedOrderForPickup(order);
     setShowPickupModal(true);
   };
 
-  // ✅ NOVA FUNÇÃO: Fechar modal de confirmação de retirada
   const handleClosePickupModal = () => {
     setSelectedOrderForPickup(null);
     setShowPickupModal(false);
   };
 
-  // ✅ NOVA FUNÇÃO: Callback após confirmar retirada
   const handlePickupSuccess = () => {
-    fetchOrders(filters); // Recarrega pedidos
+    fetchOrders(filters);
   };
 
   const handleInputChange = (e) => {
@@ -112,6 +109,7 @@ export function OrdersPage() {
     fetchOrders(defaultFilters);
   };
 
+  // ✅ CORRIGIDO: 6 COLUNAS
   const columns = useMemo(() => {
     const activeOrders = allOrders.filter(o => 
       o.status !== 'Arquivado' && o.status !== 'archived'
@@ -120,17 +118,25 @@ export function OrdersPage() {
     const novos = activeOrders.filter(o => o.status === 'Pendente' || o.status === 'pending');
     const emPreparo = activeOrders.filter(o => ['Aceito', 'Preparando', 'accepted', 'preparing'].includes(o.status));
     const prontos = activeOrders.filter(o => o.status === 'Pronto' || o.status === 'ready');
+    
+    // ✅ NOVA COLUNA: Aguardando Retirada
+    const aguardandoRetirada = activeOrders.filter(o => 
+      o.status === 'Aguardando Retirada' || 
+      o.status === 'accepted_by_delivery'
+    );
+    
     const saiuParaEntrega = activeOrders.filter(o => 
       o.status === 'Saiu para Entrega' || 
       o.status === 'delivering' ||
       o.status === 'Entregando'
     );
+    
     const entregues = activeOrders.filter(o => 
       o.status === 'Entregue' || 
       o.status === 'delivered'
     );
     
-    return { novos, emPreparo, prontos, saiuParaEntrega, entregues };
+    return { novos, emPreparo, prontos, aguardandoRetirada, saiuParaEntrega, entregues };
   }, [allOrders]);
 
   const handleViewOrderDetails = (order) => { 
@@ -215,18 +221,18 @@ export function OrdersPage() {
         </div>
       )}
 
-      {/* Grid de Pedidos com 5 COLUNAS */}
-      <div className="flex-grow grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 overflow-x-auto">
+      {/* ✅ Grid de Pedidos com 6 COLUNAS */}
+      <div className="flex-grow grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3 overflow-x-auto">
         {isLoading ? (
-          <p className="text-gray-500 text-center col-span-5 py-10">Carregando...</p>
+          <p className="text-gray-500 text-center col-span-6 py-10">Carregando...</p>
         ) : (
           <>
             {/* Coluna 1: Novos Pedidos */}
-            <div className="bg-blue-50 rounded-lg p-4 flex flex-col min-w-[250px]">
-              <h2 className="text-lg font-bold text-blue-700 mb-4">
+            <div className="bg-blue-50 rounded-lg p-3 flex flex-col min-w-[200px]">
+              <h2 className="text-sm font-bold text-blue-700 mb-3">
                 📥 Novos ({columns.novos.length})
               </h2>
-              <div className="space-y-4 overflow-y-auto">
+              <div className="space-y-3 overflow-y-auto">
                 {columns.novos.length > 0 ? (
                   columns.novos.map(order => (
                     <OrderCard 
@@ -238,17 +244,17 @@ export function OrdersPage() {
                     />
                   ))
                 ) : (
-                  <p className="text-sm text-center text-gray-500 pt-4">Nenhum pedido novo.</p>
+                  <p className="text-xs text-center text-gray-500 pt-4">Nenhum pedido novo.</p>
                 )}
               </div>
             </div>
 
             {/* Coluna 2: Em Preparo */}
-            <div className="bg-orange-50 rounded-lg p-4 flex flex-col min-w-[250px]">
-              <h2 className="text-lg font-bold text-orange-700 mb-4">
+            <div className="bg-orange-50 rounded-lg p-3 flex flex-col min-w-[200px]">
+              <h2 className="text-sm font-bold text-orange-700 mb-3">
                 👨‍🍳 Preparo ({columns.emPreparo.length})
               </h2>
-              <div className="space-y-4 overflow-y-auto">
+              <div className="space-y-3 overflow-y-auto">
                 {columns.emPreparo.length > 0 ? (
                   columns.emPreparo.map(order => (
                     <OrderCard 
@@ -260,17 +266,17 @@ export function OrdersPage() {
                     />
                   ))
                 ) : (
-                  <p className="text-sm text-center text-gray-500 pt-4">Nenhum pedido em preparo.</p>
+                  <p className="text-xs text-center text-gray-500 pt-4">Nenhum pedido em preparo.</p>
                 )}
               </div>
             </div>
 
             {/* Coluna 3: Prontos */}
-            <div className="bg-yellow-50 rounded-lg p-4 flex flex-col min-w-[250px]">
-              <h2 className="text-lg font-bold text-yellow-700 mb-4">
+            <div className="bg-yellow-50 rounded-lg p-3 flex flex-col min-w-[200px]">
+              <h2 className="text-sm font-bold text-yellow-700 mb-3">
                 📦 Prontos ({columns.prontos.length})
               </h2>
-              <div className="space-y-4 overflow-y-auto">
+              <div className="space-y-3 overflow-y-auto">
                 {columns.prontos.length > 0 ? (
                   columns.prontos.map(order => (
                     <OrderCard 
@@ -282,17 +288,39 @@ export function OrdersPage() {
                     />
                   ))
                 ) : (
-                  <p className="text-sm text-center text-gray-500 pt-4">Nenhum pedido pronto.</p>
+                  <p className="text-xs text-center text-gray-500 pt-4">Nenhum pedido pronto.</p>
                 )}
               </div>
             </div>
 
-            {/* Coluna 4: Em Rota - ✅ AQUI É ONDE APARECE O BOTÃO CONFIRMAR RETIRADA */}
-            <div className="bg-purple-50 rounded-lg p-4 flex flex-col min-w-[250px]">
-              <h2 className="text-lg font-bold text-purple-700 mb-4">
+            {/* ✅ NOVA Coluna 4: Aguardando Retirada */}
+            <div className="bg-pink-50 rounded-lg p-3 flex flex-col min-w-[200px]">
+              <h2 className="text-sm font-bold text-pink-700 mb-3">
+                ⏳ Aguardando ({columns.aguardandoRetirada.length})
+              </h2>
+              <div className="space-y-3 overflow-y-auto">
+                {columns.aguardandoRetirada.length > 0 ? (
+                  columns.aguardandoRetirada.map(order => (
+                    <OrderCard 
+                      key={order.id} 
+                      order={order} 
+                      onUpdateStatus={handleUpdateStatus} 
+                      onViewDetails={handleViewOrderDetails}
+                      onConfirmPickup={handleOpenPickupModal}
+                    />
+                  ))
+                ) : (
+                  <p className="text-xs text-center text-gray-500 pt-4">Nenhum pedido aguardando.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Coluna 5: Em Rota */}
+            <div className="bg-purple-50 rounded-lg p-3 flex flex-col min-w-[200px]">
+              <h2 className="text-sm font-bold text-purple-700 mb-3">
                 🚗 Em Rota ({columns.saiuParaEntrega.length})
               </h2>
-              <div className="space-y-4 overflow-y-auto">
+              <div className="space-y-3 overflow-y-auto">
                 {columns.saiuParaEntrega.length > 0 ? (
                   columns.saiuParaEntrega.map(order => (
                     <OrderCard 
@@ -300,21 +328,21 @@ export function OrdersPage() {
                       order={order} 
                       onUpdateStatus={handleUpdateStatus} 
                       onViewDetails={handleViewOrderDetails}
-                      onConfirmPickup={handleOpenPickupModal} // ✅ Passa função
+                      onConfirmPickup={handleOpenPickupModal}
                     />
                   ))
                 ) : (
-                  <p className="text-sm text-center text-gray-500 pt-4">Nenhum pedido em rota.</p>
+                  <p className="text-xs text-center text-gray-500 pt-4">Nenhum pedido em rota.</p>
                 )}
               </div>
             </div>
 
-            {/* Coluna 5: Entregues (com botão Remover) */}
-            <div className="bg-green-50 rounded-lg p-4 flex flex-col min-w-[250px]">
-              <h2 className="text-lg font-bold text-green-700 mb-4">
+            {/* Coluna 6: Entregues (com botão Remover) */}
+            <div className="bg-green-50 rounded-lg p-3 flex flex-col min-w-[200px]">
+              <h2 className="text-sm font-bold text-green-700 mb-3">
                 ✅ Entregues ({columns.entregues.length})
               </h2>
-              <div className="space-y-4 overflow-y-auto">
+              <div className="space-y-3 overflow-y-auto">
                 {columns.entregues.length > 0 ? (
                   columns.entregues.map(order => (
                     <div key={order.id}>
@@ -327,16 +355,16 @@ export function OrdersPage() {
                       {/* Botão Remover */}
                       <button
                         onClick={() => handleRemoveOrder(order.id)}
-                        className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-medium rounded-md transition-colors border border-red-200"
+                        className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-medium rounded-md transition-colors border border-red-200"
                         title="Remover do painel"
                       >
-                        <Trash2 size={14} />
+                        <Trash2 size={12} />
                         Remover
                       </button>
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-center text-gray-500 pt-4">Nenhum pedido entregue.</p>
+                  <p className="text-xs text-center text-gray-500 pt-4">Nenhum pedido entregue.</p>
                 )}
               </div>
             </div>
@@ -352,7 +380,7 @@ export function OrdersPage() {
         />
       )}
 
-      {/* ✅ NOVO: Modal de Confirmação de Retirada */}
+      {/* Modal de Confirmação de Retirada */}
       {showPickupModal && selectedOrderForPickup && (
         <PickupConfirmationModal
           order={selectedOrderForPickup}
