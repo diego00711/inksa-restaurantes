@@ -1,4 +1,4 @@
-// src/pages/AnalyticsPage.jsx - VERSÃO MELHORADA COM DADOS REAIS
+// src/pages/AnalyticsPage.jsx - VERSÃO CORRIGIDA
 
 import React, { useState, useEffect } from 'react';
 import { 
@@ -29,7 +29,9 @@ export function AnalyticsPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await analyticsService.getAnalytics();
+      // ✅ CORRIGIDO: Passando dateRange para o serviço
+      const data = await analyticsService.getAnalytics(dateRange);
+      console.log('📊 Dados do analytics recebidos:', data);
       setAnalyticsData(data);
       
       // Adicionar dados simulados extras se necessário
@@ -60,9 +62,11 @@ export function AnalyticsPage() {
     addToast('Dados atualizados com sucesso!', 'success');
   };
 
+  // ✅ CORRIGIDO: useEffect depende de dateRange agora
   useEffect(() => {
+    console.log('🔄 Buscando analytics para período:', dateRange, 'dias');
     fetchAnalytics();
-  }, [addToast, dateRange]);
+  }, [dateRange]); // ✅ Agora recarrega quando dateRange muda!
 
   if (isLoading) {
     return (
@@ -149,12 +153,17 @@ export function AnalyticsPage() {
         <div className="flex items-center gap-4 mt-4 md:mt-0">
           <select 
             value={dateRange} 
-            onChange={(e) => setDateRange(e.target.value)}
+            onChange={(e) => {
+              console.log('📅 Mudando período para:', e.target.value, 'dias');
+              setDateRange(e.target.value);
+            }}
             className="border border-gray-300 rounded-lg px-3 py-2 bg-white"
           >
             <option value="7">Últimos 7 dias</option>
             <option value="30">Últimos 30 dias</option>
             <option value="90">Últimos 90 dias</option>
+            <option value="365">Último ano</option>
+            <option value="all">Todo período</option>
           </select>
           <button
             onClick={handleRefresh}
@@ -255,7 +264,7 @@ export function AnalyticsPage() {
       {/* Seção do Gráfico */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Vendas nos Últimos {dateRange} Dias</h2>
+          <h2 className="text-2xl font-bold text-gray-800">Vendas nos Últimos {dateRange === 'all' ? 'Todo período' : `${dateRange} Dias`}</h2>
           <Calendar className="h-6 w-6 text-gray-400" />
         </div>
         {analyticsData.vendas_por_dia && analyticsData.vendas_por_dia.length > 0 ? (
