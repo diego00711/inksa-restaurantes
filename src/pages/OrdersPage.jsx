@@ -1,4 +1,4 @@
-// src/pages/OrdersPage.jsx (VERSÃO FINAL COM 6 COLUNAS)
+// src/pages/OrdersPage.jsx - VERSÃO RESPONSIVA OTIMIZADA
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { orderService } from '../services/orderService.js';
@@ -109,7 +109,7 @@ export function OrdersPage() {
     fetchOrders(defaultFilters);
   };
 
-  // ✅ CORRIGIDO: 6 COLUNAS
+  // ✅ COLUNAS: 6 no total
   const columns = useMemo(() => {
     const activeOrders = allOrders.filter(o => 
       o.status !== 'Arquivado' && o.status !== 'archived'
@@ -119,7 +119,6 @@ export function OrdersPage() {
     const emPreparo = activeOrders.filter(o => ['Aceito', 'Preparando', 'accepted', 'preparing'].includes(o.status));
     const prontos = activeOrders.filter(o => o.status === 'Pronto' || o.status === 'ready');
     
-    // ✅ NOVA COLUNA: Aguardando Retirada
     const aguardandoRetirada = activeOrders.filter(o => 
       o.status === 'Aguardando Retirada' || 
       o.status === 'accepted_by_delivery'
@@ -221,14 +220,14 @@ export function OrdersPage() {
         </div>
       )}
 
-      {/* ✅ Grid de Pedidos com 6 COLUNAS */}
-      <div className="flex-grow grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3 overflow-x-auto">
+      {/* ✅ GRID RESPONSIVO: Mobile 1 col → Tablet 2 cols → Desktop 3 cols → Grande 4 cols → Extra grande 6 cols */}
+      <div className="flex-grow grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-3 overflow-x-auto">
         {isLoading ? (
-          <p className="text-gray-500 text-center col-span-6 py-10">Carregando...</p>
+          <p className="text-gray-500 text-center col-span-full py-10">Carregando...</p>
         ) : (
           <>
             {/* Coluna 1: Novos Pedidos */}
-            <div className="bg-blue-50 rounded-lg p-3 flex flex-col min-w-[200px]">
+            <div className="bg-blue-50 rounded-lg p-3 flex flex-col min-w-[240px]">
               <h2 className="text-sm font-bold text-blue-700 mb-3">
                 📥 Novos ({columns.novos.length})
               </h2>
@@ -250,7 +249,7 @@ export function OrdersPage() {
             </div>
 
             {/* Coluna 2: Em Preparo */}
-            <div className="bg-orange-50 rounded-lg p-3 flex flex-col min-w-[200px]">
+            <div className="bg-orange-50 rounded-lg p-3 flex flex-col min-w-[240px]">
               <h2 className="text-sm font-bold text-orange-700 mb-3">
                 👨‍🍳 Preparo ({columns.emPreparo.length})
               </h2>
@@ -272,7 +271,7 @@ export function OrdersPage() {
             </div>
 
             {/* Coluna 3: Prontos */}
-            <div className="bg-yellow-50 rounded-lg p-3 flex flex-col min-w-[200px]">
+            <div className="bg-yellow-50 rounded-lg p-3 flex flex-col min-w-[240px]">
               <h2 className="text-sm font-bold text-yellow-700 mb-3">
                 📦 Prontos ({columns.prontos.length})
               </h2>
@@ -293,8 +292,8 @@ export function OrdersPage() {
               </div>
             </div>
 
-            {/* ✅ NOVA Coluna 4: Aguardando Retirada */}
-            <div className="bg-pink-50 rounded-lg p-3 flex flex-col min-w-[200px]">
+            {/* Coluna 4: Aguardando Retirada */}
+            <div className="bg-pink-50 rounded-lg p-3 flex flex-col min-w-[240px]">
               <h2 className="text-sm font-bold text-pink-700 mb-3">
                 ⏳ Aguardando ({columns.aguardandoRetirada.length})
               </h2>
@@ -316,7 +315,7 @@ export function OrdersPage() {
             </div>
 
             {/* Coluna 5: Em Rota */}
-            <div className="bg-purple-50 rounded-lg p-3 flex flex-col min-w-[200px]">
+            <div className="bg-purple-50 rounded-lg p-3 flex flex-col min-w-[240px]">
               <h2 className="text-sm font-bold text-purple-700 mb-3">
                 🚗 Em Rota ({columns.saiuParaEntrega.length})
               </h2>
@@ -337,8 +336,8 @@ export function OrdersPage() {
               </div>
             </div>
 
-            {/* Coluna 6: Entregues (com botão Remover) */}
-            <div className="bg-green-50 rounded-lg p-3 flex flex-col min-w-[200px]">
+            {/* Coluna 6: Entregues */}
+            <div className="bg-green-50 rounded-lg p-3 flex flex-col min-w-[240px]">
               <h2 className="text-sm font-bold text-green-700 mb-3">
                 ✅ Entregues ({columns.entregues.length})
               </h2>
