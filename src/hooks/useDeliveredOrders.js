@@ -1,13 +1,12 @@
-// src/hooks/useDeliveredOrders.js
+// inksa-restaurantes/src/hooks/useDeliveredOrders.js - VERSÃO COMPLETA
 
 import { useState, useEffect } from 'react';
-// ✅ 1. Importa o serviço de pedidos que contém a nova função
 import { orderService } from '../services/orderService';
 
 /**
- * Custom Hook para buscar e gerenciar a lista de pedidos entregues
- * que estão pendentes de avaliação por parte do restaurante.
- * @param {string} restaurantId - O ID do restaurante.
+ * Custom Hook para buscar pedidos entregues pendentes de avaliação (RESTAURANTE)
+ * Busca pedidos onde o restaurante ainda precisa avaliar cliente/entregador
+ * @param {string} restaurantId - O ID do perfil do restaurante
  */
 export default function useDeliveredOrders(restaurantId) {
   const [orders, setOrders] = useState([]);
@@ -15,28 +14,32 @@ export default function useDeliveredOrders(restaurantId) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Não executa a busca se o ID do restaurante não estiver disponível
     if (!restaurantId) {
       setLoading(false);
       return;
     }
 
-    // AbortController para cancelar a requisição se o componente for desmontado
     const controller = new AbortController();
     const signal = controller.signal;
 
     const fetchOrders = async () => {
       setLoading(true);
       setError(null);
+      
       try {
-        // ✅ 2. Chama a função REAL da API em vez de usar dados mockados
+        console.log('🔍 [Restaurante] Buscando pedidos pendentes de avaliação...');
+        
+        // ✅ Chama o endpoint específico do restaurante
         const pendingOrders = await orderService.getOrdersPendingReview(restaurantId, signal);
-        setOrders(pendingOrders || []); // Garante que 'orders' seja sempre um array
+        
+        console.log(`✅ [Restaurante] ${pendingOrders.length} pedidos pendentes encontrados`);
+        
+        setOrders(pendingOrders || []);
+        
       } catch (err) {
-        // Ignora o erro se for por cancelamento da requisição
         if (err.name !== 'AbortError') {
-          console.error("Erro ao buscar pedidos pendentes:", err);
-          setError(err.message || "Não foi possível carregar os pedidos para avaliação.");
+          console.error('❌ [Restaurante] Erro ao buscar pedidos:', err);
+          setError(err.message || "Não foi possível carregar os pedidos.");
         }
       } finally {
         setLoading(false);
@@ -45,11 +48,27 @@ export default function useDeliveredOrders(restaurantId) {
 
     fetchOrders();
 
-    // ✅ 3. Função de limpeza que cancela a requisição da API
     return () => {
       controller.abort();
     };
-  }, [restaurantId]); // O hook re-executa se o restaurantId mudar
+  }, [restaurantId]);
 
-  return { orders, loading, error };
+  // ✅ Função para refazer busca (útil após criar avaliação)
+  const refetch = () => {
+    if (!restaurantId) return;
+    
+    setLoading(true);
+    setError(null);
+    
+    orderService.getOrdersPendingReview(restaurantId)
+      .then(data => setOrders(data || []))
+      .catch(err => {
+        if (err.name !== 'AbortError') {
+          setError(err.message);
+        }
+      })
+      .finally(() => setLoading(false));
+  };
+
+  return { orders, loading, error, refetch };
 }
