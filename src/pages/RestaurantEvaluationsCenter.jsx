@@ -1,6 +1,6 @@
-// src/pages/RestaurantEvaluationsCenter.jsx
+// src/pages/RestaurantEvaluationsCenter.jsx - VERSÃO ATUALIZADA
 
-import React, { useState } from "react"; // ✅ 1. Importa o useState
+import React, { useState } from "react";
 import { Star, TrendingUp, MessageCircle, Award, Clock, User, Truck } from "lucide-react";
 import RestaurantReviewsList from "../components/RestaurantReviewsList";
 import ClientReviewForm from "../components/ClientReviewForm";
@@ -10,10 +10,11 @@ import useDeliveredOrders from "../hooks/useDeliveredOrders";
 
 export default function RestaurantEvaluationsCenter() {
   const { profile, loading } = useProfile();
-  const { orders, loading: loadingOrders } = useDeliveredOrders(profile?.id);
-  const [highlightOrderId, setHighlightOrderId] = useState(null);
   
-  // ✅ 2. Cria um estado para guardar os dados que vêm do componente filho
+  // ✅ CORREÇÃO: Adiciona refetch ao hook
+  const { orders, loading: loadingOrders, refetch } = useDeliveredOrders(profile?.id);
+  
+  const [highlightOrderId, setHighlightOrderId] = useState(null);
   const [reviewData, setReviewData] = useState(null);
 
   if (loading) {
@@ -37,7 +38,7 @@ export default function RestaurantEvaluationsCenter() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
-      {/* Header Section (sem alterações) */}
+      {/* Header Section */}
       <div className="bg-white shadow-sm border-b border-gray-100 mb-8">
         <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="flex items-center gap-4 mb-4">
@@ -53,13 +54,12 @@ export default function RestaurantEvaluationsCenter() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 space-y-8">
-        {/* ✅ 3. Performance Overview Cards CORRIGIDOS */}
+        {/* Performance Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-xl">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-100 text-sm font-medium">Total de Avaliações</p>
-                {/* Usa o dado do estado 'reviewData', com '...' enquanto carrega */}
                 <p className="text-3xl font-bold">{reviewData ? reviewData.total_reviews : '...'}</p>
               </div>
               <TrendingUp className="h-8 w-8 text-blue-200" />
@@ -70,7 +70,6 @@ export default function RestaurantEvaluationsCenter() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-green-100 text-sm font-medium">Média Geral</p>
-                {/* Usa o dado do estado 'reviewData', com '...' enquanto carrega */}
                 <p className="text-3xl font-bold">{reviewData ? (reviewData.average_rating?.toFixed(1) || '0.0') : '...'}</p>
               </div>
               <Star className="h-8 w-8 text-green-200" />
@@ -81,7 +80,6 @@ export default function RestaurantEvaluationsCenter() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-purple-100 text-sm font-medium">Avaliações Pendentes</p>
-                {/* Este já estava dinâmico, mas adicionamos '...' para consistência */}
                 <p className="text-3xl font-bold">{loadingOrders ? '...' : (orders?.length || 0)}</p>
               </div>
               <MessageCircle className="h-8 w-8 text-purple-200" />
@@ -99,7 +97,6 @@ export default function RestaurantEvaluationsCenter() {
             <p className="text-orange-100 mt-2">Acompanhe o feedback dos seus clientes</p>
           </div>
           <div className="p-6">
-            {/* ✅ 4. Passa a função 'setReviewData' para o componente filho */}
             <RestaurantReviewsList 
               restaurantId={profile.id} 
               onDataLoaded={setReviewData} 
@@ -107,7 +104,7 @@ export default function RestaurantEvaluationsCenter() {
           </div>
         </div>
 
-        {/* Evaluate Clients and Delivery Section (sem alterações) */}
+        {/* Evaluate Clients and Delivery Section */}
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
           <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-6">
             <div className="flex items-center gap-3">
@@ -137,17 +134,20 @@ export default function RestaurantEvaluationsCenter() {
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-4">
                             <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-3 rounded-xl">
-                              <span className="text-white font-bold">#{order.id}</span>
+                              <span className="text-white font-bold">#{order.id.slice(0, 8)}</span>
                             </div>
                             <div>
-                              <h3 className="text-lg font-bold text-gray-800">Pedido #{order.id}</h3>
+                              <h3 className="text-lg font-bold text-gray-800">Pedido #{order.id.slice(0, 8)}</h3>
                               <div className="flex items-center gap-2 text-gray-500">
                                 <Clock className="h-4 w-4" />
                                 <span className="text-sm">{new Date(order.completed_at).toLocaleDateString('pt-BR')}</span>
                               </div>
                             </div>
                           </div>
-                          <button onClick={() => setHighlightOrderId(highlightOrderId === order.id ? null : order.id)} className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${highlightOrderId === order.id ? "bg-red-500 hover:bg-red-600 text-white" : "bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105"}`}>
+                          <button 
+                            onClick={() => setHighlightOrderId(highlightOrderId === order.id ? null : order.id)} 
+                            className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${highlightOrderId === order.id ? "bg-red-500 hover:bg-red-600 text-white" : "bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105"}`}
+                          >
                             {highlightOrderId === order.id ? "Cancelar" : "Avaliar agora"}
                           </button>
                         </div>
@@ -162,7 +162,15 @@ export default function RestaurantEvaluationsCenter() {
                                     <p className="text-gray-600 text-sm">{order.client_name}</p>
                                   </div>
                                 </div>
-                                <ClientReviewForm clientId={order.client_id} orderId={order.id} onSuccess={() => { alert("Avaliação do cliente enviada!"); setHighlightOrderId(null); }} />
+                                <ClientReviewForm 
+                                  clientId={order.client_id} 
+                                  orderId={order.id} 
+                                  onSuccess={() => { 
+                                    alert("Avaliação do cliente enviada!"); 
+                                    setHighlightOrderId(null);
+                                    refetch(); // ✅ ATUALIZA A LISTA
+                                  }} 
+                                />
                               </div>
                               <div className="bg-white rounded-xl p-6 shadow-sm border border-emerald-100">
                                 <div className="flex items-center gap-3 mb-4">
@@ -172,7 +180,15 @@ export default function RestaurantEvaluationsCenter() {
                                     <p className="text-gray-600 text-sm">{order.deliveryman_name}</p>
                                   </div>
                                 </div>
-                                <DeliveryReviewForm deliverymanId={order.deliveryman_id} orderId={order.id} onSuccess={() => { alert("Avaliação do entregador enviada!"); setHighlightOrderId(null); }} />
+                                <DeliveryReviewForm 
+                                  deliverymanId={order.deliveryman_id} 
+                                  orderId={order.id} 
+                                  onSuccess={() => { 
+                                    alert("Avaliação do entregador enviada!"); 
+                                    setHighlightOrderId(null);
+                                    refetch(); // ✅ ATUALIZA A LISTA
+                                  }} 
+                                />
                               </div>
                             </div>
                           </div>
