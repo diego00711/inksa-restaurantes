@@ -1,8 +1,8 @@
-// src/services/orderService.js (VERSÃO FINAL COM SUPORTE A ARCHIVED)
+// inksa-restaurantes/src/services/orderService.js - VERSÃO COMPLETA
 
 import api from './api';
 
-// Mapeamento de status PT → EN (para enviar ao backend)
+// Mapeamento de status PT → EN
 const statusMapping = {
   'Pendente': 'pending',
   'Aceito': 'accepted',
@@ -11,10 +11,10 @@ const statusMapping = {
   'Saiu para Entrega': 'delivering',
   'Entregue': 'delivered',
   'Cancelado': 'cancelled',
-  'Arquivado': 'archived'  // ✅ ADICIONADO
+  'Arquivado': 'archived'
 };
 
-// Mapeamento inverso EN → PT (para exibir no frontend)
+// Mapeamento inverso EN → PT
 const statusMappingReverse = {
   'pending': 'Pendente',
   'accepted': 'Aceito',
@@ -23,7 +23,7 @@ const statusMappingReverse = {
   'delivering': 'Saiu para Entrega',
   'delivered': 'Entregue',
   'cancelled': 'Cancelado',
-  'archived': 'Arquivado'  // ✅ ADICIONADO
+  'archived': 'Arquivado'
 };
 
 const translateOrderStatus = (order) => {
@@ -63,7 +63,7 @@ export const orderService = {
     try {
       const statusForBackend = statusMapping[newStatus];
       if (!statusForBackend) {
-        throw new Error(`Status inválido para mapeamento: ${newStatus}`);
+        throw new Error(`Status inválido: ${newStatus}`);
       }
       
       const payload = { 
@@ -81,7 +81,7 @@ export const orderService = {
       
       return translateOrderStatus(response.data);
     } catch (error) {
-      console.error(`Erro ao atualizar status do pedido ${orderId}:`, error);
+      console.error(`Erro ao atualizar status: ${orderId}`, error);
       throw error;
     }
   },
@@ -128,7 +128,30 @@ export const orderService = {
       const response = await api.put(`/api/orders/${orderId}/delivery-time`, payload, config);
       return translateOrderStatus(response.data);
     } catch (error) {
-      console.error(`Erro ao atualizar tempo de entrega do pedido ${orderId}:`, error);
+      console.error(`Erro ao atualizar tempo de entrega:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * ✅ NOVO: Busca pedidos entregues pendentes de avaliação (RESTAURANTE)
+   * Pedidos onde o restaurante ainda precisa avaliar cliente/entregador
+   */
+  async getOrdersPendingReview(restaurantId, signal) {
+    try {
+      console.log('🔍 Buscando pedidos para restaurante avaliar...');
+      
+      const response = await api.get('/api/orders/pending-client-review', { signal });
+      
+      const orders = Array.isArray(response.data) ? response.data : response;
+      
+      console.log(`✅ ${orders.length} pedidos pendentes encontrados`);
+      
+      return orders.map(translateOrderStatus);
+    } catch (error) {
+      if (error.name !== 'AbortError') {
+        console.error('❌ Erro ao buscar pedidos pendentes:', error);
+      }
       throw error;
     }
   }
