@@ -1,4 +1,4 @@
-// src/context/AuthContext.jsx
+// src/context/AuthContext.jsx - VERSÃO CORRIGIDA COM LOGOUT ASSÍNCRONO
 
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 
@@ -39,12 +39,25 @@ export function AuthProvider({ children }) {
         setToken(authToken);
     }, []);
 
-    // Função para fazer logout
-    const logout = useCallback(() => {
-        localStorage.removeItem('restaurantUser');
-        localStorage.removeItem('restaurantAuthToken');
-        setUser(null);
-        setToken(null);
+    // ✅ Função para fazer logout - AGORA ASSÍNCRONA!
+    const logout = useCallback(async () => {
+        try {
+            // Limpa o estado local imediatamente
+            localStorage.removeItem('restaurantUser');
+            localStorage.removeItem('restaurantAuthToken');
+            setUser(null);
+            setToken(null);
+            
+            // Nota: O authService.logout() já faz o redirecionamento
+            // então não precisamos fazer nada mais aqui
+        } catch (error) {
+            console.error("Erro ao fazer logout:", error);
+            // Garante que limpa mesmo se der erro
+            localStorage.removeItem('restaurantUser');
+            localStorage.removeItem('restaurantAuthToken');
+            setUser(null);
+            setToken(null);
+        }
     }, []);
 
     const value = {
