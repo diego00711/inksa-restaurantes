@@ -1,4 +1,4 @@
-// Local: src/components/restaurant-portal/PortalLayout.jsx
+// Local: src/components/restaurant-portal/PortalLayout.jsx - VERSÃO CORRIGIDA
 
 import React from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
@@ -16,14 +16,24 @@ export function PortalLayout() {
     { name: 'Pedidos', icon: ListOrdered, path: '/pedidos' },
     { name: 'Cardápio', icon: Utensils, path: '/cardapio' },
     { name: 'Analytics', icon: BarChart2, path: '/analytics' },
-    { name: 'Avaliações', icon: Star, path: '/avaliacoes' }, // <<< AVALIAÇÕES ADICIONADO AQUI
+    { name: 'Avaliações', icon: Star, path: '/avaliacoes' },
     { name: 'Gamificação', icon: Trophy, path: '/gamificacao' },
     { name: 'Configurações', icon: Settings, path: '/configuracoes' },
     { name: 'Categorias', icon: Tag, path: '/categorias' },
   ];
 
-  const handleLogout = () => {
-    authService.logout();
+  // ✅ HANDLELOGOUT CORRIGIDO - AGORA É ASSÍNCRONO E CHAMA O BACKEND!
+  const handleLogout = async () => {
+    try {
+      addToast('info', 'Saindo...');
+      await authService.logout(); // Agora aguarda a chamada ao backend
+      // O authService.logout() já faz o redirecionamento
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+      addToast('error', 'Erro ao sair. Redirecionando...');
+      // Força redirecionamento mesmo com erro
+      window.location.href = '/login';
+    }
   };
 
   const handleToggleIsOpen = async () => {
