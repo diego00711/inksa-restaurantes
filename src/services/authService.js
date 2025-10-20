@@ -1,4 +1,4 @@
-// src/services/authService.js - VERSÃO CORRIGIDA PARA O PAINEL DO RESTAURANTE
+// src/services/authService.js - VERSÃO CORRIGIDA COM LOGOUT QUE FECHA RESTAURANTE
 
 import { 
   RESTAURANT_API_URL, 
@@ -38,9 +38,6 @@ export const authService = {
    */
   getProfile: async () => {
     try {
-      // ✅ CORREÇÃO: A URL agora aponta para a rota específica do restaurante.
-      // Antes era: /api/auth/profile
-      // Agora é: /api/restaurant/profile
       const response = await fetch(`${RESTAURANT_BASE}/api/restaurant/profile`, {
         headers: createAuthHeaders(),
       });
@@ -53,7 +50,6 @@ export const authService = {
 
   updateProfile: async (profileData) => {
     try {
-      // Esta já estava correta, apontando para a rota do restaurante.
       const response = await fetch(`${RESTAURANT_BASE}/api/restaurant/profile`, {
         method: 'PUT',
         headers: {
@@ -86,13 +82,41 @@ export const authService = {
     }
   },
 
-  logout: () => {
+  // ✅ MÉTODO LOGOUT CORRIGIDO - AGORA CHAMA O BACKEND!
+  logout: async () => {
     try {
+      // 1️⃣ Pega o token ANTES de limpar (precisamos dele para autenticar)
+      const token = localStorage.getItem(AUTH_TOKEN_KEY);
+      
+      if (token) {
+        // 2️⃣ Chama o backend para fechar o restaurante automaticamente
+        try {
+          await fetch(`${AUTH_BASE}/api/auth/logout`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          console.log('✅ Logout no backend realizado com sucesso!');
+        } catch (backendError) {
+          // Se falhar no backend, continua o logout local mesmo assim
+          console.warn('⚠️ Erro ao chamar logout no backend:', backendError);
+        }
+      }
+      
+      // 3️⃣ Limpa o localStorage (sempre executa, mesmo se backend falhar)
       localStorage.removeItem(AUTH_TOKEN_KEY);
       localStorage.removeItem(USER_DATA_KEY);
-      window.location.href = '/login'; // Redireciona para a página de login
+      
+      // 4️⃣ Redireciona para login
+      window.location.href = '/login';
+      
     } catch (error) {
-      console.error("Erro durante o processo de logout:", error);
+      console.error("❌ Erro durante o processo de logout:", error);
+      // Em caso de erro crítico, força limpeza e redirecionamento
+      localStorage.removeItem(AUTH_TOKEN_KEY);
+      localStorage.removeItem(USER_DATA_KEY);
       window.location.href = '/login';
     }
   },
