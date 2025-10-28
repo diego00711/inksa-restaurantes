@@ -1,4 +1,4 @@
-// src/components/OrderCard.jsx - VERSÃO OTIMIZADA
+// src/components/OrderCard.jsx - VERSÃO CORRIGIDA
 
 import React from 'react';
 import { Package } from 'lucide-react';
@@ -27,13 +27,13 @@ export default function OrderCard({ order, onUpdateStatus, onViewDetails, onConf
   const getNextAction = () => {
     switch (order.status) {
       case 'Pendente': 
-        return { text: 'Aceitar', nextStatus: 'Aceito' };
+        return { text: 'Aceitar', nextStatus: 'preparing' }; // ✅ Status em inglês
       case 'Aceito': 
-        return { text: 'Preparar', nextStatus: 'Preparando' };
+        return { text: 'Preparar', nextStatus: 'preparing' }; // ✅ Status em inglês
       case 'Preparando': 
-        return { text: 'Pronto', nextStatus: 'Pronto' };
+        return { text: 'Pronto', nextStatus: 'ready' }; // ✅ Status em inglês
       case 'Pronto':
-        return { text: 'Saiu para Entrega', nextStatus: 'Saiu para Entrega' };
+        return { text: 'Saiu para Entrega', nextStatus: 'ready_for_pickup' }; // ✅ CORREÇÃO PRINCIPAL!
       default: 
         return null;
     }
@@ -119,7 +119,7 @@ export default function OrderCard({ order, onUpdateStatus, onViewDetails, onConf
               {/* Botão Cancelar */}
               {order.status !== 'Concluído' && order.status !== 'Cancelado' && order.status !== 'Entregue' && (
                 <button 
-                  onClick={() => onUpdateStatus(order.id, 'Cancelado')} 
+                  onClick={() => onUpdateStatus(order.id, 'cancelled')} 
                   className="px-3 py-2 text-xs font-medium text-white bg-red-600 rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                   title="Cancelar pedido"
                 >
