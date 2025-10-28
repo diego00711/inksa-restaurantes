@@ -1,37 +1,86 @@
-// inksa-restaurantes/src/services/orderService.js - VERSÃO COMPLETA
+// inksa-restaurantes/src/services/orderService.js  ✅ PATCH
 
 import api from './api';
 
-// Mapeamento de status PT → EN
-const statusMapping = {
+// --- Aliases e normalização ---
+const ALIASES_TO_INTERNAL = {
+  // aliases antigos/variações
+  ready_for_pickup: 'accepted_by_delivery',
+  out_for_delivery: 'delivering',
+  saiu_para_entrega: 'delivering',
+  aguardando_retirada: 'accepted_by_delivery',
+};
+
+// Conjunto de status internos válidos (iguais aos do backend)
+const INTERNAL_VALID = new Set([
+  'awaiting_payment',
+  'pending',
+  'accepted',
+  'preparing',
+  'ready',
+  'accepted_by_delivery',
+  'delivering',
+  'delivered',
+  'cancelled',
+  'archived',
+]);
+
+// Mapeamento de status PT → EN (para quando vier em PT)
+const statusMappingPTtoEN = {
+  'Aguardando Pagamento': 'awaiting_payment',
   'Pendente': 'pending',
   'Aceito': 'accepted',
   'Preparando': 'preparing',
   'Pronto': 'ready',
+  'Aguardando Retirada': 'accepted_by_delivery',
   'Saiu para Entrega': 'delivering',
   'Entregue': 'delivered',
   'Cancelado': 'cancelled',
-  'Arquivado': 'archived'
+  'Arquivado': 'archived',
 };
 
-// Mapeamento inverso EN → PT
-const statusMappingReverse = {
-  'pending': 'Pendente',
-  'accepted': 'Aceito',
-  'preparing': 'Preparando',
-  'ready': 'Pronto',
-  'delivering': 'Saiu para Entrega',
-  'delivered': 'Entregue',
-  'cancelled': 'Cancelado',
-  'archived': 'Arquivado'
+// Mapeamento EN → PT (para exibir)
+const statusMappingENtoPT = {
+  awaiting_payment: 'Aguardando Pagamento',
+  pending: 'Pendente',
+  accepted: 'Aceito',
+  preparing: 'Preparando',
+  ready: 'Pronto',
+  accepted_by_delivery: 'Aguardando Retirada',
+  delivering: 'Saiu para Entrega',
+  delivered: 'Entregue',
+  cancelled: 'Cancelado',
+  archived: 'Arquivado',
 };
+
+// Normaliza qualquer entrada (PT, EN ou alias) para o status interno aceito pelo backend
+function normalizeToInternalStatus(anyStatus) {
+  if (!anyStatus) return '';
+
+  let s = String(anyStatus).trim();
+
+  // 1) se veio em PT, converte
+  if (statusMappingPTtoEN[s]) {
+    s = statusMappingPTtoEN[s];
+  }
+
+  // 2) baixa para minúsculas para checar aliases
+  const lower = s.toLowerCase();
+
+  // 3) aplica alias se existir
+  const aliased = ALIASES_TO_INTERNAL[lower] || lower;
+
+  // 4) confere se é um status interno válido
+  if (!INTERNAL_VALID.has(aliased)) {
+    throw new Error(`Status inválido: ${anyStatus}`);
+  }
+  return aliased;
+}
 
 const translateOrderStatus = (order) => {
   if (order && order.status) {
-    return {
-      ...order,
-      status: statusMappingReverse[order.status] || order.status,
-    };
+    const pt = statusMappingENtoPT[order.status] || order.status;
+    return { ...order, status: pt };
   }
   return order;
 };
@@ -61,24 +110,19 @@ export const orderService = {
 
   async updateOrderStatus(orderId, newStatus, delivery_id = null) {
     try {
-      const statusForBackend = statusMapping[newStatus];
-      if (!statusForBackend) {
-        throw new Error(`Status inválido: ${newStatus}`);
-      }
-      
-      const payload = { 
+      // ✅ aceita PT, EN ou alias; sempre envia interno válido
+      const statusForBackend = normalizeToInternalStatus(newStatus);
+
+      const payload = {
         new_status: statusForBackend,
-        delivery_id: delivery_id
+        // delivery_id é ignorado pelo backend neste endpoint, mas mantive se você usa em outro fluxo
+        delivery_id: delivery_id ?? undefined,
       };
-      
-      const config = {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      };
-      
-      const response = await api.put(`/api/orders/${orderId}/status`, payload, config);
-      
+
+      const response = await api.put(`/api/orders/${orderId}/status`, payload, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+
       return translateOrderStatus(response.data);
     } catch (error) {
       console.error(`Erro ao atualizar status: ${orderId}`, error);
@@ -98,12 +142,10 @@ export const orderService = {
 
   async cancelOrder(orderId, reason) {
     try {
-      const payload = { 
-        new_status: 'cancelled', 
-        cancellation_reason: reason 
-      };
-      const config = { headers: { 'Content-Type': 'application/json' } };
-      const response = await api.put(`/api/orders/${orderId}/status`, payload, config);
+      const payload = { new_status: 'cancelled', cancellation_reason: reason };
+      const response = await api.put(`/api/orders/${orderId}/status`, payload, {
+        headers: { 'Content-Type': 'application/json' },
+      });
       return translateOrderStatus(response.data);
     } catch (error) {
       console.error(`Erro ao cancelar pedido ${orderId}:`, error);
@@ -124,29 +166,22 @@ export const orderService = {
   async updateDeliveryTime(orderId, estimatedTime) {
     try {
       const payload = { estimated_delivery_time: estimatedTime };
-      const config = { headers: { 'Content-Type': 'application/json' } };
-      const response = await api.put(`/api/orders/${orderId}/delivery-time`, payload, config);
+      const response = await api.put(`/api/orders/${orderId}/delivery-time`, payload, {
+        headers: { 'Content-Type': 'application/json' },
+      });
       return translateOrderStatus(response.data);
     } catch (error) {
-      console.error(`Erro ao atualizar tempo de entrega:`, error);
+      console.error('Erro ao atualizar tempo de entrega:', error);
       throw error;
     }
   },
 
-  /**
-   * ✅ NOVO: Busca pedidos entregues pendentes de avaliação (RESTAURANTE)
-   * Pedidos onde o restaurante ainda precisa avaliar cliente/entregador
-   */
   async getOrdersPendingReview(restaurantId, signal) {
     try {
       console.log('🔍 Buscando pedidos para restaurante avaliar...');
-      
       const response = await api.get('/api/orders/pending-client-review', { signal });
-      
       const orders = Array.isArray(response.data) ? response.data : response;
-      
       console.log(`✅ ${orders.length} pedidos pendentes encontrados`);
-      
       return orders.map(translateOrderStatus);
     } catch (error) {
       if (error.name !== 'AbortError') {
@@ -154,7 +189,7 @@ export const orderService = {
       }
       throw error;
     }
-  }
+  },
 };
 
 export default orderService;
