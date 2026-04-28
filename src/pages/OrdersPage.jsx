@@ -1,8 +1,8 @@
 // src/pages/OrdersPage.jsx - VERSÃO RESPONSIVA OTIMIZADA
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { orderService } from '../services/orderService.js';
-import OrderCard from '../components/OrderCard'; 
+import OrderCard from '../components/OrderCard';
 import { OrderDetailsModal } from '../components/OrderDetailsModal';
 import { PickupConfirmationModal } from '../components/PickupConfirmationModal';
 import { useToast } from '../context/ToastContext.jsx';
@@ -12,6 +12,7 @@ export function OrdersPage() {
   const [allOrders, setAllOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const { addToast } = useToast();
+  const knownOrderIds = useRef(null); // null = first load
 
   const [filters, setFilters] = useState({
     startDate: '',
@@ -38,7 +39,22 @@ export function OrdersPage() {
       params.append('sort_order', currentFilters.sortOrder);
       
       const ordersArray = await orderService.getOrders(params);
-      setAllOrders(ordersArray || []);
+      const newOrders = ordersArray || [];
+      setAllOrders(newOrders);
+
+      // Detect new pending orders after first load
+      if (knownOrderIds.current !== null) {
+        const newPending = newOrders.filter(
+          o => o.status === 'pending' && !knownOrderIds.current.has(o.id)
+        );
+        if (newPending.length > 0) {
+          addToast(
+            `${newPending.length === 1 ? 'Novo pedido recebido!' : `${newPending.length} novos pedidos recebidos!`}`,
+            'success'
+          );
+        }
+      }
+      knownOrderIds.current = new Set(newOrders.map(o => o.id));
     } catch (err) {
       addToast(err.message || "Erro ao carregar pedidos.", 'error');
       setAllOrders([]);
@@ -49,10 +65,7 @@ export function OrdersPage() {
 
   useEffect(() => {
     fetchOrders(filters);
-    const intervalId = setInterval(() => {
-      console.log('Restaurante: Verificando por novos pedidos...');
-      fetchOrders(filters);
-    }, 10000); 
+    const intervalId = setInterval(() => fetchOrders(filters), 10000); 
     return () => clearInterval(intervalId);
   }, [fetchOrders, filters]);
 
