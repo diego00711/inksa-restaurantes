@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import { restaurantReviewService, clientReviewService, deliveryReviewService } from '../services/reviewServices';
+import { RESTAURANT_API_URL } from '../services/api';
 
 export default function TestReviewServices() {
   const [loading, setLoading] = useState(false);
@@ -30,7 +31,7 @@ export default function TestReviewServices() {
 
   // Teste 2: Verificar configuração da API
   const testApiConfig = () => {
-    const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+    const apiUrl = RESTAURANT_API_URL;
     const token = localStorage.getItem('authToken');
     
     setResults(`
@@ -48,7 +49,7 @@ export default function TestReviewServices() {
     setResults('');
     
     try {
-      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+      const apiUrl = RESTAURANT_API_URL;
       const response = await fetch(`${apiUrl}/health`, {
         method: 'GET',
         headers: {
