@@ -1,215 +1,204 @@
-// Ficheiro: src/pages/RestaurantGamificationPage.jsx (PÁGINA EM CONSTRUÇÃO)
+import React, { useState, useEffect, useCallback } from 'react';
+import { Trophy, Star, Zap, Loader2, RefreshCcw, AlertCircle, Medal, TrendingUp } from 'lucide-react';
+import { useProfile } from '../context/ProfileContext';
+import { RESTAURANT_API_URL, createAuthHeaders } from '../services/api';
 
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Trophy, Award, Star, Zap, Target, Gift, Wrench, Clock, Users, TrendingUp, ChefHat, Utensils } from 'lucide-react';
+function LevelBadge({ level, levelName }) {
+  const colors = {
+    1: 'from-amber-600 to-amber-700',
+    2: 'from-slate-400 to-slate-500',
+    3: 'from-yellow-400 to-yellow-500',
+    4: 'from-cyan-400 to-cyan-500',
+    5: 'from-purple-500 to-purple-600',
+  };
+  const color = colors[level] || 'from-gray-400 to-gray-500';
+  return (
+    <div className={`inline-flex items-center gap-2 bg-gradient-to-r ${color} text-white px-4 py-1.5 rounded-full text-sm font-bold shadow-md`}>
+      <Trophy className="h-4 w-4" />
+      {levelName || `Nível ${level}`}
+    </div>
+  );
+}
+
+function ProgressBar({ value, max, color = 'bg-orange-500' }) {
+  const pct = max > 0 ? Math.min((value / max) * 100, 100) : 0;
+  return (
+    <div className="w-full bg-gray-200 rounded-full h-2.5">
+      <div className={`${color} h-2.5 rounded-full transition-all duration-500`} style={{ width: `${pct}%` }} />
+    </div>
+  );
+}
 
 export default function RestaurantGamificationPage() {
+  const { profile, loading: profileLoading } = useProfile();
+  const [stats, setStats] = useState(null);
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchGamification = useCallback(async () => {
+    if (!profile?.id) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const headers = createAuthHeaders();
+      const [statsRes, lbRes] = await Promise.all([
+        fetch(`${RESTAURANT_API_URL}/api/gamification/${profile.id}/points-level`, { headers }),
+        fetch(`${RESTAURANT_API_URL}/api/gamification/leaderboard?scope=restaurant&limit=10`, { headers }),
+      ]);
+      const statsJson = statsRes.ok ? await statsRes.json() : null;
+      const lbJson = lbRes.ok ? await lbRes.json() : null;
+      setStats(statsJson?.data || statsJson || null);
+      const lb = lbJson?.data || lbJson || [];
+      setLeaderboard(Array.isArray(lb) ? lb : []);
+    } catch (err) {
+      setError(err.message || 'Falha ao carregar gamificação.');
+    } finally {
+      setLoading(false);
+    }
+  }, [profile?.id]);
+
+  useEffect(() => {
+    if (!profileLoading && profile?.id) fetchGamification();
+    else if (!profileLoading) setLoading(false);
+  }, [profileLoading, profile?.id, fetchGamification]);
+
+  const myRank = leaderboard.findIndex(r => String(r.user_id) === String(profile?.id)) + 1;
+
+  if (loading || profileLoading) {
     return (
-        <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 p-6">
-            <div className="max-w-4xl mx-auto">
-                {/* Header */}
-                <div className="text-center mb-8">
-                    <div className="flex justify-center mb-4">
-                        <div className="relative">
-                            <Wrench className="w-16 h-16 text-orange-500 animate-bounce" />
-                            <div className="absolute -top-2 -right-2">
-                                <div className="w-6 h-6 bg-red-400 rounded-full flex items-center justify-center">
-                                    <span className="text-xs font-bold text-red-800">!</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <h1 className="text-4xl font-bold text-gray-800 mb-2">
-                        Gamificação em Desenvolvimento
-                    </h1>
-                    <p className="text-lg text-gray-600 mb-4">
-                        Sistema de recompensas para restaurantes em construção!
-                    </p>
-                    <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-                        <Clock className="w-4 h-4" />
-                        <span>Lançamento em breve</span>
-                    </div>
-                </div>
-
-                {/* Preview do que está vindo */}
-                <Card className="shadow-xl mb-8">
-                    <CardContent className="p-8">
-                        <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-                            Funcionalidades Exclusivas para Restaurantes
-                        </h2>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {/* Pontuação por Vendas */}
-                            <div className="text-center p-4 bg-gradient-to-b from-green-100 to-green-200 rounded-lg">
-                                <TrendingUp className="w-12 h-12 text-green-600 mx-auto mb-3" />
-                                <h3 className="font-bold text-gray-800 mb-2">Pontos por Vendas</h3>
-                                <p className="text-sm text-gray-600">
-                                    Ganhe pontos baseados no volume de vendas e faturamento
-                                </p>
-                            </div>
-
-                            {/* Avaliações */}
-                            <div className="text-center p-4 bg-gradient-to-b from-yellow-100 to-yellow-200 rounded-lg">
-                                <Star className="w-12 h-12 text-yellow-600 mx-auto mb-3" />
-                                <h3 className="font-bold text-gray-800 mb-2">Sistema de Avaliações</h3>
-                                <p className="text-sm text-gray-600">
-                                    Bônus por manter alta qualidade e satisfação dos clientes
-                                </p>
-                            </div>
-
-                            {/* Ranking de Restaurantes */}
-                            <div className="text-center p-4 bg-gradient-to-b from-purple-100 to-purple-200 rounded-lg">
-                                <Trophy className="w-12 h-12 text-purple-600 mx-auto mb-3" />
-                                <h3 className="font-bold text-gray-800 mb-2">Ranking Regional</h3>
-                                <p className="text-sm text-gray-600">
-                                    Compete com outros restaurantes da sua região
-                                </p>
-                            </div>
-
-                            {/* Badges Especiais */}
-                            <div className="text-center p-4 bg-gradient-to-b from-blue-100 to-blue-200 rounded-lg">
-                                <Award className="w-12 h-12 text-blue-600 mx-auto mb-3" />
-                                <h3 className="font-bold text-gray-800 mb-2">Badges Culinários</h3>
-                                <p className="text-sm text-gray-600">
-                                    Conquiste emblemas especiais por especialidades culinárias
-                                </p>
-                            </div>
-
-                            {/* Programa de Fidelidade */}
-                            <div className="text-center p-4 bg-gradient-to-b from-red-100 to-red-200 rounded-lg">
-                                <Users className="w-12 h-12 text-red-600 mx-auto mb-3" />
-                                <h3 className="font-bold text-gray-800 mb-2">Fidelidade de Clientes</h3>
-                                <p className="text-sm text-gray-600">
-                                    Pontos extras por clientes frequentes e recorrentes
-                                </p>
-                            </div>
-
-                            {/* Recompensas Exclusivas */}
-                            <div className="text-center p-4 bg-gradient-to-b from-indigo-100 to-indigo-200 rounded-lg">
-                                <Gift className="w-12 h-12 text-indigo-600 mx-auto mb-3" />
-                                <h3 className="font-bold text-gray-800 mb-2">Recompensas VIP</h3>
-                                <p className="text-sm text-gray-600">
-                                    Benefícios exclusivos e descontos em taxas da plataforma
-                                </p>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Funcionalidades específicas para restaurantes */}
-                <Card className="shadow-lg mb-8">
-                    <CardContent className="p-6">
-                        <h3 className="text-xl font-bold text-gray-800 mb-4 text-center flex items-center justify-center gap-2">
-                            <ChefHat className="w-6 h-6 text-orange-500" />
-                            Recursos Especiais para Restaurantes
-                        </h3>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-3">
-                                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                    <Utensils className="w-5 h-5 text-orange-500" />
-                                    <span className="text-sm font-medium">Metas de Vendas Mensais</span>
-                                </div>
-                                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                    <Star className="w-5 h-5 text-yellow-500" />
-                                    <span className="text-sm font-medium">Programa de Qualidade</span>
-                                </div>
-                                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                    <Users className="w-5 h-5 text-blue-500" />
-                                    <span className="text-sm font-medium">Análise de Satisfação</span>
-                                </div>
-                            </div>
-                            <div className="space-y-3">
-                                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                    <Trophy className="w-5 h-5 text-purple-500" />
-                                    <span className="text-sm font-medium">Certificações Especiais</span>
-                                </div>
-                                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                    <TrendingUp className="w-5 h-5 text-green-500" />
-                                    <span className="text-sm font-medium">Relatórios de Performance</span>
-                                </div>
-                                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                    <Gift className="w-5 h-5 text-red-500" />
-                                    <span className="text-sm font-medium">Programa de Benefícios</span>
-                                </div>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Progresso simulado */}
-                <Card className="shadow-lg mb-8">
-                    <CardContent className="p-6">
-                        <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">
-                            Progresso de Desenvolvimento
-                        </h3>
-                        
-                        <div className="space-y-4">
-                            {/* Backend para Restaurantes */}
-                            <div>
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="text-sm font-medium text-gray-700">APIs de Restaurantes</span>
-                                    <span className="text-sm text-green-600">90%</span>
-                                </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2">
-                                    <div className="bg-green-500 h-2 rounded-full" style={{ width: '90%' }}></div>
-                                </div>
-                            </div>
-
-                            {/* Sistema de Pontuação */}
-                            <div>
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="text-sm font-medium text-gray-700">Sistema de Pontuação</span>
-                                    <span className="text-sm text-yellow-600">70%</span>
-                                </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2">
-                                    <div className="bg-yellow-500 h-2 rounded-full" style={{ width: '70%' }}></div>
-                                </div>
-                            </div>
-
-                            {/* Interface do Usuário */}
-                            <div>
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="text-sm font-medium text-gray-700">Interface para Restaurantes</span>
-                                    <span className="text-sm text-blue-600">50%</span>
-                                </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2">
-                                    <div className="bg-blue-500 h-2 rounded-full" style={{ width: '50%' }}></div>
-                                </div>
-                            </div>
-
-                            {/* Integração */}
-                            <div>
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="text-sm font-medium text-gray-700">Integração & Testes</span>
-                                    <span className="text-sm text-orange-600">25%</span>
-                                </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2">
-                                    <div className="bg-orange-500 h-2 rounded-full" style={{ width: '25%' }}></div>
-                                </div>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Mensagem motivacional */}
-                <Card className="shadow-lg bg-gradient-to-r from-orange-500 to-red-500 text-white">
-                    <CardContent className="p-6 text-center">
-                        <ChefHat className="w-12 h-12 mx-auto mb-4 text-orange-100" />
-                        <h3 className="text-xl font-bold mb-2">Continue oferecendo excelência!</h3>
-                        <p className="text-orange-100">
-                            Mantenha a qualidade e o bom atendimento. Quando o sistema de gamificação estiver pronto, 
-                            você receberá pontos retroativos baseados no seu histórico de vendas e avaliações!
-                        </p>
-                    </CardContent>
-                </Card>
-
-                {/* Footer */}
-                <div className="text-center mt-8 text-gray-500 text-sm">
-                    <p>🏆 Em breve: Sistema completo de gamificação para restaurantes Inksa Delivery</p>
-                </div>
-            </div>
-        </div>
+      <div className="flex items-center justify-center h-64 gap-2 text-slate-400">
+        <Loader2 className="h-6 w-6 animate-spin" />
+        <span className="text-sm">Carregando gamificação…</span>
+      </div>
     );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-lg mx-auto mt-8 rounded-xl border border-rose-200 bg-rose-50 p-6">
+        <div className="flex items-center gap-3 mb-3">
+          <AlertCircle className="h-5 w-5 text-rose-600 shrink-0" />
+          <p className="text-sm font-semibold text-rose-700">Falha ao carregar gamificação</p>
+        </div>
+        <p className="text-sm text-rose-600 mb-4">{error}</p>
+        <button
+          onClick={fetchGamification}
+          className="inline-flex items-center gap-2 rounded-lg border border-rose-300 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-100"
+        >
+          <RefreshCcw className="h-3.5 w-3.5" /> Tentar novamente
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 max-w-4xl mx-auto">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-slate-800">Gamificação</h1>
+        <button
+          onClick={fetchGamification}
+          className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+        >
+          <RefreshCcw className="h-4 w-4" />
+          Atualizar
+        </button>
+      </div>
+
+      {/* Stats cards */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100">
+              <Zap className="h-5 w-5 text-orange-600" />
+            </div>
+            <p className="text-sm text-slate-500 font-medium">Pontos Totais</p>
+          </div>
+          <p className="text-3xl font-bold text-slate-800">{stats?.total_points?.toLocaleString('pt-BR') ?? '—'}</p>
+        </div>
+
+        <div className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-yellow-100">
+              <Trophy className="h-5 w-5 text-yellow-600" />
+            </div>
+            <p className="text-sm text-slate-500 font-medium">Nível Atual</p>
+          </div>
+          {stats ? (
+            <>
+              <p className="text-3xl font-bold text-slate-800 mb-2">{stats.current_level}</p>
+              <LevelBadge level={stats.current_level} levelName={stats.level_name} />
+            </>
+          ) : (
+            <p className="text-3xl font-bold text-slate-400">—</p>
+          )}
+        </div>
+
+        <div className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100">
+              <Medal className="h-5 w-5 text-indigo-600" />
+            </div>
+            <p className="text-sm text-slate-500 font-medium">Posição no Ranking</p>
+          </div>
+          <p className="text-3xl font-bold text-slate-800">{myRank > 0 ? `#${myRank}` : '—'}</p>
+        </div>
+      </div>
+
+      {/* Progress to next level */}
+      {stats?.points_to_next_level != null && (
+        <div className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-sm font-semibold text-slate-700">Progresso para o próximo nível</p>
+            <span className="text-xs text-slate-400">{stats.points_to_next_level} pts restantes</span>
+          </div>
+          <ProgressBar
+            value={(stats.total_points || 0)}
+            max={(stats.total_points || 0) + (stats.points_to_next_level || 1)}
+            color="bg-orange-500"
+          />
+        </div>
+      )}
+
+      {/* Leaderboard */}
+      {leaderboard.length > 0 && (
+        <div className="rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden">
+          <div className="flex items-center gap-2 px-5 py-4 border-b border-slate-100">
+            <TrendingUp className="h-4 w-4 text-indigo-500" />
+            <h2 className="text-base font-semibold text-slate-800">Ranking de Restaurantes</h2>
+          </div>
+          <div className="divide-y divide-slate-50">
+            {leaderboard.map((entry, idx) => {
+              const isMe = String(entry.user_id) === String(profile?.id);
+              return (
+                <div
+                  key={entry.user_id || idx}
+                  className={`flex items-center gap-4 px-5 py-3 ${isMe ? 'bg-orange-50' : 'hover:bg-slate-50/60'}`}
+                >
+                  <span className={`w-6 text-center text-sm font-bold ${idx === 0 ? 'text-yellow-500' : idx === 1 ? 'text-slate-400' : idx === 2 ? 'text-amber-600' : 'text-slate-400'}`}>
+                    {idx + 1}
+                  </span>
+                  <span className="flex-1 text-sm font-medium text-slate-700 truncate">
+                    {entry.restaurant_name || entry.name || `Restaurante ${idx + 1}`}
+                    {isMe && <span className="ml-2 text-xs text-orange-600 font-semibold">(você)</span>}
+                  </span>
+                  <span className="text-sm font-bold text-slate-800">
+                    {Number(entry.total_points || 0).toLocaleString('pt-BR')} pts
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {!stats && !error && (
+        <div className="text-center py-12 text-slate-500">
+          <Trophy className="h-12 w-12 mx-auto mb-3 text-slate-300" />
+          <p className="text-sm">Nenhum dado de gamificação encontrado ainda.</p>
+          <p className="text-xs mt-1">Continue recebendo pedidos para acumular pontos!</p>
+        </div>
+      )}
+    </div>
+  );
 }

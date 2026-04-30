@@ -143,14 +143,7 @@ export default function RestaurantReviewsList({ restaurantId, onDataLoaded }) {
     );
   }
 
-  // NOTA: A distribuição de notas simulada pode ser substituída por dados reais se a API os fornecer.
-  const ratingDistribution = [
-    { rating: 5, count: Math.floor(data.total_reviews * 0.6) },
-    { rating: 4, count: Math.floor(data.total_reviews * 0.25) },
-    { rating: 3, count: Math.floor(data.total_reviews * 0.1) },
-    { rating: 2, count: Math.floor(data.total_reviews * 0.03) },
-    { rating: 1, count: Math.floor(data.total_reviews * 0.02) },
-  ];
+  const ratingDistribution = Array.isArray(data.rating_distribution) ? data.rating_distribution : null;
 
   return (
     <div className="space-y-8">
@@ -189,7 +182,7 @@ export default function RestaurantReviewsList({ restaurantId, onDataLoaded }) {
       </div>
 
       {/* Rating Distribution */}
-      {data.total_reviews > 0 && (
+      {data.total_reviews > 0 && ratingDistribution && (
         <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">Distribuição das Avaliações</h3>
           <div className="space-y-3">

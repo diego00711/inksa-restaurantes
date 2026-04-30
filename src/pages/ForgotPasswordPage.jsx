@@ -10,18 +10,17 @@ import { Mail } from 'lucide-react';
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const addToast = useToast();
+  const { addToast } = useToast();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      // ✅ CORREÇÃO 2: A chamada usa 'authService' (minúsculo).
       const response = await authService.forgotPassword(email);
-      addToast(response.message, 'success');
-      setEmail(''); 
+      addToast('success', response.message);
+      setEmail('');
     } catch (error) {
-      addToast(error.message || 'Ocorreu um erro ao enviar o e-mail.', 'error');
+      addToast('error', error.message || 'Ocorreu um erro ao enviar o e-mail.');
     } finally {
       setIsLoading(false);
     }

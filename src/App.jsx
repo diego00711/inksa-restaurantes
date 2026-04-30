@@ -13,8 +13,6 @@ import { CategoryManagementPage } from './pages/CategoryManagementPage';
 import RestaurantGamificationPage from './pages/RestaurantGamificationPage';
 // <<< NOVO: Importar Central de Avaliações >>>
 import RestaurantEvaluationsCenter from './pages/RestaurantEvaluationsCenter';
-import TestReviewServices from './components/TestReviewServices';
-
 // --- Componentes e Contextos ---
 import { PortalLayout } from './components/restaurant-portal/PortalLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -54,9 +52,6 @@ export default function App() {
               {/* <<< CENTRAL DE AVALIAÇÕES >>> */}
               <Route path="avaliacoes" element={<RestaurantEvaluationsCenter />} />
               
-              {/* <<< ROTA DE TESTE CORRIGIDA >>> */}
-              {/* O componente de teste agora tem sua própria rota */}
-              <Route path="teste-avaliacoes" element={<TestReviewServices />} />
             </Route>
 
             {/* Redirecionamento legado */}

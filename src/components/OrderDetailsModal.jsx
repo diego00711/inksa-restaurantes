@@ -22,13 +22,13 @@ export function OrderDetailsModal({ order, onClose }) {
       setIsLoading(true);
       setError(null);
       try {
-        const details = await orderService.getOrderDetails(order.id);
+        const details = await orderService.getOrderById(order.id);
         setFullOrderDetails(details);
       } catch (err) {
         console.error("Erro ao buscar detalhes do pedido:", err);
         const errorMessage = err.message || "Não foi possível carregar os detalhes do pedido.";
         setError(errorMessage);
-        addToast(errorMessage, 'error');
+        addToast('error', errorMessage);
       } finally {
         setIsLoading(false);
       }
