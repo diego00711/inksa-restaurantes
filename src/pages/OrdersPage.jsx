@@ -1,18 +1,105 @@
-// src/pages/OrdersPage.jsx - VERSÃO RESPONSIVA OTIMIZADA
-
+// src/pages/OrdersPage.jsx — Kanban + Supabase Realtime + KPIs + Sons
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { orderService } from '../services/orderService.js';
 import OrderCard from '../components/OrderCard';
 import { OrderDetailsModal } from '../components/OrderDetailsModal';
 import { PickupConfirmationModal } from '../components/PickupConfirmationModal';
 import { useToast } from '../context/ToastContext.jsx';
-import { SlidersHorizontal, Trash2 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { useNotificationSound } from '../hooks/useNotificationSound';
+import { supabase } from '../lib/supabase';
+import { SlidersHorizontal, Trash2, TrendingUp, ShoppingBag, DollarSign, Clock, AlertCircle } from 'lucide-react';
 
+// ─── OrderTimer ───────────────────────────────────────────────────────────────
+function OrderTimer({ createdAt, acceptedAt }) {
+  const [mins, setMins] = useState(0);
+  const base = acceptedAt || createdAt;
+
+  useEffect(() => {
+    if (!base) return;
+    const tick = () => setMins(Math.max(0, Math.floor((Date.now() - new Date(base).getTime()) / 60000)));
+    tick();
+    const id = setInterval(tick, 30000);
+    return () => clearInterval(id);
+  }, [base]);
+
+  const cls = mins > 25
+    ? 'text-red-600 bg-red-50 border-red-200'
+    : mins > 12
+    ? 'text-amber-600 bg-amber-50 border-amber-200'
+    : 'text-green-600 bg-green-50 border-green-200';
+
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full border ${cls}`}>
+      <Clock className="w-3 h-3" />
+      {mins}min
+    </span>
+  );
+}
+
+// ─── KPI Bar ──────────────────────────────────────────────────────────────────
+function KPIBar({ orders }) {
+  const stats = useMemo(() => {
+    const today = new Date().toDateString();
+    const todayOrds = orders.filter(o => {
+      try { return new Date(o.created_at).toDateString() === today; }
+      catch { return false; }
+    });
+    const delivered = todayOrds.filter(o => ['delivered', 'Entregue'].includes(o.status));
+    const revenue = delivered.reduce((s, o) => s + parseFloat(o.total_amount || o.total || 0), 0);
+    const ticket = delivered.length ? revenue / delivered.length : 0;
+    const inProgress = orders.filter(o =>
+      ['pending', 'Pendente', 'accepted', 'Aceito', 'preparing', 'Preparando', 'ready', 'Pronto'].includes(o.status)
+    ).length;
+
+    return [
+      { label: 'Pedidos Hoje', value: String(todayOrds.length), icon: ShoppingBag, color: 'text-blue-700', bg: 'bg-blue-50', border: 'border-blue-100' },
+      { label: 'Faturamento', value: `R$ ${revenue.toFixed(2)}`, icon: DollarSign, color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-100' },
+      { label: 'Ticket Médio', value: `R$ ${ticket.toFixed(2)}`, icon: TrendingUp, color: 'text-purple-700', bg: 'bg-purple-50', border: 'border-purple-100' },
+      { label: 'Em Andamento', value: String(inProgress), icon: AlertCircle, color: 'text-orange-700', bg: 'bg-orange-50', border: 'border-orange-100' },
+    ];
+  }, [orders]);
+
+  return (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+      {stats.map(({ label, value, icon: Icon, color, bg, border }) => (
+        <div key={label} className={`${bg} rounded-2xl p-4 border ${border} shadow-sm flex items-center gap-3`}>
+          <div className={`p-2.5 rounded-xl bg-white shadow-sm ${color}`}>
+            <Icon className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide leading-none mb-1">{label}</p>
+            <p className={`text-xl font-black ${color} leading-none`}>{value}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Column header ────────────────────────────────────────────────────────────
+function ColumnHeader({ emoji, title, count, color, textColor, hasNew }) {
+  return (
+    <div className={`flex items-center justify-between mb-3 p-2 rounded-lg ${hasNew ? 'animate-pulse' : ''}`}>
+      <h2 className={`text-sm font-bold ${textColor} flex items-center gap-1.5`}>
+        <span>{emoji}</span>
+        {title}
+      </h2>
+      <span className={`text-xs font-black px-2.5 py-1 rounded-full ${color} ${textColor}`}>{count}</span>
+    </div>
+  );
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
 export function OrdersPage() {
   const [allOrders, setAllOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const { addToast } = useToast();
-  const knownOrderIds = useRef(null); // null = first load
+  const { user } = useAuth();
+  const playSound = useNotificationSound();
+
+  const knownOrderIds = useRef(null);
+  const [newOrderIds, setNewOrderIds] = useState(new Set());
 
   const [filters, setFilters] = useState({
     startDate: '',
@@ -22,14 +109,12 @@ export function OrdersPage() {
   });
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
-  // Estados para modal de detalhes
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
-  // Estados para modal de confirmação de retirada
   const [selectedOrderForPickup, setSelectedOrderForPickup] = useState(null);
   const [showPickupModal, setShowPickupModal] = useState(false);
 
+  // ── Fetch orders ────────────────────────────────────────────────────────────
   const fetchOrders = useCallback(async (currentFilters) => {
     try {
       const params = new URLSearchParams();
@@ -37,195 +122,212 @@ export function OrdersPage() {
       if (currentFilters.endDate) params.append('end_date', currentFilters.endDate);
       params.append('sort_by', currentFilters.sortBy);
       params.append('sort_order', currentFilters.sortOrder);
-      
+
       const ordersArray = await orderService.getOrders(params);
       const newOrders = ordersArray || [];
       setAllOrders(newOrders);
 
-      // Detect new pending orders after first load
       if (knownOrderIds.current !== null) {
-        const newPending = newOrders.filter(
-          o => o.status === 'pending' && !knownOrderIds.current.has(o.id)
+        const arrived = newOrders.filter(
+          o => ['pending', 'Pendente'].includes(o.status) && !knownOrderIds.current.has(o.id)
         );
-        if (newPending.length > 0) {
+        if (arrived.length > 0) {
+          playSound('new_order');
           addToast(
-            `${newPending.length === 1 ? 'Novo pedido recebido!' : `${newPending.length} novos pedidos recebidos!`}`,
+            arrived.length === 1 ? '🔔 Novo pedido recebido!' : `🔔 ${arrived.length} novos pedidos!`,
             'success'
           );
+          const ids = new Set(arrived.map(o => o.id));
+          setNewOrderIds(ids);
+          setTimeout(() => setNewOrderIds(new Set()), 5000);
         }
       }
       knownOrderIds.current = new Set(newOrders.map(o => o.id));
     } catch (err) {
-      addToast(err.message || "Erro ao carregar pedidos.", 'error');
+      addToast(err.message || 'Erro ao carregar pedidos.', 'error');
       setAllOrders([]);
     } finally {
       setIsLoading(false);
     }
-  }, [addToast]);
+  }, [addToast, playSound]);
 
+  // ── Polling ─────────────────────────────────────────────────────────────────
   useEffect(() => {
     fetchOrders(filters);
-    const intervalId = setInterval(() => fetchOrders(filters), 10000); 
+    const intervalId = setInterval(() => fetchOrders(filters), 10000);
     return () => clearInterval(intervalId);
   }, [fetchOrders, filters]);
 
+  // ── Supabase realtime ───────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!supabase) return;
+
+    const restaurantId = user?.restaurant_id || user?.id;
+    const channelConfig = {
+      event: '*',
+      schema: 'public',
+      table: 'orders',
+      ...(restaurantId ? { filter: `restaurant_id=eq.${restaurantId}` } : {}),
+    };
+
+    const ch = supabase
+      .channel('restaurant-orders-live')
+      .on('postgres_changes', channelConfig, (payload) => {
+        if (payload.eventType === 'INSERT' ||
+          (payload.eventType === 'UPDATE' && ['pending', 'Pendente'].includes(payload.new?.status))) {
+          playSound('new_order');
+          addToast('🔔 Novo pedido recebido!', 'success');
+        }
+        fetchOrders(filters);
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(ch); };
+  }, [user, playSound, addToast, fetchOrders, filters]);
+
+  // ── Status update ───────────────────────────────────────────────────────────
   const handleUpdateStatus = async (orderId, newStatus) => {
     try {
       await orderService.updateOrderStatus(orderId, newStatus);
-      addToast(`Status do pedido atualizado para ${newStatus}!`, 'success');
-      fetchOrders(filters); 
+      if (['accepted_by_delivery', 'delivering'].includes(newStatus)) playSound('out_for_delivery');
+      if (['delivered', 'Entregue'].includes(newStatus)) playSound('delivered');
+      addToast(`Status atualizado!`, 'success');
+      fetchOrders(filters);
     } catch (err) {
-      addToast(`Falha ao atualizar o status: ${err.message}`, 'error');
+      addToast(`Falha: ${err.message}`, 'error');
     }
   };
 
   const handleRemoveOrder = async (orderId) => {
-    if (!window.confirm('Deseja remover este pedido do painel? Ele não aparecerá mais aqui, mas ficará no histórico para análises.')) {
-      return;
-    }
-    
+    if (!window.confirm('Remover este pedido do painel?')) return;
     try {
       await orderService.updateOrderStatus(orderId, 'Arquivado');
       addToast('Pedido removido do painel!', 'success');
       fetchOrders(filters);
     } catch (err) {
-      addToast(`Erro ao remover pedido: ${err.message}`, 'error');
+      addToast(`Erro: ${err.message}`, 'error');
     }
   };
 
-  const handleOpenPickupModal = (order) => {
-    setSelectedOrderForPickup(order);
-    setShowPickupModal(true);
-  };
-
-  const handleClosePickupModal = () => {
-    setSelectedOrderForPickup(null);
-    setShowPickupModal(false);
-  };
-
-  const handlePickupSuccess = () => {
-    fetchOrders(filters);
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
-  };
-  
-  const handleApplyFilters = () => { 
-    fetchOrders(filters); 
-  };
-  
+  const handleOpenPickupModal = (order) => { setSelectedOrderForPickup(order); setShowPickupModal(true); };
+  const handleClosePickupModal = () => { setSelectedOrderForPickup(null); setShowPickupModal(false); };
+  const handlePickupSuccess = () => { fetchOrders(filters); };
+  const handleInputChange = (e) => { setFilters(prev => ({ ...prev, [e.target.name]: e.target.value })); };
+  const handleApplyFilters = () => { fetchOrders(filters); };
   const handleClearFilters = () => {
-    const defaultFilters = { startDate: '', endDate: '', sortBy: 'created_at', sortOrder: 'desc' };
-    setFilters(defaultFilters);
-    fetchOrders(defaultFilters);
+    const d = { startDate: '', endDate: '', sortBy: 'created_at', sortOrder: 'desc' };
+    setFilters(d);
+    fetchOrders(d);
   };
+  const handleViewOrderDetails = (order) => { setSelectedOrder(order); setIsModalOpen(true); };
+  const handleCloseModal = () => { setSelectedOrder(null); setIsModalOpen(false); };
 
-  // ✅ COLUNAS: 6 no total
+  // ── Column data ─────────────────────────────────────────────────────────────
   const columns = useMemo(() => {
-    const activeOrders = allOrders.filter(o => 
-      o.status !== 'Arquivado' && o.status !== 'archived'
-    );
-    
-    const novos = activeOrders.filter(o => o.status === 'Pendente' || o.status === 'pending');
-    const emPreparo = activeOrders.filter(o => ['Aceito', 'Preparando', 'accepted', 'preparing'].includes(o.status));
-    const prontos = activeOrders.filter(o => o.status === 'Pronto' || o.status === 'ready');
-    
-    const aguardandoRetirada = activeOrders.filter(o => 
-      o.status === 'Aguardando Retirada' || 
-      o.status === 'accepted_by_delivery'
-    );
-    
-    const saiuParaEntrega = activeOrders.filter(o => 
-      o.status === 'Saiu para Entrega' || 
-      o.status === 'delivering' ||
-      o.status === 'Entregando'
-    );
-    
-    const entregues = activeOrders.filter(o => 
-      o.status === 'Entregue' || 
-      o.status === 'delivered'
-    );
-    
-    return { novos, emPreparo, prontos, aguardandoRetirada, saiuParaEntrega, entregues };
+    const active = allOrders.filter(o => !['Arquivado', 'archived'].includes(o.status));
+    return {
+      novos:              active.filter(o => ['pending', 'Pendente'].includes(o.status)),
+      emPreparo:          active.filter(o => ['accepted', 'Aceito', 'preparing', 'Preparando'].includes(o.status)),
+      prontos:            active.filter(o => ['ready', 'Pronto'].includes(o.status)),
+      aguardandoRetirada: active.filter(o => ['accepted_by_delivery', 'Aguardando Retirada'].includes(o.status)),
+      saiuParaEntrega:    active.filter(o => ['delivering', 'Saiu para Entrega', 'Entregando'].includes(o.status)),
+      entregues:          active.filter(o => ['delivered', 'Entregue'].includes(o.status)),
+    };
   }, [allOrders]);
 
-  const handleViewOrderDetails = (order) => { 
-    setSelectedOrder(order); 
-    setIsModalOpen(true); 
-  };
-  
-  const handleCloseModal = () => { 
-    setSelectedOrder(null); 
-    setIsModalOpen(false); 
-  };
+  const hasNewOrders = newOrderIds.size > 0;
+
+  // ── Column wrapper ──────────────────────────────────────────────────────────
+  const Col = ({ bg, emoji, title, count, textColor, badgeColor, orders, showRemove = false, isNewCol = false }) => (
+    <div className={`${bg} rounded-xl p-3 flex flex-col min-w-[240px] border border-white/80 shadow-sm`}>
+      <ColumnHeader emoji={emoji} title={title} count={count} color={badgeColor} textColor={textColor} hasNew={isNewCol && hasNewOrders} />
+      <div className="space-y-3 overflow-y-auto max-h-[60vh] pr-0.5">
+        {orders.length > 0 ? (
+          orders.map(order => (
+            <div
+              key={order.id}
+              className={`${newOrderIds.has(order.id) ? 'animate-in slide-in-from-top-4 duration-300' : ''}`}
+            >
+              {/* Timer badge */}
+              <div className="flex justify-end mb-1">
+                <OrderTimer createdAt={order.created_at} acceptedAt={order.accepted_at} />
+              </div>
+              <OrderCard
+                order={order}
+                onUpdateStatus={handleUpdateStatus}
+                onViewDetails={handleViewOrderDetails}
+                onConfirmPickup={handleOpenPickupModal}
+              />
+              {showRemove && (
+                <button
+                  onClick={() => handleRemoveOrder(order.id)}
+                  className="mt-1.5 w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-medium rounded-lg transition-colors border border-red-100"
+                >
+                  <Trash2 size={11} /> Remover
+                </button>
+              )}
+            </div>
+          ))
+        ) : (
+          <p className="text-xs text-center text-gray-400 py-6">Nenhum pedido</p>
+        )}
+      </div>
+    </div>
+  );
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 h-full flex flex-col">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Painel de Pedidos</h1>
-        <button 
-          onClick={() => setShowAdvancedFilters(!showAdvancedFilters)} 
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border rounded-md shadow-sm hover:bg-gray-50"
+    <div className="p-4 sm:p-6 lg:p-8 min-h-full flex flex-col bg-gray-50">
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      <div className="flex flex-wrap justify-between items-center gap-3 mb-5">
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-gray-800">Painel de Pedidos</h1>
+          {hasNewOrders && (
+            <span className="flex items-center gap-1.5 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-bounce">
+              🔔 Novo!
+            </span>
+          )}
+        </div>
+        <button
+          onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl shadow-sm hover:bg-gray-50 transition-colors"
         >
           <SlidersHorizontal size={16} />
-          {showAdvancedFilters ? 'Ocultar Filtros' : 'Filtros Avançados'}
+          {showAdvancedFilters ? 'Ocultar Filtros' : 'Filtros'}
         </button>
       </div>
 
-      {/* Filtros Avançados */}
+      {/* ── KPI Bar ────────────────────────────────────────────────────────── */}
+      <KPIBar orders={allOrders} />
+
+      {/* ── Filters ────────────────────────────────────────────────────────── */}
       {showAdvancedFilters && (
-        <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
+        <div className="bg-white p-4 rounded-xl shadow-sm mb-5 border border-gray-100">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
             <div>
-              <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">De</label>
-              <input 
-                type="date" 
-                name="startDate" 
-                id="startDate" 
-                value={filters.startDate} 
-                onChange={handleInputChange} 
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" 
-              />
+              <label className="block text-xs font-semibold text-gray-600 mb-1">De</label>
+              <input type="date" name="startDate" value={filters.startDate} onChange={handleInputChange}
+                className="w-full rounded-lg border-gray-300 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500" />
             </div>
             <div>
-              <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">Até</label>
-              <input 
-                type="date" 
-                name="endDate" 
-                id="endDate" 
-                value={filters.endDate} 
-                onChange={handleInputChange} 
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" 
-              />
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Até</label>
+              <input type="date" name="endDate" value={filters.endDate} onChange={handleInputChange}
+                className="w-full rounded-lg border-gray-300 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500" />
             </div>
             <div>
-              <label htmlFor="sortBy" className="block text-sm font-medium text-gray-700">Ordenar por</label>
-              <select 
-                name="sortBy" 
-                id="sortBy" 
-                value={filters.sortBy} 
-                onChange={handleInputChange} 
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              >
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Ordenar por</label>
+              <select name="sortBy" value={filters.sortBy} onChange={handleInputChange}
+                className="w-full rounded-lg border-gray-300 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500">
                 <option value="created_at">Data</option>
                 <option value="total_amount">Valor</option>
               </select>
             </div>
-            <div className="flex items-center gap-2">
-              <button 
-                onClick={handleApplyFilters} 
-                className="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-              >
+            <div className="flex gap-2">
+              <button onClick={handleApplyFilters}
+                className="flex-1 py-2 px-4 text-sm font-semibold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition-colors">
                 Aplicar
               </button>
-              <button 
-                onClick={handleClearFilters} 
-                title="Limpar Filtros" 
-                className="p-2 border rounded-md hover:bg-gray-100"
-              >
+              <button onClick={handleClearFilters}
+                className="p-2 rounded-lg border hover:bg-gray-100 transition-colors" title="Limpar">
                 🧹
               </button>
             </div>
@@ -233,166 +335,54 @@ export function OrdersPage() {
         </div>
       )}
 
-      {/* ✅ GRID RESPONSIVO: Mobile 1 col → Tablet 2 cols → Desktop 3 cols → Grande 4 cols → Extra grande 6 cols */}
-      <div className="flex-grow grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-3 overflow-x-auto">
+      {/* ── Kanban ─────────────────────────────────────────────────────────── */}
+      <div className="flex-grow overflow-x-auto">
         {isLoading ? (
-          <p className="text-gray-500 text-center col-span-full py-10">Carregando...</p>
+          <div className="flex gap-3">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="min-w-[240px] h-64 bg-gray-200 rounded-xl animate-pulse" />
+            ))}
+          </div>
         ) : (
-          <>
-            {/* Coluna 1: Novos Pedidos */}
-            <div className="bg-blue-50 rounded-lg p-3 flex flex-col min-w-[240px]">
-              <h2 className="text-sm font-bold text-blue-700 mb-3">
-                📥 Novos ({columns.novos.length})
-              </h2>
-              <div className="space-y-3 overflow-y-auto">
-                {columns.novos.length > 0 ? (
-                  columns.novos.map(order => (
-                    <OrderCard 
-                      key={order.id} 
-                      order={order} 
-                      onUpdateStatus={handleUpdateStatus} 
-                      onViewDetails={handleViewOrderDetails}
-                      onConfirmPickup={handleOpenPickupModal}
-                    />
-                  ))
-                ) : (
-                  <p className="text-xs text-center text-gray-500 pt-4">Nenhum pedido novo.</p>
-                )}
-              </div>
-            </div>
-
-            {/* Coluna 2: Em Preparo */}
-            <div className="bg-orange-50 rounded-lg p-3 flex flex-col min-w-[240px]">
-              <h2 className="text-sm font-bold text-orange-700 mb-3">
-                👨‍🍳 Preparo ({columns.emPreparo.length})
-              </h2>
-              <div className="space-y-3 overflow-y-auto">
-                {columns.emPreparo.length > 0 ? (
-                  columns.emPreparo.map(order => (
-                    <OrderCard 
-                      key={order.id} 
-                      order={order} 
-                      onUpdateStatus={handleUpdateStatus} 
-                      onViewDetails={handleViewOrderDetails}
-                      onConfirmPickup={handleOpenPickupModal}
-                    />
-                  ))
-                ) : (
-                  <p className="text-xs text-center text-gray-500 pt-4">Nenhum pedido em preparo.</p>
-                )}
-              </div>
-            </div>
-
-            {/* Coluna 3: Prontos */}
-            <div className="bg-yellow-50 rounded-lg p-3 flex flex-col min-w-[240px]">
-              <h2 className="text-sm font-bold text-yellow-700 mb-3">
-                📦 Prontos ({columns.prontos.length})
-              </h2>
-              <div className="space-y-3 overflow-y-auto">
-                {columns.prontos.length > 0 ? (
-                  columns.prontos.map(order => (
-                    <OrderCard 
-                      key={order.id} 
-                      order={order} 
-                      onUpdateStatus={handleUpdateStatus} 
-                      onViewDetails={handleViewOrderDetails}
-                      onConfirmPickup={handleOpenPickupModal}
-                    />
-                  ))
-                ) : (
-                  <p className="text-xs text-center text-gray-500 pt-4">Nenhum pedido pronto.</p>
-                )}
-              </div>
-            </div>
-
-            {/* Coluna 4: Aguardando Retirada */}
-            <div className="bg-pink-50 rounded-lg p-3 flex flex-col min-w-[240px]">
-              <h2 className="text-sm font-bold text-pink-700 mb-3">
-                ⏳ Aguardando ({columns.aguardandoRetirada.length})
-              </h2>
-              <div className="space-y-3 overflow-y-auto">
-                {columns.aguardandoRetirada.length > 0 ? (
-                  columns.aguardandoRetirada.map(order => (
-                    <OrderCard 
-                      key={order.id} 
-                      order={order} 
-                      onUpdateStatus={handleUpdateStatus} 
-                      onViewDetails={handleViewOrderDetails}
-                      onConfirmPickup={handleOpenPickupModal}
-                    />
-                  ))
-                ) : (
-                  <p className="text-xs text-center text-gray-500 pt-4">Nenhum pedido aguardando.</p>
-                )}
-              </div>
-            </div>
-
-            {/* Coluna 5: Em Rota */}
-            <div className="bg-purple-50 rounded-lg p-3 flex flex-col min-w-[240px]">
-              <h2 className="text-sm font-bold text-purple-700 mb-3">
-                🚗 Em Rota ({columns.saiuParaEntrega.length})
-              </h2>
-              <div className="space-y-3 overflow-y-auto">
-                {columns.saiuParaEntrega.length > 0 ? (
-                  columns.saiuParaEntrega.map(order => (
-                    <OrderCard 
-                      key={order.id} 
-                      order={order} 
-                      onUpdateStatus={handleUpdateStatus} 
-                      onViewDetails={handleViewOrderDetails}
-                      onConfirmPickup={handleOpenPickupModal}
-                    />
-                  ))
-                ) : (
-                  <p className="text-xs text-center text-gray-500 pt-4">Nenhum pedido em rota.</p>
-                )}
-              </div>
-            </div>
-
-            {/* Coluna 6: Entregues */}
-            <div className="bg-green-50 rounded-lg p-3 flex flex-col min-w-[240px]">
-              <h2 className="text-sm font-bold text-green-700 mb-3">
-                ✅ Entregues ({columns.entregues.length})
-              </h2>
-              <div className="space-y-3 overflow-y-auto">
-                {columns.entregues.length > 0 ? (
-                  columns.entregues.map(order => (
-                    <div key={order.id}>
-                      <OrderCard 
-                        order={order} 
-                        onUpdateStatus={handleUpdateStatus} 
-                        onViewDetails={handleViewOrderDetails}
-                        onConfirmPickup={handleOpenPickupModal}
-                      />
-                      {/* Botão Remover */}
-                      <button
-                        onClick={() => handleRemoveOrder(order.id)}
-                        className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-medium rounded-md transition-colors border border-red-200"
-                        title="Remover do painel"
-                      >
-                        <Trash2 size={12} />
-                        Remover
-                      </button>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-xs text-center text-gray-500 pt-4">Nenhum pedido entregue.</p>
-                )}
-              </div>
-            </div>
-          </>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-3 min-w-max 2xl:min-w-0">
+            <Col
+              bg="bg-blue-50" emoji="📥" title="Novos" count={columns.novos.length}
+              textColor="text-blue-700" badgeColor="bg-blue-200"
+              orders={columns.novos} isNewCol
+            />
+            <Col
+              bg="bg-orange-50" emoji="👨‍🍳" title="Preparando" count={columns.emPreparo.length}
+              textColor="text-orange-700" badgeColor="bg-orange-200"
+              orders={columns.emPreparo}
+            />
+            <Col
+              bg="bg-yellow-50" emoji="📦" title="Prontos" count={columns.prontos.length}
+              textColor="text-yellow-700" badgeColor="bg-yellow-200"
+              orders={columns.prontos}
+            />
+            <Col
+              bg="bg-pink-50" emoji="⏳" title="Aguardando" count={columns.aguardandoRetirada.length}
+              textColor="text-pink-700" badgeColor="bg-pink-200"
+              orders={columns.aguardandoRetirada}
+            />
+            <Col
+              bg="bg-purple-50" emoji="🚗" title="Em Rota" count={columns.saiuParaEntrega.length}
+              textColor="text-purple-700" badgeColor="bg-purple-200"
+              orders={columns.saiuParaEntrega}
+            />
+            <Col
+              bg="bg-green-50" emoji="✅" title="Entregues" count={columns.entregues.length}
+              textColor="text-green-700" badgeColor="bg-green-200"
+              orders={columns.entregues} showRemove
+            />
+          </div>
         )}
       </div>
 
-      {/* Modal de Detalhes */}
+      {/* ── Modals ─────────────────────────────────────────────────────────── */}
       {isModalOpen && selectedOrder && (
-        <OrderDetailsModal 
-          order={selectedOrder} 
-          onClose={handleCloseModal} 
-        />
+        <OrderDetailsModal order={selectedOrder} onClose={handleCloseModal} />
       )}
-
-      {/* Modal de Confirmação de Retirada */}
       {showPickupModal && selectedOrderForPickup && (
         <PickupConfirmationModal
           order={selectedOrderForPickup}
