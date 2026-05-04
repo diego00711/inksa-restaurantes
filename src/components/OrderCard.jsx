@@ -92,6 +92,41 @@ export default function OrderCard({ order, onUpdateStatus, onViewDetails, onConf
           {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(order.total_amount)}
         </p>
 
+        {/* Payment method badge */}
+        {(() => {
+          const method = order.payment_method;
+          const changeFor = parseFloat(order.change_for || 0);
+          if (method === 'cash') {
+            return (
+              <div className="flex flex-col gap-0.5">
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-800 bg-green-100 px-2 py-1 rounded-full w-fit">
+                  💵 Dinheiro
+                </span>
+                {changeFor > 0 && (
+                  <span className="text-xs text-gray-500 pl-1">
+                    Troco para {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(changeFor)}
+                  </span>
+                )}
+              </div>
+            );
+          }
+          if (method === 'pix') {
+            return (
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-blue-800 bg-blue-100 px-2 py-1 rounded-full w-fit">
+                📱 PIX
+              </span>
+            );
+          }
+          if (method === 'credit' || method === 'debit') {
+            return (
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-purple-800 bg-purple-100 px-2 py-1 rounded-full w-fit">
+                💳 Cartão
+              </span>
+            );
+          }
+          return null;
+        })()}
+
         <div className="flex flex-col gap-2" onClick={(e) => e.stopPropagation()}>
           {showPickupButton && onConfirmPickup ? (
             <button
