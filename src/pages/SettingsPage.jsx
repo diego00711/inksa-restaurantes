@@ -18,6 +18,7 @@ export function SettingsPage() {
     bank_name: '', bank_agency: '',
     bank_account_number: '', bank_account_type: 'corrente',
     pix_key: '', mp_account_id: '', delivery_type: 'platform',
+    accepts_cash: true,
   });
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState('');
@@ -202,6 +203,28 @@ export function SettingsPage() {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Aceitar dinheiro */}
+            <div className="border-t pt-8">
+              <h2 className="text-xl font-semibold mb-4 text-gray-700">Formas de Pagamento</h2>
+              <label className="flex items-center gap-3 cursor-pointer w-fit">
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    name="accepts_cash"
+                    checked={profileData.accepts_cash ?? true}
+                    onChange={handleChange}
+                    className="sr-only"
+                  />
+                  <div className={`w-11 h-6 rounded-full transition-colors duration-200 ${(profileData.accepts_cash ?? true) ? 'bg-indigo-600' : 'bg-gray-300'}`} />
+                  <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${(profileData.accepts_cash ?? true) ? 'translate-x-5' : ''}`} />
+                </div>
+                <span className="text-sm font-medium text-gray-700">Aceitar pagamento em dinheiro</span>
+              </label>
+              <p className="text-xs text-gray-500 mt-2 ml-0">
+                Se desativado, a opção "Dinheiro" não será exibida para os clientes no checkout.
+              </p>
             </div>
 
             {/* Secção de Endereço */}
