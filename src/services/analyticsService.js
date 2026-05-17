@@ -2,6 +2,7 @@
 // Serviço de Analytics do Portal do Restaurante
 
 import { RESTAURANT_API_URL, processResponse, createAuthHeaders } from './api';
+import { apiFetch } from './apiClient';
 
 export const analyticsService = {
   /**
@@ -29,7 +30,7 @@ export const analyticsService = {
     // Se for 'all', não envia o parâmetro (backend retorna tudo)
 
     try {
-      const response = await fetch(url.toString(), {
+      const response = await apiFetch(url.toString(), {
         headers,
         signal,
       });

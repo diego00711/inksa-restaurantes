@@ -1,6 +1,7 @@
 // src/services/menuService.js - VERSÃO FINAL E ROBUSTA
 
 import { RESTAURANT_API_URL, processResponse, createAuthHeaders } from './api';
+import { apiFetch } from './apiClient';
 
 export const menuService = {
   /**
@@ -9,7 +10,7 @@ export const menuService = {
    */
   getMenuItems: async (signal) => {
     try {
-      const response = await fetch(`${RESTAURANT_API_URL}/api/menu`, {
+      const response = await apiFetch(`${RESTAURANT_API_URL}/api/menu`, {
         headers: createAuthHeaders(),
         signal,
       });
@@ -43,7 +44,7 @@ export const menuService = {
    */
   addMenuItem: async (itemData) => {
     try {
-      const response = await fetch(`${RESTAURANT_API_URL}/api/menu`, {
+      const response = await apiFetch(`${RESTAURANT_API_URL}/api/menu`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -64,7 +65,7 @@ export const menuService = {
    */
   updateMenuItem: async (itemId, itemData) => {
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `${RESTAURANT_API_URL}/api/menu/${encodeURIComponent(itemId)}`,
         {
           method: 'PUT',
@@ -88,7 +89,7 @@ export const menuService = {
    */
   deleteMenuItem: async (itemId) => {
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `${RESTAURANT_API_URL}/api/menu/${encodeURIComponent(itemId)}`,
         {
           method: 'DELETE',
@@ -111,7 +112,7 @@ export const menuService = {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch(
+      const response = await apiFetch(
         `${RESTAURANT_API_URL}/api/menu/upload-image`,
         {
           method: 'POST',

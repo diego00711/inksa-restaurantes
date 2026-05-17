@@ -1,11 +1,12 @@
 // src/services/restaurantReviewsService.js
 
 import { RESTAURANT_API_URL, processResponse, createAuthHeaders } from './api';
+import { apiFetch } from './apiClient';
 
 export async function getRestaurantReviews(restaurantId) {
   const url = `${RESTAURANT_API_URL}/api/review/restaurants/${encodeURIComponent(restaurantId)}/reviews`;
   try {
-    const response = await fetch(url, {
+    const response = await apiFetch(url, {
       method: 'GET',
       headers: createAuthHeaders(),
     });
@@ -19,7 +20,7 @@ export async function getRestaurantReviews(restaurantId) {
 export async function postRestaurantReview({ restaurantId, orderId, rating, comment, categoryRatings, badges }) {
   const url = `${RESTAURANT_API_URL}/api/review/restaurants/${encodeURIComponent(restaurantId)}/reviews`;
   try {
-    const response = await fetch(url, {
+    const response = await apiFetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

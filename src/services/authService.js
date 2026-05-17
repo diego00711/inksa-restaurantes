@@ -1,13 +1,14 @@
 // src/services/authService.js - VERSÃO CORRIGIDA COM LOGOUT QUE FECHA RESTAURANTE
 
-import { 
-  RESTAURANT_API_URL, 
-  AUTH_API_URL, 
-  processResponse, 
+import {
+  RESTAURANT_API_URL,
+  AUTH_API_URL,
+  processResponse,
   createAuthHeaders,
   AUTH_TOKEN_KEY,
   USER_DATA_KEY
 } from './api';
+import { apiFetch } from './apiClient';
 
 const AUTH_BASE = AUTH_API_URL || RESTAURANT_API_URL;
 const RESTAURANT_BASE = RESTAURANT_API_URL || AUTH_API_URL;
@@ -15,7 +16,7 @@ const RESTAURANT_BASE = RESTAURANT_API_URL || AUTH_API_URL;
 export const authService = {
   login: async (email, password) => {
     try {
-      const response = await fetch(`${AUTH_BASE}/api/auth/login`, {
+      const response = await apiFetch(`${AUTH_BASE}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -38,7 +39,7 @@ export const authService = {
    */
   getProfile: async () => {
     try {
-      const response = await fetch(`${RESTAURANT_BASE}/api/restaurant/profile`, {
+      const response = await apiFetch(`${RESTAURANT_BASE}/api/restaurant/profile`, {
         headers: createAuthHeaders(),
       });
       return processResponse(response);
@@ -50,7 +51,7 @@ export const authService = {
 
   updateProfile: async (profileData) => {
     try {
-      const response = await fetch(`${RESTAURANT_BASE}/api/restaurant/profile`, {
+      const response = await apiFetch(`${RESTAURANT_BASE}/api/restaurant/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -70,7 +71,7 @@ export const authService = {
       const formData = new FormData();
       formData.append('logo', logoFile);
 
-      const response = await fetch(`${RESTAURANT_BASE}/api/restaurant/upload-logo`, {
+      const response = await apiFetch(`${RESTAURANT_BASE}/api/restaurant/upload-logo`, {
         method: 'POST',
         headers: createAuthHeaders(),
         body: formData,
@@ -87,7 +88,7 @@ export const authService = {
    */
   register: async (registrationData) => {
     try {
-      const response = await fetch(`${AUTH_BASE}/api/auth/register`, {
+      const response = await apiFetch(`${AUTH_BASE}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(registrationData),
@@ -104,7 +105,7 @@ export const authService = {
    */
   forgotPassword: async (email) => {
     try {
-      const response = await fetch(`${AUTH_BASE}/api/auth/forgot-password`, {
+      const response = await apiFetch(`${AUTH_BASE}/api/auth/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
@@ -125,7 +126,7 @@ export const authService = {
       if (token) {
         // 2️⃣ Chama o backend para fechar o restaurante automaticamente
         try {
-          await fetch(`${AUTH_BASE}/api/auth/logout`, {
+          await apiFetch(`${AUTH_BASE}/api/auth/logout`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,

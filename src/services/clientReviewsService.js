@@ -1,11 +1,12 @@
 // src/services/clientReviewsService.js
 
 import { RESTAURANT_API_URL, processResponse, createAuthHeaders } from './api';
+import { apiFetch } from './apiClient';
 
 export async function postClientReview({ clientId, orderId, rating, comment, badges }) {
   const url = `${RESTAURANT_API_URL}/api/review/clients/${encodeURIComponent(clientId)}/reviews`;
   try {
-    const response = await fetch(url, {
+    const response = await apiFetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

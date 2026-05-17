@@ -2,6 +2,7 @@
 // Serviço de categorias do Portal do Restaurante
 
 import { RESTAURANT_API_URL, processResponse, createAuthHeaders } from './api';
+import { apiFetch } from './apiClient';
 
 export const categoryService = {
   /**
@@ -10,7 +11,7 @@ export const categoryService = {
    */
   getCategories: async (signal) => {
     try {
-      const response = await fetch(`${RESTAURANT_API_URL}/api/categories`, {
+      const response = await apiFetch(`${RESTAURANT_API_URL}/api/categories`, {
         headers: createAuthHeaders(),
         signal,
       });
@@ -28,7 +29,7 @@ export const categoryService = {
    */
   addCategory: async (categoryName) => {
     try {
-      const response = await fetch(`${RESTAURANT_API_URL}/api/categories`, {
+      const response = await apiFetch(`${RESTAURANT_API_URL}/api/categories`, {
         method: 'POST',
         headers: { ...createAuthHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: categoryName }),
@@ -46,7 +47,7 @@ export const categoryService = {
    */
   updateCategory: async (categoryId, newName) => {
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `${RESTAURANT_API_URL}/api/categories/${encodeURIComponent(categoryId)}`,
         {
           method: 'PUT',
@@ -67,7 +68,7 @@ export const categoryService = {
    */
   deleteCategory: async (categoryId) => {
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `${RESTAURANT_API_URL}/api/categories/${encodeURIComponent(categoryId)}`,
         {
           method: 'DELETE',
