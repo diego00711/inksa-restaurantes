@@ -134,8 +134,8 @@ export function OrdersPage() {
         if (arrived.length > 0) {
           playSound('new_order');
           addToast(
-            arrived.length === 1 ? '🔔 Novo pedido recebido!' : `🔔 ${arrived.length} novos pedidos!`,
-            'success'
+            'success',
+            arrived.length === 1 ? '🔔 Novo pedido recebido!' : `🔔 ${arrived.length} novos pedidos!`
           );
           const ids = new Set(arrived.map(o => o.id));
           setNewOrderIds(ids);
@@ -144,7 +144,7 @@ export function OrdersPage() {
       }
       knownOrderIds.current = new Set(newOrders.map(o => o.id));
     } catch (err) {
-      addToast(err.message || 'Erro ao carregar pedidos.', 'error');
+      addToast('error', err.message || 'Erro ao carregar pedidos.');
       setAllOrders([]);
     } finally {
       setIsLoading(false);
@@ -176,7 +176,7 @@ export function OrdersPage() {
         if (payload.eventType === 'INSERT' ||
           (payload.eventType === 'UPDATE' && ['pending', 'Pendente'].includes(payload.new?.status))) {
           playSound('new_order');
-          addToast('🔔 Novo pedido recebido!', 'success');
+          addToast('success', '🔔 Novo pedido recebido!');
         }
         fetchOrders(filters);
       })
@@ -191,10 +191,10 @@ export function OrdersPage() {
       await orderService.updateOrderStatus(orderId, newStatus);
       if (['accepted_by_delivery', 'delivering'].includes(newStatus)) playSound('out_for_delivery');
       if (['delivered', 'Entregue'].includes(newStatus)) playSound('delivered');
-      addToast(`Status atualizado!`, 'success');
+      addToast('success', `Status atualizado!`);
       fetchOrders(filters);
     } catch (err) {
-      addToast(`Falha: ${err.message}`, 'error');
+      addToast('error', `Falha: ${err.message}`);
     }
   };
 
@@ -202,10 +202,10 @@ export function OrdersPage() {
     if (!window.confirm('Remover este pedido do painel?')) return;
     try {
       await orderService.updateOrderStatus(orderId, 'Arquivado');
-      addToast('Pedido removido do painel!', 'success');
+      addToast('success', 'Pedido removido do painel!');
       fetchOrders(filters);
     } catch (err) {
-      addToast(`Erro: ${err.message}`, 'error');
+      addToast('error', `Erro: ${err.message}`);
     }
   };
 

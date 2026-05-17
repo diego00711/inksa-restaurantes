@@ -21,7 +21,7 @@ export function MenuItemModal({ onClose, onItemAdded, onItemUpdated, itemToEdit 
 				const data = await categoryService.getCategories();
 				setCategories(data || []);
 			} catch (err) {
-				addToast(err.message || "Erro ao carregar categorias.", 'error');
+				addToast('error', err.message || "Erro ao carregar categorias.");
 			}
 		};
 		fetchCategories();
@@ -76,14 +76,17 @@ export function MenuItemModal({ onClose, onItemAdded, onItemUpdated, itemToEdit 
 		try {
 			if (selectedFile) {
 				setIsUploadingImage(true);
-				addToast("A carregar imagem...", 'info');
+				addToast('info', "A carregar imagem...");
 				
 				// ✅ AJUSTE FINAL: O serviço retorna { data: { image_url: '...' } }.
 				// Extraímos a propriedade corretamente.
 				const uploadResponse = await menuService.uploadMenuItemImage(selectedFile);
-				finalImageUrl = uploadResponse.data.image_url;
+				finalImageUrl = uploadResponse?.data?.image_url || uploadResponse?.image_url || null;
+				if (!finalImageUrl) {
+					throw new Error("Falha ao obter URL da imagem após upload.");
+				}
 
-				addToast("Imagem carregada com sucesso!", 'success');
+				addToast('success', "Imagem carregada com sucesso!");
 				setIsUploadingImage(false);
 			}
 
@@ -91,11 +94,11 @@ export function MenuItemModal({ onClose, onItemAdded, onItemUpdated, itemToEdit 
 
 			if (itemToEdit) {
 				const response = await menuService.updateMenuItem(itemToEdit.id, itemDataToSend);
-				addToast('Item atualizado com sucesso!', 'success');
+				addToast('success', 'Item atualizado com sucesso!');
 				if (onItemUpdated) onItemUpdated(response.data);
 			} else {
 				const response = await menuService.addMenuItem(itemDataToSend);
-				addToast('Item adicionado com sucesso!', 'success');
+				addToast('success', 'Item adicionado com sucesso!');
 				if (onItemAdded) onItemAdded(response.data);
 			}
 
@@ -103,7 +106,7 @@ export function MenuItemModal({ onClose, onItemAdded, onItemUpdated, itemToEdit 
 		} catch (err) {
 			console.error("Erro ao salvar item:", err);
 			const errorMessage = err.response?.data?.error || err.message || "Falha ao salvar o item.";
-			addToast(errorMessage, 'error');
+			addToast('error', errorMessage);
 		} finally {
 			setIsLoading(false);
 			setIsUploadingImage(false);

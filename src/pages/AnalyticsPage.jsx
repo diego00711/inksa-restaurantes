@@ -25,7 +25,7 @@ export function AnalyticsPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { addToast } = useToast();
 
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = React.useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -49,24 +49,25 @@ export function AnalyticsPage() {
     } catch (err) {
       console.error("Erro ao buscar dados de analytics:", err);
       setError(err.message);
-      addToast(err.message || "Não foi possível carregar os dados.", 'error');
+      addToast('error', err.message || "Não foi possível carregar os dados.");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [dateRange, addToast]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await fetchAnalytics();
-    setIsRefreshing(false);
-    addToast('Dados atualizados com sucesso!', 'success');
+    try {
+      await fetchAnalytics();
+      addToast('success', 'Dados atualizados com sucesso!');
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
-  // ✅ CORRIGIDO: useEffect depende de dateRange agora
   useEffect(() => {
-    console.log('🔄 Buscando analytics para período:', dateRange, 'dias');
     fetchAnalytics();
-  }, [dateRange]); // ✅ Agora recarrega quando dateRange muda!
+  }, [fetchAnalytics]);
 
   if (isLoading) {
     return (

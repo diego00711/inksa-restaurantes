@@ -17,7 +17,7 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
     try {
       const response = await authService.forgotPassword(email);
-      addToast('success', response.message);
+      addToast('success', response?.message || 'Link de recuperação enviado para o seu e-mail!');
       setEmail('');
     } catch (error) {
       addToast('error', error.message || 'Ocorreu um erro ao enviar o e-mail.');

@@ -29,7 +29,7 @@ export function CategoryManagementPage() {
             console.error("Erro ao buscar categorias:", err);
             const errorMessage = err.message || "Não foi possível carregar as categorias.";
             setError(errorMessage);
-            addToast(errorMessage, 'error'); 
+            addToast('error', errorMessage);
         } finally {
             setIsLoading(false);
         }
@@ -53,7 +53,7 @@ export function CategoryManagementPage() {
         if (!newCategoryName.trim()) {
             const errorMessage = "O nome da categoria não pode ser vazio.";
             setError(errorMessage);
-            addToast(errorMessage, 'warning'); 
+            addToast('warning', errorMessage);
             setIsSaving(false);
             return;
         }
@@ -62,11 +62,11 @@ export function CategoryManagementPage() {
             if (editingCategory) {
                 // ✅ CORREÇÃO 3: Chamando a função do serviço correto
                 await categoryService.updateCategory(editingCategory.id, newCategoryName);
-                addToast("Categoria atualizada com sucesso!", 'success'); 
+                addToast('success', "Categoria atualizada com sucesso!");
             } else {
                 // ✅ CORREÇÃO 4: Chamando a função do serviço correto
                 await categoryService.addCategory(newCategoryName);
-                addToast("Categoria adicionada com sucesso!", 'success'); 
+                addToast('success', "Categoria adicionada com sucesso!");
             }
             setNewCategoryName('');
             setEditingCategory(null);
@@ -75,7 +75,7 @@ export function CategoryManagementPage() {
             console.error("Erro ao salvar categoria:", err);
             const errorMessage = err.message || "Falha ao salvar a categoria.";
             setError(errorMessage);
-            addToast(errorMessage, 'error'); 
+            addToast('error', errorMessage);
         } finally {
             setIsSaving(false);
         }
@@ -99,11 +99,11 @@ export function CategoryManagementPage() {
         try {
             // ✅ CORREÇÃO 5: Chamando a função do serviço correto
             await categoryService.deleteCategory(categoryId);
-            addToast("Categoria excluída com sucesso!", 'success'); 
+            addToast('success', "Categoria excluída com sucesso!");
             fetchCategories();
         } catch (err) {
             console.error("Erro ao excluir categoria:", err);
-            addToast(err.message || "Falha ao excluir a categoria.", 'error'); 
+            addToast('error', err.message || "Falha ao excluir a categoria.");
         }
     };
     

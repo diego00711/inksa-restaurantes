@@ -30,18 +30,18 @@ export function LoginPage() {
         // Atualiza o contexto global de autenticação
         login(loginData.user, loginData.token);
         
-        addToast('Login realizado com sucesso!', 'success');
-        
+        addToast('success', 'Login realizado com sucesso!');
+
         // Redireciona para a página de pedidos após o login
         navigate('/pedidos');
       } else {
         // Fallback de segurança caso a resposta não venha como esperado
         throw new Error('Resposta de login inválida do servidor.');
       }
-      
+
     } catch (err) {
       // Usa o sistema de toast para exibir o erro de forma não-bloqueante
-      addToast(err.message || 'Email ou senha inválidos.', 'error');
+      addToast('error', err.message || 'Email ou senha inválidos.');
       console.error("Falha no login:", err);
     } finally {
       // Garante que o botão de login seja reativado

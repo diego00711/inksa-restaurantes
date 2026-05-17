@@ -42,7 +42,9 @@ export function PortalLayout() {
     try {
       addToast('info', `A atualizar status para ${newIsOpenStatus ? 'Aberto' : 'Fechado'}...`);
       const updatedProfileResponse = await authService.updateProfile({ is_open: newIsOpenStatus });
-      updateProfileInContext(updatedProfileResponse.data); 
+      if (updatedProfileResponse?.data) {
+        updateProfileInContext(updatedProfileResponse.data);
+      }
       addToast('success', `Restaurante agora está ${newIsOpenStatus ? 'Aberto' : 'Fechado'}!`);
     } catch (error) {
       console.error("Erro ao alternar status 'is_open':", error);

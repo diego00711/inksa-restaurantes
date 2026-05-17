@@ -42,15 +42,20 @@ export const menuService = {
    * POST /api/menu
    */
   addMenuItem: async (itemData) => {
-    const response = await fetch(`${RESTAURANT_API_URL}/api/menu`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...createAuthHeaders(),
-      },
-      body: JSON.stringify(itemData),
-    });
-    return processResponse(response);
+    try {
+      const response = await fetch(`${RESTAURANT_API_URL}/api/menu`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...createAuthHeaders(),
+        },
+        body: JSON.stringify(itemData),
+      });
+      return processResponse(response);
+    } catch (error) {
+      console.error('Erro ao adicionar item ao cardápio:', error);
+      throw error;
+    }
   },
 
   /**
@@ -58,18 +63,23 @@ export const menuService = {
    * PUT /api/menu/:itemId
    */
   updateMenuItem: async (itemId, itemData) => {
-    const response = await fetch(
-      `${RESTAURANT_API_URL}/api/menu/${encodeURIComponent(itemId)}`,
-      {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          ...createAuthHeaders(),
-        },
-        body: JSON.stringify(itemData),
-      }
-    );
-    return processResponse(response);
+    try {
+      const response = await fetch(
+        `${RESTAURANT_API_URL}/api/menu/${encodeURIComponent(itemId)}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            ...createAuthHeaders(),
+          },
+          body: JSON.stringify(itemData),
+        }
+      );
+      return processResponse(response);
+    } catch (error) {
+      console.error('Erro ao atualizar item do cardápio:', error);
+      throw error;
+    }
   },
 
   /**
@@ -77,14 +87,19 @@ export const menuService = {
    * DELETE /api/menu/:itemId
    */
   deleteMenuItem: async (itemId) => {
-    const response = await fetch(
-      `${RESTAURANT_API_URL}/api/menu/${encodeURIComponent(itemId)}`,
-      {
-        method: 'DELETE',
-        headers: createAuthHeaders(),
-      }
-    );
-    return processResponse(response);
+    try {
+      const response = await fetch(
+        `${RESTAURANT_API_URL}/api/menu/${encodeURIComponent(itemId)}`,
+        {
+          method: 'DELETE',
+          headers: createAuthHeaders(),
+        }
+      );
+      return processResponse(response);
+    } catch (error) {
+      console.error('Erro ao deletar item do cardápio:', error);
+      throw error;
+    }
   },
 
   /**
@@ -92,18 +107,23 @@ export const menuService = {
    * POST /api/menu/upload-image
    */
   uploadMenuItemImage: async (file) => {
-    const formData = new FormData();
-    formData.append('file', file);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
 
-    const response = await fetch(
-      `${RESTAURANT_API_URL}/api/menu/upload-image`,
-      {
-        method: 'POST',
-        headers: createAuthHeaders(),
-        body: formData,
-      }
-    );
-    return processResponse(response);
+      const response = await fetch(
+        `${RESTAURANT_API_URL}/api/menu/upload-image`,
+        {
+          method: 'POST',
+          headers: createAuthHeaders(),
+          body: formData,
+        }
+      );
+      return processResponse(response);
+    } catch (error) {
+      console.error('Erro ao fazer upload da imagem do item:', error);
+      throw error;
+    }
   },
 };
 

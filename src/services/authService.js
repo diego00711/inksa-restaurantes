@@ -82,6 +82,40 @@ export const authService = {
     }
   },
 
+  /**
+   * Registra um novo restaurante.
+   */
+  register: async (registrationData) => {
+    try {
+      const response = await fetch(`${AUTH_BASE}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(registrationData),
+      });
+      return processResponse(response);
+    } catch (error) {
+      console.error('Erro ao registrar:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Solicita redefinição de senha por e-mail.
+   */
+  forgotPassword: async (email) => {
+    try {
+      const response = await fetch(`${AUTH_BASE}/api/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      return processResponse(response);
+    } catch (error) {
+      console.error('Erro ao solicitar redefinição de senha:', error);
+      throw error;
+    }
+  },
+
   // ✅ MÉTODO LOGOUT CORRIGIDO - AGORA CHAMA O BACKEND!
   logout: async () => {
     try {

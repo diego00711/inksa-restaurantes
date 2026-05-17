@@ -46,6 +46,7 @@ export default function RestaurantReviewsList({ restaurantId, onDataLoaded }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     if (!restaurantId) {
@@ -62,7 +63,7 @@ export default function RestaurantReviewsList({ restaurantId, onDataLoaded }) {
     const fetchReviews = () => {
       setLoading(true);
       setError(null);
-      
+
       restaurantReviewService.getRestaurantReviews(restaurantId)
         .then(response => {
           if (isMounted) {
@@ -90,11 +91,10 @@ export default function RestaurantReviewsList({ restaurantId, onDataLoaded }) {
     fetchReviews();
 
     // Função de limpeza: é executada quando o componente é removido da tela.
-    // Isso previne o erro "Can't perform a React state update on an unmounted component".
     return () => {
       isMounted = false;
     };
-  }, [restaurantId, onDataLoaded]); // Dependências do useEffect
+  }, [restaurantId, onDataLoaded, retryCount]); // retryCount allows manual retry
 
   // --- Lógica de Renderização ---
 
@@ -123,11 +123,11 @@ export default function RestaurantReviewsList({ restaurantId, onDataLoaded }) {
             mas como o useEffect depende de restaurantId, uma nova tentativa
             requeriria uma mudança no ID ou um botão com lógica própria.
             Para simplificar, recarregar a página é uma opção viável. */}
-        <button 
-          onClick={() => window.location.reload()}
+        <button
+          onClick={() => setRetryCount(c => c + 1)}
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
         >
-          Recarregar Página
+          Tentar novamente
         </button>
       </div>
     );

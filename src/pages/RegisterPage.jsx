@@ -30,11 +30,11 @@ export function RegisterPage() {
 
         // Validação de senha
         if (formData.password !== formData.confirmPassword) {
-            addToast('As senhas não coincidem.', 'error');
+            addToast('error', 'As senhas não coincidem.');
             return;
         }
         if (formData.password.length < 6) {
-            addToast('A senha deve ter no mínimo 6 caracteres.', 'error');
+            addToast('error', 'A senha deve ter no mínimo 6 caracteres.');
             return;
         }
 
@@ -56,12 +56,12 @@ export function RegisterPage() {
 
             await authService.register(registrationData);
             
-            addToast('Registo realizado com sucesso! Por favor, faça o login.', 'success');
+            addToast('success', 'Registo realizado com sucesso! Por favor, faça o login.');
             navigate('/login'); // Redireciona para a página de login
 
         } catch (err) {
             console.error("Erro no registo:", err);
-            addToast(err.message || 'Ocorreu um erro ao tentar registar.', 'error');
+            addToast('error', err.message || 'Ocorreu um erro ao tentar registar.');
         } finally {
             setIsLoading(false);
         }

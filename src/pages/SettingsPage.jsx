@@ -46,7 +46,7 @@ export function SettingsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [addToast, updateProfileInContext]);
+  }, [addToast]);
 
   useEffect(() => {
     fetchProfile();
@@ -116,7 +116,19 @@ export function SettingsPage() {
   };
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-screen"><Loader className="animate-spin" size={48} /></div>;
+    return (
+      <div className="p-6 bg-gray-50 min-h-screen">
+        <div className="h-8 bg-gray-200 rounded w-64 mb-8 animate-pulse"></div>
+        <div className="bg-white rounded-lg shadow-md p-8 max-w-4xl mx-auto space-y-6">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="animate-pulse space-y-3">
+              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+              <div className="h-10 bg-gray-100 rounded"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (

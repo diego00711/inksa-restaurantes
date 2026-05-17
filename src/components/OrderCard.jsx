@@ -57,14 +57,15 @@ export default function OrderCard({ order, onUpdateStatus, onViewDetails, onConf
       <div className="cursor-pointer" onClick={() => onViewDetails(order)}>
         <div className="flex items-center justify-between gap-2 mb-2">
           <h3 className="text-sm font-bold text-gray-800 truncate">
-            Pedido #{order.id.substring(0, 8)}...
+            Pedido #{String(order.id || '').substring(0, 8)}...
           </h3>
           <StatusBadge status={order.status} />
         </div>
 
         <div className="text-xs text-gray-600 space-y-1">
           <p className="truncate">
-            <span className="font-semibold">Cliente:</span> {order.client_id?.substring(0, 20) || 'N/A'}...
+            <span className="font-semibold">Cliente:</span>{' '}
+            {order.client_name || order.client_first_name || (order.client_id ? String(order.client_id).substring(0, 20) + '...' : 'N/A')}
           </p>
 
           {orderItems.length > 0 && (

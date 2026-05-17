@@ -24,7 +24,7 @@ export function MenuPage() {
     } catch (err) {
       console.error("Falha ao carregar o cardápio na página:", err);
       setError(err.message);
-      addToast(err.message || "Erro ao carregar cardápio.", 'error'); 
+      addToast('error', err.message || "Erro ao carregar cardápio.");
     } finally {
       setIsLoading(false);
     }
@@ -51,9 +51,9 @@ export function MenuPage() {
     try {
       await menuService.deleteMenuItem(itemId);
       setMenuItems(prevItems => prevItems.filter(item => item.id !== itemId));
-      addToast('Item excluído com sucesso!', 'success'); 
+      addToast('success', 'Item excluído com sucesso!');
     } catch (err) {
-      addToast(`Falha ao excluir o item: ${err.message || 'Erro desconhecido'}`, 'error'); 
+      addToast('error', `Falha ao excluir o item: ${err.message || 'Erro desconhecido'}`);
     }
   };
 

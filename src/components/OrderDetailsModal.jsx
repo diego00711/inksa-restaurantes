@@ -108,10 +108,10 @@ export function OrderDetailsModal({ order, onClose }) {
             <div className="border-b pb-2">
               <p className="text-lg font-semibold text-gray-700 mb-1">Cliente:</p>
               <p className="text-gray-600">
-                {fullOrderDetails.client_name || 
-                 fullOrderDetails.client_first_name && fullOrderDetails.client_last_name
-                   ? `${fullOrderDetails.client_first_name} ${fullOrderDetails.client_last_name}`
-                   : 'Nome não disponível'}
+                {fullOrderDetails.client_name ||
+                  (fullOrderDetails.client_first_name && fullOrderDetails.client_last_name
+                    ? `${fullOrderDetails.client_first_name} ${fullOrderDetails.client_last_name}`
+                    : fullOrderDetails.client_first_name || 'Nome não disponível')}
               </p>
             </div>
 

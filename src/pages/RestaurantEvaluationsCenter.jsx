@@ -6,14 +6,16 @@ import RestaurantReviewsList from "../components/RestaurantReviewsList";
 import ClientReviewForm from "../components/ClientReviewForm";
 import DeliveryReviewForm from "../components/DeliveryReviewForm";
 import { useProfile } from "../context/ProfileContext";
+import { useToast } from "../context/ToastContext";
 import useDeliveredOrders from "../hooks/useDeliveredOrders";
 
 export default function RestaurantEvaluationsCenter() {
   const { profile, loading } = useProfile();
-  
+  const { addToast } = useToast();
+
   // ✅ CORREÇÃO: Adiciona refetch ao hook
   const { orders, loading: loadingOrders, refetch } = useDeliveredOrders(profile?.id);
-  
+
   const [highlightOrderId, setHighlightOrderId] = useState(null);
   const [reviewData, setReviewData] = useState(null);
 
@@ -134,13 +136,15 @@ export default function RestaurantEvaluationsCenter() {
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-4">
                             <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-3 rounded-xl">
-                              <span className="text-white font-bold">#{order.id.slice(0, 8)}</span>
+                              <span className="text-white font-bold">#{String(order.id || '').slice(0, 8)}</span>
                             </div>
                             <div>
-                              <h3 className="text-lg font-bold text-gray-800">Pedido #{order.id.slice(0, 8)}</h3>
+                              <h3 className="text-lg font-bold text-gray-800">Pedido #{String(order.id || '').slice(0, 8)}</h3>
                               <div className="flex items-center gap-2 text-gray-500">
                                 <Clock className="h-4 w-4" />
-                                <span className="text-sm">{new Date(order.completed_at).toLocaleDateString('pt-BR')}</span>
+                                <span className="text-sm">
+                                  {order.completed_at ? new Date(order.completed_at).toLocaleDateString('pt-BR') : 'Data indisponível'}
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -162,14 +166,14 @@ export default function RestaurantEvaluationsCenter() {
                                     <p className="text-gray-600 text-sm">{order.client_name}</p>
                                   </div>
                                 </div>
-                                <ClientReviewForm 
-                                  clientId={order.client_id} 
-                                  orderId={order.id} 
-                                  onSuccess={() => { 
-                                    alert("Avaliação do cliente enviada!"); 
+                                <ClientReviewForm
+                                  clientId={order.client_id}
+                                  orderId={order.id}
+                                  onSuccess={() => {
+                                    addToast('success', 'Avaliação do cliente enviada com sucesso!');
                                     setHighlightOrderId(null);
-                                    refetch(); // ✅ ATUALIZA A LISTA
-                                  }} 
+                                    refetch();
+                                  }}
                                 />
                               </div>
                               <div className="bg-white rounded-xl p-6 shadow-sm border border-emerald-100">
@@ -180,14 +184,14 @@ export default function RestaurantEvaluationsCenter() {
                                     <p className="text-gray-600 text-sm">{order.deliveryman_name}</p>
                                   </div>
                                 </div>
-                                <DeliveryReviewForm 
-                                  deliverymanId={order.deliveryman_id} 
-                                  orderId={order.id} 
-                                  onSuccess={() => { 
-                                    alert("Avaliação do entregador enviada!"); 
+                                <DeliveryReviewForm
+                                  deliverymanId={order.deliveryman_id}
+                                  orderId={order.id}
+                                  onSuccess={() => {
+                                    addToast('success', 'Avaliação do entregador enviada com sucesso!');
                                     setHighlightOrderId(null);
-                                    refetch(); // ✅ ATUALIZA A LISTA
-                                  }} 
+                                    refetch();
+                                  }}
                                 />
                               </div>
                             </div>

@@ -28,18 +28,19 @@ export const analyticsService = {
     }
     // Se for 'all', não envia o parâmetro (backend retorna tudo)
 
-    console.log('📡 Buscando analytics:', url.toString());
+    try {
+      const response = await fetch(url.toString(), {
+        headers,
+        signal,
+      });
 
-    const response = await fetch(url.toString(), {
-      headers,
-      signal,
-    });
+      const data = await processResponse(response);
 
-    const data = await processResponse(response);
-    
-    console.log('📊 Resposta do analytics:', data);
-    
-    // Alguns backends retornam { data: ... }, outros já retornam o objeto direto
-    return data?.data ?? data;
+      // Alguns backends retornam { data: ... }, outros já retornam o objeto direto
+      return data?.data ?? data;
+    } catch (error) {
+      console.error('Erro ao buscar dados de analytics:', error);
+      throw error;
+    }
   },
 };

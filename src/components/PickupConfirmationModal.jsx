@@ -46,7 +46,7 @@ export function PickupConfirmationModal({ order, isOpen, onClose, onSuccess }) {
         pickup_code: pickupCode.toUpperCase().trim()
       });
 
-      addToast('Retirada confirmada! Pedido saiu para entrega.', 'success');
+      addToast('success', 'Retirada confirmada! Pedido saiu para entrega.');
       
       // Reseta o formulário
       setPickupCode('');
@@ -64,7 +64,7 @@ export function PickupConfirmationModal({ order, isOpen, onClose, onSuccess }) {
       console.error('Erro ao confirmar retirada:', err);
       const errorMessage = err.response?.data?.error || 'Código inválido. Verifique e tente novamente.';
       setError(errorMessage);
-      addToast(errorMessage, 'error');
+      addToast('error', errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -102,7 +102,7 @@ export function PickupConfirmationModal({ order, isOpen, onClose, onSuccess }) {
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-800">Confirmar Retirada</h2>
-              <p className="text-sm text-gray-500">Pedido #{order.id.substring(0, 8)}...</p>
+              <p className="text-sm text-gray-500">Pedido #{String(order.id || '').substring(0, 8)}...</p>
             </div>
           </div>
           <button
