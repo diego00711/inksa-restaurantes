@@ -33,19 +33,7 @@ export function AnalyticsPage() {
       const data = await analyticsService.getAnalytics(dateRange);
       console.log('📊 Dados do analytics recebidos:', data);
       setAnalyticsData(data);
-      
-      // Adicionar dados simulados extras se necessário
-      if (data && !data.metricas_extras) {
-        data.metricas_extras = {
-          taxa_conversao: 85.2,
-          tempo_medio_preparo: 25,
-          avaliacao_media: 4.6,
-          clientes_unicos: 156,
-          pedidos_cancelados: 3,
-          crescimento_mensal: 12.5
-        };
-      }
-      
+
     } catch (err) {
       console.error("Erro ao buscar dados de analytics:", err);
       setError(err.message);
@@ -195,10 +183,6 @@ export function AnalyticsPage() {
             <div>
               <p className="text-sm font-medium text-gray-500">Total de Pedidos</p>
               <p className="text-3xl font-bold text-green-600 mt-1">{analyticsData.pedidos_concluidos || 0}</p>
-              <div className="text-green-600 flex items-center gap-1">
-                <TrendingUp className="h-4 w-4" />
-                <span className="text-sm font-medium">+8.2%</span>
-              </div>
             </div>
             <ShoppingBag className="h-12 w-12 text-green-300" />
           </div>
@@ -223,7 +207,7 @@ export function AnalyticsPage() {
             <div>
               <p className="text-sm font-medium text-gray-500">Avaliação Média</p>
               <div className="flex items-center gap-2 mt-1">
-                <p className="text-2xl font-bold text-yellow-600">{metricas.avaliacao_media || '4.5'}</p>
+                <p className="text-2xl font-bold text-yellow-600">{metricas.avaliacao_media ?? 'N/A'}</p>
                 <Star className="h-5 w-5 text-yellow-400 fill-current" />
               </div>
             </div>
@@ -235,7 +219,7 @@ export function AnalyticsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">Tempo Médio</p>
-              <p className="text-2xl font-bold text-blue-600 mt-1">{metricas.tempo_medio_preparo || '25'} min</p>
+              <p className="text-2xl font-bold text-blue-600 mt-1">{metricas.tempo_medio_preparo != null ? `${metricas.tempo_medio_preparo} min` : 'N/A'}</p>
             </div>
             <Clock className="h-8 w-8 text-blue-300" />
           </div>
