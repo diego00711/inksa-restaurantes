@@ -5,6 +5,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '../services/authService';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx'; // Importando o useToast
+import { requestNotificationPermission, saveFcmToken } from '../services/notificationService';
+import { createAuthHeaders, RESTAURANT_API_URL } from '../services/api';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -29,7 +31,15 @@ export function LoginPage() {
       if (loginData && loginData.user && loginData.token) {
         // Atualiza o contexto global de autenticação
         login(loginData.user, loginData.token);
-        
+
+        // FCM: solicita permissão e persiste token — falha silenciosa, nunca quebra o login
+        try {
+          const fcmToken = await requestNotificationPermission();
+          if (fcmToken) {
+            await saveFcmToken(fcmToken, RESTAURANT_API_URL, createAuthHeaders());
+          }
+        } catch (_fcmErr) { /* intencional: ignorado */ }
+
         addToast('success', 'Login realizado com sucesso!');
 
         // Redireciona para a página de pedidos após o login
