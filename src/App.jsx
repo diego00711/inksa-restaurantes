@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 
 // --- Páginas ---
@@ -18,12 +18,38 @@ import { PortalLayout } from './components/restaurant-portal/PortalLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ToastProvider, useToast } from './context/ToastContext.jsx';
 import { ProfileProvider } from './context/ProfileContext.jsx';
-import { AuthProvider } from './context/AuthContext.jsx';
+import { AuthProvider, useAuth } from './context/AuthContext.jsx';
+// --- Onboarding ---
+import OnboardingSlides from './components/onboarding/OnboardingSlides.jsx';
+import GuidedTour from './components/onboarding/GuidedTour.jsx';
 
 // Componente interno que vive dentro do ToastProvider e pode usar useToast
 function AppRoutes() {
   const navigate = useNavigate();
   const { addToast } = useToast();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  // Onboarding: exibe antes do login se ainda não foi visto
+  const [showOnboarding, setShowOnboarding] = useState(
+    () => localStorage.getItem('inksa_onboarding_done') !== 'true'
+  );
+
+  // Tour guiado: exibe após login se ainda não foi feito
+  const [showTour, setShowTour] = useState(false);
+
+  // Detecta transição para autenticado e dispara o tour
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && localStorage.getItem('inksa_tour_done') !== 'true') {
+      setShowTour(true);
+    }
+  }, [isAuthenticated, isLoading]);
+
+  // Quando o usuário faz logout, permite reexibir o tour no próximo login
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setShowTour(false);
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const handleUnauthorized = () => {
@@ -70,6 +96,19 @@ function AppRoutes() {
         {/* Redirecionamento legado */}
         <Route path="/dashboard" element={<Navigate to="/pedidos" replace />} />
       </Routes>
+
+      {/* Overlays de onboarding — renderizados sobre todas as rotas */}
+      {showOnboarding && (
+        <OnboardingSlides
+          onComplete={() => {
+            localStorage.setItem('inksa_onboarding_done', 'true');
+            setShowOnboarding(false);
+          }}
+        />
+      )}
+      {showTour && (
+        <GuidedTour onComplete={() => setShowTour(false)} />
+      )}
     </ProfileProvider>
   );
 }
