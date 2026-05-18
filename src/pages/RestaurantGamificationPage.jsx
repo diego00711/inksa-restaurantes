@@ -95,10 +95,10 @@ export default function RestaurantGamificationPage() {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-800">Gamificação</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Gamificação</h1>
         <button
           onClick={fetchGamification}
-          className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+          className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 min-h-[44px]"
         >
           <RefreshCcw className="h-4 w-4" />
           Atualizar

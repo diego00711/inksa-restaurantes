@@ -69,22 +69,23 @@ export function MenuPage() {
 
   return (
     <div>
-        <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-gray-800">Gestão de Cardápio</h1>
-            <button 
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-white font-semibold rounded-lg shadow hover:bg-orange-600 transition-colors"
+        <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
+            <h1 className="text-xl sm:text-3xl font-bold text-gray-800">Gestão de Cardápio</h1>
+            <button
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white font-semibold rounded-lg shadow hover:bg-orange-600 transition-colors min-h-[44px]"
             onClick={() => { setEditingItem(null); setIsModalOpen(true); }}
             >
             <PlusCircle size={20} />
-            Adicionar Novo Item
+            <span className="hidden sm:inline">Adicionar Novo Item</span>
+            <span className="sm:hidden">Adicionar</span>
             </button>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <table className="w-full text-left">
+        <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
+            <table className="w-full text-left min-w-[560px]">
             <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                    <th className="p-4 font-semibold text-gray-600">Imagem</th> 
+                    <th className="p-4 font-semibold text-gray-600">Imagem</th>
                     <th className="p-4 font-semibold text-gray-600">Item</th>
                     <th className="p-4 font-semibold text-gray-600">Categoria</th>
                     <th className="p-4 font-semibold text-gray-600">Preço</th>
@@ -97,12 +98,12 @@ export function MenuPage() {
                 <tr><td colSpan="6" className="text-center p-4 text-gray-500">Carregando cardápio...</td></tr>
                 ) : error ? (
                 <tr><td colSpan="6" className="text-center p-4 text-red-500">Erro ao carregar cardápio: {error}</td></tr>
-                ) : menuItems.length > 0 ? ( 
+                ) : menuItems.length > 0 ? (
                 menuItems.map((item) => (
                     <tr key={item.id} className="border-b border-gray-200 hover:bg-gray-50">
-                        <td className="p-4"> 
+                        <td className="p-4">
                             {item.image_url ? (
-                                <img src={item.image_url} alt={item.name} className="w-16 h-16 object-cover rounded-md shadow-sm" />
+                                <img src={item.image_url} alt={item.name} className="w-16 h-16 object-cover rounded-md shadow-sm max-w-full" />
                             ) : (
                                 <div className="w-16 h-16 bg-gray-100 rounded-md flex items-center justify-center text-gray-400">
                                     <ImageIcon size={24} />
@@ -110,8 +111,8 @@ export function MenuPage() {
                             )}
                         </td>
                         <td className="p-4">
-                        <div className="font-medium text-gray-800">{item.name}</div>
-                        <div className="text-sm text-gray-500">{item.description}</div>
+                        <div className="font-medium text-gray-800 break-words">{item.name}</div>
+                        <div className="text-sm text-gray-500 break-words">{item.description}</div>
                         </td>
                         <td className="p-4 text-gray-600">{item.category}</td>
                         <td className="p-4 font-medium text-gray-800">R$ {parseFloat(item.price || 0).toFixed(2)}</td>
@@ -122,14 +123,14 @@ export function MenuPage() {
                         </td>
                         <td className="p-4">
                         <div className="flex gap-2">
-                            <button className="text-blue-600 hover:text-blue-800" onClick={() => openEditModal(item)}><Edit size={18} /></button>
-                            <button onClick={() => handleDeleteItem(item.id)} className="text-red-600 hover:text-red-800"><Trash2 size={18} /></button>
+                            <button className="text-blue-600 hover:text-blue-800 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center" onClick={() => openEditModal(item)}><Edit size={18} /></button>
+                            <button onClick={() => handleDeleteItem(item.id)} className="text-red-600 hover:text-red-800 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"><Trash2 size={18} /></button>
                         </div>
                         </td>
                     </tr>
                 ))
                 ) : (
-                <tr><td colSpan="6" className="text-center p-4 text-gray-500">Nenhum item encontrado. Adicione um para começar.</td></tr> 
+                <tr><td colSpan="6" className="text-center p-4 text-gray-500">Nenhum item encontrado. Adicione um para começar.</td></tr>
                 )}
             </tbody>
             </table>

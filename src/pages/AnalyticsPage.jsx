@@ -59,9 +59,9 @@ export function AnalyticsPage() {
 
   if (isLoading) {
     return (
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div className="flex items-center gap-3 mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">Dashboard de Analytics</h1>
+          <h1 className="text-xl sm:text-3xl font-bold text-gray-800">Dashboard de Analytics</h1>
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500"></div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -78,8 +78,8 @@ export function AnalyticsPage() {
 
   if (error) {
     return (
-      <div className="p-6">
-        <h1 className="text-3xl font-bold text-gray-800 mb-8">Dashboard de Analytics</h1>
+      <div className="p-4 sm:p-6">
+        <h1 className="text-xl sm:text-3xl font-bold text-gray-800 mb-8">Dashboard de Analytics</h1>
         <div className="bg-red-50 border border-red-200 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-red-800 mb-2">Erro ao carregar dados</h3>
           <p className="text-red-600 mb-4">{error}</p>
@@ -96,8 +96,8 @@ export function AnalyticsPage() {
 
   if (!analyticsData) {
     return (
-      <div className="p-6">
-        <h1 className="text-3xl font-bold text-gray-800 mb-8">Dashboard de Analytics</h1>
+      <div className="p-4 sm:p-6">
+        <h1 className="text-xl sm:text-3xl font-bold text-gray-800 mb-8">Dashboard de Analytics</h1>
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
           <PieChart className="mx-auto h-12 w-12 text-gray-400 mb-4" />
           <p className="text-lg text-gray-600">Nenhum dado de analytics disponível.</p>
@@ -132,21 +132,21 @@ export function AnalyticsPage() {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-4 sm:p-6 bg-gray-50 min-h-screen">
       {/* Header com controles */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 sm:mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Dashboard de Analytics</h1>
-          <p className="text-gray-600">Acompanhe o desempenho do seu restaurante</p>
+          <h1 className="text-xl sm:text-3xl font-bold text-gray-800">Dashboard de Analytics</h1>
+          <p className="text-gray-600 text-sm sm:text-base">Acompanhe o desempenho do seu restaurante</p>
         </div>
-        <div className="flex items-center gap-4 mt-4 md:mt-0">
-          <select 
-            value={dateRange} 
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <select
+            value={dateRange}
             onChange={(e) => {
               console.log('📅 Mudando período para:', e.target.value, 'dias');
               setDateRange(e.target.value);
             }}
-            className="border border-gray-300 rounded-lg px-3 py-2 bg-white"
+            className="flex-1 sm:flex-none text-base border border-gray-300 rounded-lg px-3 py-2 bg-white min-h-[44px]"
           >
             <option value="7">Últimos 7 dias</option>
             <option value="30">Últimos 30 dias</option>
@@ -157,7 +157,7 @@ export function AnalyticsPage() {
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="flex items-center gap-2 bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 min-h-[44px]"
           >
             <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             Atualizar
@@ -166,7 +166,7 @@ export function AnalyticsPage() {
       </div>
 
       {/* Cards de Resumo Principal */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -201,7 +201,7 @@ export function AnalyticsPage() {
       </div>
 
       {/* Cards de Métricas Secundárias */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -247,9 +247,9 @@ export function AnalyticsPage() {
       </div>
 
       {/* Seção do Gráfico */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Vendas nos Últimos {dateRange === 'all' ? 'Todo período' : `${dateRange} Dias`}</h2>
+      <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6 sm:mb-8">
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
+          <h2 className="text-lg sm:text-2xl font-bold text-gray-800 break-words">Vendas nos Últimos {dateRange === 'all' ? 'Todo período' : `${dateRange} Dias`}</h2>
           <Calendar className="h-6 w-6 text-gray-400" />
         </div>
         {analyticsData.vendas_por_dia && analyticsData.vendas_por_dia.length > 0 ? (
@@ -264,7 +264,7 @@ export function AnalyticsPage() {
       </div>
 
       {/* Insights e Resumo */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <div className="bg-white rounded-lg shadow-md p-6">
           <h3 className="text-xl font-bold text-gray-800 mb-4">Resumo de Performance</h3>
           <div className="space-y-4">

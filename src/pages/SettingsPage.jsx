@@ -117,9 +117,9 @@ export function SettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="p-4 sm:p-6 bg-gray-50 min-h-screen">
         <div className="h-8 bg-gray-200 rounded w-64 mb-8 animate-pulse"></div>
-        <div className="bg-white rounded-lg shadow-md p-8 max-w-4xl mx-auto space-y-6">
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-8 max-w-4xl mx-auto space-y-6">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="animate-pulse space-y-3">
               <div className="h-4 bg-gray-200 rounded w-1/4"></div>
@@ -132,9 +132,9 @@ export function SettingsPage() {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-bold text-gray-800 mb-8">Configurações do Restaurante</h1>
-      <div className="bg-white rounded-lg shadow-md p-8 max-w-4xl mx-auto">
+    <div className="p-4 sm:p-6 bg-gray-50 min-h-screen">
+      <h1 className="text-xl sm:text-3xl font-bold text-gray-800 mb-6 sm:mb-8">Configurações do Restaurante</h1>
+      <div className="bg-white rounded-lg shadow-md p-4 sm:p-8 max-w-4xl mx-auto">
         <form onSubmit={handleSubmit} className="space-y-8">
             {/* Secção do Logo */}
             <div>
@@ -162,23 +162,23 @@ export function SettingsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label htmlFor="restaurant_name" className="block text-sm font-medium text-gray-700">Nome do Restaurante</label>
-                  <input type="text" name="restaurant_name" id="restaurant_name" value={profileData.restaurant_name || ''} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/>
+                  <input type="text" name="restaurant_name" id="restaurant_name" value={profileData.restaurant_name || ''} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/>
                 </div>
                 <div>
                   <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Telefone</label>
-                  <input type="tel" name="phone" id="phone" value={profileData.phone || ''} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/>
+                  <input type="tel" name="phone" id="phone" value={profileData.phone || ''} onChange={handleChange} className="mt-1 block w-full px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/>
                 </div>
                 <div>
                   <label htmlFor="cuisine_type" className="block text-sm font-medium text-gray-700">Tipo de Cozinha (ex: Italiana, Japonesa)</label>
-                  <input type="text" name="cuisine_type" id="cuisine_type" value={profileData.cuisine_type || ''} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/>
+                  <input type="text" name="cuisine_type" id="cuisine_type" value={profileData.cuisine_type || ''} onChange={handleChange} className="mt-1 block w-full px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/>
                 </div>
                 <div>
                   <label htmlFor="category" className="block text-sm font-medium text-gray-700">Categoria (ex: Lanches, Pizzaria)</label>
-                  <input type="text" name="category" id="category" value={profileData.category || ''} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/>
+                  <input type="text" name="category" id="category" value={profileData.category || ''} onChange={handleChange} className="mt-1 block w-full px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/>
                 </div>
                 <div className="md:col-span-2">
                   <label htmlFor="description" className="block text-sm font-medium text-gray-700">Descrição Curta do Restaurante</label>
-                  <textarea name="description" id="description" rows="3" value={profileData.description || ''} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                  <textarea name="description" id="description" rows="3" value={profileData.description || ''} onChange={handleChange} className="mt-1 block w-full px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></textarea>
                 </div>
               </div>
             </div>
@@ -245,31 +245,31 @@ export function SettingsPage() {
               <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
                 <div className="col-span-6 md:col-span-4">
                   <label htmlFor="address_street" className="block text-sm font-medium text-gray-700">Rua</label>
-                  <input type="text" name="address_street" value={profileData.address_street || ''} onChange={handleChange} className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md"/>
+                  <input type="text" name="address_street" value={profileData.address_street || ''} onChange={handleChange} className="mt-1 w-full px-3 py-2 text-base border border-gray-300 rounded-md"/>
                 </div>
                 <div className="col-span-6 md:col-span-2">
                   <label htmlFor="address_number" className="block text-sm font-medium text-gray-700">Número</label>
-                  <input type="text" name="address_number" value={profileData.address_number || ''} onChange={handleChange} className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md"/>
+                  <input type="text" name="address_number" value={profileData.address_number || ''} onChange={handleChange} className="mt-1 w-full px-3 py-2 text-base border border-gray-300 rounded-md"/>
                 </div>
                 <div className="col-span-6">
                   <label htmlFor="address_complement" className="block text-sm font-medium text-gray-700">Complemento (opcional)</label>
-                  <input type="text" name="address_complement" value={profileData.address_complement || ''} onChange={handleChange} className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md"/>
+                  <input type="text" name="address_complement" value={profileData.address_complement || ''} onChange={handleChange} className="mt-1 w-full px-3 py-2 text-base border border-gray-300 rounded-md"/>
                 </div>
                 <div className="col-span-6 md:col-span-3">
                   <label htmlFor="address_neighborhood" className="block text-sm font-medium text-gray-700">Bairro</label>
-                  <input type="text" name="address_neighborhood" value={profileData.address_neighborhood || ''} onChange={handleChange} className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md"/>
+                  <input type="text" name="address_neighborhood" value={profileData.address_neighborhood || ''} onChange={handleChange} className="mt-1 w-full px-3 py-2 text-base border border-gray-300 rounded-md"/>
                 </div>
                 <div className="col-span-6 md:col-span-3">
                   <label htmlFor="address_city" className="block text-sm font-medium text-gray-700">Cidade</label>
-                  <input type="text" name="address_city" value={profileData.address_city || ''} onChange={handleChange} className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md"/>
+                  <input type="text" name="address_city" value={profileData.address_city || ''} onChange={handleChange} className="mt-1 w-full px-3 py-2 text-base border border-gray-300 rounded-md"/>
                 </div>
                  <div className="col-span-6 md:col-span-3">
                   <label htmlFor="address_state" className="block text-sm font-medium text-gray-700">Estado (UF)</label>
-                  <input type="text" name="address_state" maxLength="2" value={profileData.address_state || ''} onChange={handleChange} className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md"/>
+                  <input type="text" name="address_state" maxLength="2" value={profileData.address_state || ''} onChange={handleChange} className="mt-1 w-full px-3 py-2 text-base border border-gray-300 rounded-md"/>
                 </div>
                 <div className="col-span-6 md:col-span-3">
                   <label htmlFor="address_zipcode" className="block text-sm font-medium text-gray-700">CEP</label>
-                  <input type="text" name="address_zipcode" value={profileData.address_zipcode || ''} onChange={handleChange} className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md"/>
+                  <input type="text" name="address_zipcode" value={profileData.address_zipcode || ''} onChange={handleChange} className="mt-1 w-full px-3 py-2 text-base border border-gray-300 rounded-md"/>
                 </div>
               </div>
             </div>
@@ -280,7 +280,7 @@ export function SettingsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
                   <label htmlFor="payout_frequency" className="block text-sm font-medium text-gray-700">Frequência de Pagamento</label>
-                  <select name="payout_frequency" id="payout_frequency" value={profileData.payout_frequency || 'weekly'} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                  <select name="payout_frequency" id="payout_frequency" value={profileData.payout_frequency || 'weekly'} onChange={handleChange} className="mt-1 block w-full px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
                       <option value="weekly">Semanal</option>
                       <option value="biweekly">Quinzenal</option>
                       <option value="monthly">Mensal</option>
@@ -288,15 +288,15 @@ export function SettingsPage() {
                 </div>
                 <div className="md:col-span-2">
                   <label htmlFor="bank_name" className="block text-sm font-medium text-gray-700">Nome do Banco</label>
-                  <input type="text" name="bank_name" value={profileData.bank_name || ''} onChange={handleChange} className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md"/>
+                  <input type="text" name="bank_name" value={profileData.bank_name || ''} onChange={handleChange} className="mt-1 w-full px-3 py-2 text-base border border-gray-300 rounded-md"/>
                 </div>
                 <div>
                   <label htmlFor="bank_agency" className="block text-sm font-medium text-gray-700">Agência</label>
-                  <input type="text" name="bank_agency" value={profileData.bank_agency || ''} onChange={handleChange} className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md"/>
+                  <input type="text" name="bank_agency" value={profileData.bank_agency || ''} onChange={handleChange} className="mt-1 w-full px-3 py-2 text-base border border-gray-300 rounded-md"/>
                 </div>
                 <div>
                   <label htmlFor="bank_account_number" className="block text-sm font-medium text-gray-700">Número da Conta (com dígito)</label>
-                  <input type="text" name="bank_account_number" value={profileData.bank_account_number || ''} onChange={handleChange} className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md"/>
+                  <input type="text" name="bank_account_number" value={profileData.bank_account_number || ''} onChange={handleChange} className="mt-1 w-full px-3 py-2 text-base border border-gray-300 rounded-md"/>
                 </div>
                 <div>
                   <label htmlFor="bank_account_type" className="block text-sm font-medium text-gray-700">Tipo de Conta</label>
@@ -307,13 +307,13 @@ export function SettingsPage() {
                 </div>
                 <div>
                   <label htmlFor="pix_key" className="block text-sm font-medium text-gray-700">Chave PIX</label>
-                  <input type="text" name="pix_key" value={profileData.pix_key || ''} onChange={handleChange} className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md"/>
+                  <input type="text" name="pix_key" value={profileData.pix_key || ''} onChange={handleChange} className="mt-1 w-full px-3 py-2 text-base border border-gray-300 rounded-md"/>
                 </div>
               </div>
             </div>
             
             <div className="flex justify-end pt-4">
-              <button type="submit" disabled={isSaving} className="flex items-center justify-center gap-2 w-48 px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition-colors disabled:bg-indigo-400 disabled:cursor-not-allowed">
+              <button type="submit" disabled={isSaving} className="flex items-center justify-center gap-2 w-full sm:w-48 px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition-colors disabled:bg-indigo-400 disabled:cursor-not-allowed min-h-[44px]">
                 {isSaving ? <><Loader size={18} className="animate-spin" /> A guardar...</> : <><Save size={18} /> Guardar Alterações</>}
               </button>
             </div>

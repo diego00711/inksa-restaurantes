@@ -68,8 +68,8 @@ function KPIBar({ orders }) {
             <Icon className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide leading-none mb-1">{label}</p>
-            <p className={`text-xl font-black ${color} leading-none`}>{value}</p>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide leading-none mb-1 break-words">{label}</p>
+            <p className={`text-base sm:text-xl font-black ${color} leading-none break-words`}>{value}</p>
           </div>
         </div>
       ))}
@@ -280,7 +280,7 @@ export function OrdersPage() {
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex flex-wrap justify-between items-center gap-3 mb-5">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-gray-800">Painel de Pedidos</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Painel de Pedidos</h1>
           {hasNewOrders && (
             <span className="flex items-center gap-1.5 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-bounce">
               🔔 Novo!
@@ -289,7 +289,7 @@ export function OrdersPage() {
         </div>
         <button
           onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl shadow-sm hover:bg-gray-50 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl shadow-sm hover:bg-gray-50 transition-colors min-h-[44px]"
         >
           <SlidersHorizontal size={16} />
           {showAdvancedFilters ? 'Ocultar Filtros' : 'Filtros'}
@@ -306,28 +306,28 @@ export function OrdersPage() {
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">De</label>
               <input type="date" name="startDate" value={filters.startDate} onChange={handleInputChange}
-                className="w-full rounded-lg border-gray-300 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500" />
+                className="w-full rounded-lg border border-gray-300 shadow-sm text-base focus:border-indigo-500 focus:ring-indigo-500 min-h-[44px] px-2" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">Até</label>
               <input type="date" name="endDate" value={filters.endDate} onChange={handleInputChange}
-                className="w-full rounded-lg border-gray-300 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500" />
+                className="w-full rounded-lg border border-gray-300 shadow-sm text-base focus:border-indigo-500 focus:ring-indigo-500 min-h-[44px] px-2" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">Ordenar por</label>
               <select name="sortBy" value={filters.sortBy} onChange={handleInputChange}
-                className="w-full rounded-lg border-gray-300 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                className="w-full rounded-lg border border-gray-300 shadow-sm text-base focus:border-indigo-500 focus:ring-indigo-500 min-h-[44px] px-2">
                 <option value="created_at">Data</option>
                 <option value="total_amount">Valor</option>
               </select>
             </div>
             <div className="flex gap-2">
               <button onClick={handleApplyFilters}
-                className="flex-1 py-2 px-4 text-sm font-semibold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition-colors">
+                className="flex-1 py-2 px-4 text-sm font-semibold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition-colors min-h-[44px]">
                 Aplicar
               </button>
               <button onClick={handleClearFilters}
-                className="p-2 rounded-lg border hover:bg-gray-100 transition-colors" title="Limpar">
+                className="p-2 rounded-lg border hover:bg-gray-100 transition-colors min-h-[44px] min-w-[44px]" title="Limpar">
                 🧹
               </button>
             </div>

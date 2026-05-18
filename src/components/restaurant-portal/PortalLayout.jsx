@@ -1,16 +1,17 @@
 // Local: src/components/restaurant-portal/PortalLayout.jsx - VERSÃO CORRIGIDA
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
-import { ListOrdered, Utensils, Settings, LogOut, BarChart2, Tag, Trophy, Star } from 'lucide-react';
+import { ListOrdered, Utensils, Settings, LogOut, BarChart2, Tag, Trophy, Star, Menu, X } from 'lucide-react';
 import { authService } from '../../services/authService.js';
-import { useProfile } from '../../context/ProfileContext'; 
-import { useToast } from '../../context/ToastContext.jsx'; 
+import { useProfile } from '../../context/ProfileContext';
+import { useToast } from '../../context/ToastContext.jsx';
 
 export function PortalLayout() {
   const location = useLocation();
-  const { profile, loading, updateProfileInContext } = useProfile(); 
+  const { profile, loading, updateProfileInContext } = useProfile();
   const { addToast } = useToast();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navItems = [
     { name: 'Pedidos', icon: ListOrdered, path: '/pedidos' },
@@ -52,12 +53,22 @@ export function PortalLayout() {
     }
   };
 
+  const closeSidebar = () => setSidebarOpen(false);
+
   return (
     <div className="flex min-h-screen bg-orange-50 font-sans">
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-20 bg-black bg-opacity-50 sm:hidden"
+          onClick={closeSidebar}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-gray-900 text-white flex flex-col p-4 shadow-lg">
+      <aside className={`fixed sm:static inset-y-0 left-0 z-30 w-64 bg-gray-900 text-white flex flex-col p-4 shadow-lg transform transition-transform duration-200 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} sm:translate-x-0`}>
         <div className="flex items-center gap-3 mb-8 p-2 border-b border-gray-700 pb-4">
-          <Link to="/pedidos" className="flex items-center gap-3 w-full">
+          <Link to="/pedidos" className="flex items-center gap-3 w-full" onClick={closeSidebar}>
             {loading ? (
               <div className="h-10 w-10 bg-gray-700 rounded-full animate-pulse"></div>
             ) : profile?.logo_url ? (
@@ -97,38 +108,53 @@ export function PortalLayout() {
 
         <nav className="flex-1 space-y-2">
           {navItems.map((item) => (
-            <Link to={item.path} key={item.name} className={`flex items-center py-2.5 px-4 rounded-lg transition-colors text-gray-300 hover:bg-gray-700 hover:text-white ${location.pathname.startsWith(item.path) ? 'bg-primary text-white' : ''}`}>
-              <item.icon className="mr-3 h-5 w-5" />
+            <Link
+              to={item.path}
+              key={item.name}
+              onClick={closeSidebar}
+              className={`flex items-center py-2.5 px-4 rounded-lg transition-colors text-gray-300 hover:bg-gray-700 hover:text-white min-h-[44px] ${location.pathname.startsWith(item.path) ? 'bg-primary text-white' : ''}`}
+            >
+              <item.icon className="mr-3 h-5 w-5 shrink-0" />
               <span className="font-medium">{item.name}</span>
             </Link>
           ))}
         </nav>
 
         <div className="mt-auto pt-4 border-t border-gray-700">
-          <button 
+          <button
             onClick={handleLogout}
-            className="w-full flex items-center py-2.5 px-4 rounded-lg text-gray-300 hover:bg-red-600 hover:text-white transition-colors"
+            className="w-full flex items-center py-2.5 px-4 rounded-lg text-gray-300 hover:bg-red-600 hover:text-white transition-colors min-h-[44px]"
           >
-            <LogOut className="mr-3 h-5 w-5" />
+            <LogOut className="mr-3 h-5 w-5 shrink-0" />
             <span className="font-medium">Sair</span>
           </button>
         </div>
       </aside>
-      
+
       {/* Conteúdo principal */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         <header className="bg-white p-4 shadow-sm flex items-center justify-between z-10 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-gray-800">
-            {navItems.find(item => location.pathname.startsWith(item.path))?.name || 'Painel'}
-          </h1>
           <div className="flex items-center gap-3">
-            <span className="text-gray-600 text-sm font-medium">
+            {/* Botão hambúrguer — visível apenas em mobile */}
+            <button
+              className="sm:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Abrir menu"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <h1 className="text-lg sm:text-xl font-bold text-gray-800">
+              {navItems.find(item => location.pathname.startsWith(item.path))?.name || 'Painel'}
+            </h1>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="hidden sm:block text-gray-600 text-sm font-medium">
               Bem-vindo, {loading ? '...' : (profile?.restaurant_name || 'Restaurante')}!
             </span>
           </div>
         </header>
 
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
           <Outlet />
         </main>
       </div>

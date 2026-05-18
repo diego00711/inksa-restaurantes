@@ -107,7 +107,7 @@ export function PickupConfirmationModal({ order, isOpen, onClose, onSuccess }) {
           </div>
           <button
             onClick={handleClose}
-            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
             disabled={isLoading}
           >
             <X className="w-5 h-5 text-gray-500" />
@@ -145,9 +145,9 @@ export function PickupConfirmationModal({ order, isOpen, onClose, onSuccess }) {
               onChange={handleInputChange}
               placeholder="Ex: LHRG"
               maxLength={4}
-              className={`w-full px-4 py-3 text-center text-2xl font-bold tracking-widest border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors ${
-                error 
-                  ? 'border-red-300 bg-red-50' 
+              className={`w-full px-4 py-3 text-center text-2xl font-bold tracking-widest border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors min-h-[44px] ${
+                error
+                  ? 'border-red-300 bg-red-50'
                   : 'border-gray-300 bg-white'
               }`}
               disabled={isLoading}

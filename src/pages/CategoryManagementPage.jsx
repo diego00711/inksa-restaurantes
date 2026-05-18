@@ -121,27 +121,27 @@ export function CategoryManagementPage() {
     }
 
     return (
-        <div className="p-6 bg-gray-50 min-h-screen">
-            <h1 className="text-3xl font-bold text-gray-800 mb-8">Gerenciamento de Categorias</h1>
+        <div className="p-4 sm:p-6 bg-gray-50 min-h-screen">
+            <h1 className="text-xl sm:text-3xl font-bold text-gray-800 mb-6 sm:mb-8">Gerenciamento de Categorias</h1>
 
-            <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">
+            <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6 sm:mb-8">
+                <h2 className="text-lg sm:text-2xl font-bold text-gray-800 mb-4">
                     {editingCategory ? 'Editar Categoria' : 'Adicionar Nova Categoria'}
                 </h2>
-                <form onSubmit={handleAddOrUpdateCategory} className="flex flex-wrap gap-4 items-center">
+                <form onSubmit={handleAddOrUpdateCategory} className="flex flex-col sm:flex-row flex-wrap gap-3 items-stretch sm:items-center">
                     <input
                         type="text"
                         placeholder="Nome da Categoria"
                         value={newCategoryName}
                         onChange={(e) => setNewCategoryName(e.target.value)}
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                        className="flex-1 px-4 py-2 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary min-h-[44px]"
                         required
                         disabled={isSaving}
                     />
                     <button
                         type="submit"
                         disabled={isSaving}
-                        className="flex items-center gap-2 px-4 py-2 bg-primary text-white font-semibold rounded-lg shadow hover:bg-orange-600 transition-colors disabled:bg-orange-300 disabled:cursor-not-allowed"
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white font-semibold rounded-lg shadow hover:bg-orange-600 transition-colors disabled:bg-orange-300 disabled:cursor-not-allowed min-h-[44px]"
                     >
                         {isSaving ? 'Salvando...' : (editingCategory ? 'Atualizar' : 'Adicionar')}
                     </button>
@@ -149,7 +149,7 @@ export function CategoryManagementPage() {
                         <button
                             type="button"
                             onClick={handleCancelEdit}
-                            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
+                            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors min-h-[44px]"
                             disabled={isSaving}
                         >
                             Cancelar
@@ -160,7 +160,7 @@ export function CategoryManagementPage() {
             </div>
 
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                <h2 className="text-2xl font-bold text-gray-800 p-6 border-b">Categorias Existentes</h2>
+                <h2 className="text-lg sm:text-2xl font-bold text-gray-800 p-4 sm:p-6 border-b">Categorias Existentes</h2>
                 {isLoading ? (
                     <p className="text-center p-4 text-gray-600">Carregando categorias...</p>
                 ) : categories.length === 0 ? (
@@ -169,18 +169,18 @@ export function CategoryManagementPage() {
                     <ul className="divide-y divide-gray-200">
                         {categories.map((category) => (
                             <li key={category.id} className="flex items-center justify-between p-4 hover:bg-gray-50">
-                                <span className="text-lg font-medium text-gray-800">{category.name}</span>
-                                <div className="flex gap-2">
+                                <span className="text-base font-medium text-gray-800 break-words flex-1 mr-2">{category.name}</span>
+                                <div className="flex gap-1 shrink-0">
                                     <button
                                         onClick={() => handleEditClick(category)}
-                                        className="text-blue-600 hover:text-blue-800 p-2 rounded-md"
+                                        className="text-blue-600 hover:text-blue-800 p-2 rounded-md min-h-[44px] min-w-[44px] flex items-center justify-center"
                                         title="Editar"
                                     >
                                         <Edit size={18} />
                                     </button>
                                     <button
                                         onClick={() => handleDeleteCategory(category.id)}
-                                        className="text-red-600 hover:text-red-800 p-2 rounded-md"
+                                        className="text-red-600 hover:text-red-800 p-2 rounded-md min-h-[44px] min-w-[44px] flex items-center justify-center"
                                         title="Excluir"
                                     >
                                         <Trash2 size={18} />
