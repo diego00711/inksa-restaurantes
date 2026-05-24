@@ -13,6 +13,7 @@ import { CategoryManagementPage } from './pages/CategoryManagementPage';
 import RestaurantGamificationPage from './pages/RestaurantGamificationPage';
 // <<< NOVO: Importar Central de Avaliações >>>
 import RestaurantEvaluationsCenter from './pages/RestaurantEvaluationsCenter';
+import FinancePage from './pages/FinancePage';
 // --- Componentes e Contextos ---
 import { PortalLayout } from './components/restaurant-portal/PortalLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -102,6 +103,7 @@ function AppRoutes() {
 
           {/* <<< CENTRAL DE AVALIAÇÕES >>> */}
           <Route path="avaliacoes" element={<RestaurantEvaluationsCenter />} />
+          <Route path="financeiro" element={<FinancePage />} />
         </Route>
 
         {/* Redirecionamento legado */}

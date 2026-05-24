@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
-import { ListOrdered, Utensils, Settings, LogOut, BarChart2, Tag, Trophy, Star, Menu, X } from 'lucide-react';
+import { ListOrdered, Utensils, Settings, LogOut, BarChart2, Tag, Trophy, Star, DollarSign, Menu, X } from 'lucide-react';
 import { authService } from '../../services/authService.js';
 import { useProfile } from '../../context/ProfileContext';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -19,6 +19,7 @@ export function PortalLayout() {
     { name: 'Analytics', icon: BarChart2, path: '/analytics' },
     { name: 'Avaliações', icon: Star, path: '/avaliacoes' },
     { name: 'Gamificação', icon: Trophy, path: '/gamificacao' },
+    { name: 'Financeiro', icon: DollarSign, path: '/financeiro' },
     { name: 'Configurações', icon: Settings, path: '/configuracoes' },
     { name: 'Categorias', icon: Tag, path: '/categorias' },
   ];
