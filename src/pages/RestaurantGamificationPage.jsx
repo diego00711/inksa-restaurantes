@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Trophy, Star, Zap, Loader2, RefreshCw, AlertCircle,
-  Medal, TrendingUp, Target, Swords, CheckCircle2, Clock,
+  Medal, TrendingUp, Target, Swords, CheckCircle2, Clock, Gift,
 } from 'lucide-react';
 import { useProfile } from '../context/ProfileContext';
 import { RESTAURANT_API_URL, createAuthHeaders, processResponse } from '../services/api';
@@ -74,6 +74,14 @@ export default function RestaurantGamificationPage() {
   const [error, setError]           = useState(null);
   const [lbTab, setLbTab]           = useState('orders'); // 'orders' | 'rating'
 
+  // rewards
+  const [rewards, setRewards]               = useState([]);
+  const [rewardsLoading, setRewardsLoading] = useState(true);
+  const [rewardsError, setRewardsError]     = useState(null);
+  const [confirmReward, setConfirmReward]   = useState(null);
+  const [redeeming, setRedeeming]           = useState(null);
+  const [redeemMsg, setRedeemMsg]           = useState(null); // {type:'success'|'error', text}
+
   const restaurantId = profile?.id;
 
   const fetchAll = useCallback(async () => {
@@ -130,12 +138,62 @@ export default function RestaurantGamificationPage() {
       });
 
       setChallenges(merged);
+
+      // fetch rewards
+      try {
+        const rewardsRes = await apiFetch(
+          `${base}/api/gamification/rewards?audience=restaurant`,
+          { headers: createAuthHeaders() }
+        );
+        const rewardsData = await processResponse(rewardsRes);
+        const rewardsList = rewardsData?.items ?? rewardsData?.data?.items ?? rewardsData?.data ?? [];
+        setRewards(Array.isArray(rewardsList) ? rewardsList : []);
+      } catch {
+        setRewardsError('Não foi possível carregar recompensas.');
+      } finally {
+        setRewardsLoading(false);
+      }
     } catch (err) {
       setError(err.message || 'Falha ao carregar gamificação.');
     } finally {
       setLoading(false);
     }
   }, [restaurantId]);
+
+  const handleRedeemRequest = (reward) => {
+    const cost = reward.points_required ?? 0;
+    if ((stats?.total_points ?? 0) < cost) {
+      setRedeemMsg({ type: 'error', text: `Pontos insuficientes. Você tem ${(stats?.total_points ?? 0).toLocaleString('pt-BR')} pts, precisa de ${cost.toLocaleString('pt-BR')} pts.` });
+      setTimeout(() => setRedeemMsg(null), 4000);
+      return;
+    }
+    setConfirmReward(reward);
+  };
+
+  const handleRedeemConfirm = async () => {
+    if (!confirmReward || !restaurantId) return;
+    const reward = confirmReward;
+    setConfirmReward(null);
+    setRedeeming(reward.id);
+    const cost = reward.points_required ?? 0;
+    const restaurantName = profile?.restaurant_name ?? profile?.name ?? '';
+    try {
+      const res = await apiFetch(`${RESTAURANT_API_URL}/api/gamification/rewards/${reward.id}/redeem`, {
+        method: 'POST',
+        headers: { ...createAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: restaurantId, user_type: 'restaurant', user_name: restaurantName, points_used: cost }),
+      });
+      const data = await processResponse(res);
+      setRedeemMsg({ type: 'success', text: data?.message ?? `"${reward.name}" resgatado com sucesso!` });
+      setTimeout(() => setRedeemMsg(null), 5000);
+      fetchAll();
+    } catch (err) {
+      setRedeemMsg({ type: 'error', text: err.message || 'Erro ao resgatar recompensa.' });
+      setTimeout(() => setRedeemMsg(null), 4000);
+    } finally {
+      setRedeeming(null);
+    }
+  };
 
   useEffect(() => {
     if (!profileLoading && restaurantId) fetchAll();
@@ -446,7 +504,124 @@ export default function RestaurantGamificationPage() {
         )}
       </div>
 
-      {/* ── 4. Desafios Ativos ──────────────────────────────────────────── */}
+      {/* ── 4. Loja de Recompensas ──────────────────────────────────────── */}
+      <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Gift className="h-5 w-5 text-green-500" />
+          <h2 className="text-lg sm:text-xl font-bold text-gray-800">Loja de Recompensas</h2>
+        </div>
+
+        {/* Inline toast */}
+        {redeemMsg && (
+          <div className={`mb-4 px-4 py-3 rounded-lg text-sm font-medium ${
+            redeemMsg.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+          }`}>
+            {redeemMsg.text}
+          </div>
+        )}
+
+        {rewardsLoading ? (
+          <div className="flex justify-center py-10">
+            <Loader2 className="animate-spin h-8 w-8 text-green-400" />
+          </div>
+        ) : rewardsError ? (
+          <p className="text-center text-red-500 text-sm py-6">{rewardsError}</p>
+        ) : rewards.length === 0 ? (
+          <div className="text-center py-10">
+            <Gift className="mx-auto h-10 w-10 text-gray-300 mb-3" />
+            <p className="text-gray-500">Nenhuma recompensa disponível no momento.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {rewards.map((r) => {
+              const cost      = r.points_required ?? 0;
+              const myPts     = stats?.total_points ?? 0;
+              const canAfford = myPts >= cost;
+              const progress  = cost > 0 ? Math.min(100, Math.round((myPts / cost) * 100)) : 100;
+              const isEmoji   = r.icon && !/^https?:\/\//.test(r.icon);
+              const lowStock  = r.stock != null && r.stock < 10;
+              const isLoading = redeeming === r.id;
+
+              const TYPE_LABELS = { gift: 'Brinde', discount_pct: 'Desconto', free_delivery: 'Frete Grátis', credit: 'Crédito' };
+              const TYPE_COLORS = { gift: 'bg-purple-100 text-purple-700', discount_pct: 'bg-green-100 text-green-700', free_delivery: 'bg-blue-100 text-blue-700', credit: 'bg-amber-100 text-amber-700' };
+
+              return (
+                <div
+                  key={r.id}
+                  className={`border rounded-xl p-4 flex flex-col gap-3 transition-all hover:shadow-md ${
+                    canAfford ? 'border-green-200 bg-green-50/30' : 'border-gray-100'
+                  }`}
+                >
+                  {/* Icon + name */}
+                  <div className="flex items-start gap-3">
+                    {r.icon ? (
+                      isEmoji
+                        ? <span className="text-4xl leading-none shrink-0">{r.icon}</span>
+                        : <img src={r.icon} alt="" className="w-12 h-12 rounded-lg object-cover shrink-0" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center shrink-0">
+                        <Gift className="h-6 w-6 text-green-500" />
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-gray-800">{r.name}</p>
+                      {r.description && (
+                        <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{r.description}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Badges */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {r.reward_type && (
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${TYPE_COLORS[r.reward_type] ?? 'bg-gray-100 text-gray-600'}`}>
+                        {TYPE_LABELS[r.reward_type] ?? r.reward_type}
+                      </span>
+                    )}
+                    {lowStock && (
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-600">
+                        Estoque: {r.stock}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Points + progress */}
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className={`flex items-center gap-1 text-sm font-bold ${canAfford ? 'text-green-700' : 'text-gray-500'}`}>
+                        ⭐ {cost.toLocaleString('pt-BR')} pts
+                      </span>
+                      <span className="text-xs text-gray-400">{progress}%</span>
+                    </div>
+                    <ProgressBar value={progress} max={100} color={canAfford ? 'bg-green-500' : 'bg-orange-400'} />
+                    {!canAfford && (
+                      <p className="text-xs text-gray-400 mt-1">
+                        Faltam {(cost - myPts).toLocaleString('pt-BR')} pontos
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Button */}
+                  <button
+                    onClick={() => !isLoading && handleRedeemRequest(r)}
+                    disabled={isLoading}
+                    className={`w-full py-2 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 min-h-[44px] ${
+                      canAfford && !isLoading
+                        ? 'bg-green-500 hover:bg-green-600 text-white'
+                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    }`}
+                  >
+                    {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                    {isLoading ? 'Resgatando...' : canAfford ? 'Resgatar' : 'Pontos insuficientes'}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ── 5. Desafios Ativos ──────────────────────────────────────────── */}
       <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
         <div className="flex items-center gap-2 mb-4">
           <Swords className="h-5 w-5 text-indigo-500" />
@@ -535,6 +710,38 @@ export default function RestaurantGamificationPage() {
         )}
       </div>
 
+      {/* Confirmation modal */}
+      {confirmReward && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center">
+            <div className="text-5xl mb-3">
+              {confirmReward.icon && !/^https?:\/\//.test(confirmReward.icon) ? confirmReward.icon : '🎁'}
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-1">{confirmReward.name}</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Você usará{' '}
+              <span className="font-bold text-orange-500">
+                {(confirmReward.points_required ?? 0).toLocaleString('pt-BR')} pontos
+              </span>{' '}
+              para resgatar esta recompensa.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmReward(null)}
+                className="flex-1 px-4 py-2 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition font-semibold"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleRedeemConfirm}
+                className="flex-1 px-4 py-2 text-sm bg-green-500 hover:bg-green-600 text-white rounded-lg font-bold transition"
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
