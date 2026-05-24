@@ -12,6 +12,7 @@ export async function apiFetch(url, options = {}) {
     }
     return response;
   } catch (error) {
+    window.dispatchEvent(new CustomEvent('network:error'));
     throw error;
   }
 }

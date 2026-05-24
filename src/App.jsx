@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 
 // --- Páginas ---
@@ -22,6 +22,8 @@ import { AuthProvider, useAuth } from './context/AuthContext.jsx';
 // --- Onboarding ---
 import OnboardingSlides from './components/onboarding/OnboardingSlides.jsx';
 import GuidedTour from './components/onboarding/GuidedTour.jsx';
+import GlobalError from './components/GlobalError';
+import { useOnlineStatus } from './hooks/useOnlineStatus';
 
 // Componente interno que vive dentro do ToastProvider e pode usar useToast
 function AppRoutes() {
@@ -62,6 +64,15 @@ function AppRoutes() {
       window.removeEventListener('auth:unauthorized', handleUnauthorized);
     };
   }, [addToast, navigate]);
+
+  const isOnline = useOnlineStatus();
+  const wasOnlineRef = useRef(null);
+  useEffect(() => {
+    if (wasOnlineRef.current === null) { wasOnlineRef.current = isOnline; return; }
+    if (isOnline && !wasOnlineRef.current) addToast('success', 'Conexão restaurada');
+    if (!isOnline && wasOnlineRef.current) addToast('error', 'Você está offline');
+    wasOnlineRef.current = isOnline;
+  }, [isOnline, addToast]);
 
   return (
     <ProfileProvider>
@@ -109,6 +120,7 @@ function AppRoutes() {
       {showTour && (
         <GuidedTour onComplete={() => setShowTour(false)} />
       )}
+      <GlobalError />
     </ProfileProvider>
   );
 }
