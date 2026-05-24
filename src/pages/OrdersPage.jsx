@@ -198,6 +198,17 @@ export function OrdersPage() {
     }
   };
 
+  const handleAcceptOrder = async (orderId, estimatedTime) => {
+    try {
+      await orderService.acceptOrder(orderId, estimatedTime);
+      playSound('new_order');
+      addToast('success', `✅ Pedido aceito! Tempo estimado: ${estimatedTime} min`);
+      fetchOrders(filters);
+    } catch (err) {
+      addToast('error', `Falha ao aceitar: ${err.message}`);
+    }
+  };
+
   const handleRemoveOrder = async (orderId) => {
     if (!window.confirm('Remover este pedido do painel?')) return;
     try {
@@ -255,6 +266,7 @@ export function OrdersPage() {
               <OrderCard
                 order={order}
                 onUpdateStatus={handleUpdateStatus}
+                onAcceptOrder={handleAcceptOrder}
                 onViewDetails={handleViewOrderDetails}
                 onConfirmPickup={handleOpenPickupModal}
               />

@@ -1,7 +1,7 @@
 // src/components/OrderCard.jsx  ✅ PATCH
 
-import React from 'react';
-import { Package } from 'lucide-react';
+import React, { useState } from 'react';
+import { Package, CheckCircle } from 'lucide-react';
 
 const StatusBadge = ({ status }) => {
   const statusColors = {
@@ -22,7 +22,8 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-export default function OrderCard({ order, onUpdateStatus, onViewDetails, onConfirmPickup }) {
+export default function OrderCard({ order, onUpdateStatus, onViewDetails, onConfirmPickup, onAcceptOrder }) {
+  const [estimatedTime, setEstimatedTime] = useState(20);
   // ⚠️ order.status aqui é exibido em PT-BR; ao enviar para API usamos os nomes internos (inglês)
 
   const getNextAction = () => {
@@ -53,7 +54,7 @@ export default function OrderCard({ order, onUpdateStatus, onViewDetails, onConf
   const showPickupButton = shouldShowPickupButton();
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4 flex flex-col gap-3 hover:shadow-lg transition-shadow duration-200">
+    <div className={`bg-white rounded-lg shadow-sm p-4 flex flex-col gap-3 hover:shadow-lg transition-shadow duration-200 ${order.status === 'Pendente' ? 'ring-2 ring-green-400 animate-pulse' : ''}`}>
       <div className="cursor-pointer" onClick={() => onViewDetails(order)}>
         <div className="flex items-center justify-between gap-2 mb-2">
           <h3 className="text-sm font-bold text-gray-800 truncate">
@@ -132,27 +133,70 @@ export default function OrderCard({ order, onUpdateStatus, onViewDetails, onConf
           {showPickupButton && onConfirmPickup ? (
             <button
               onClick={() => onConfirmPickup(order)}
-              className="w-full px-3 py-2 text-xs font-medium text-white bg-purple-600 rounded-md shadow-sm hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 flex items-center justify-center gap-1.5"
+              className="w-full px-4 py-3 text-sm font-bold text-white bg-purple-600 rounded-xl shadow hover:bg-purple-700 transition-all flex items-center justify-center gap-2 min-h-[48px]"
             >
-              <Package size={14} />
+              <Package size={16} />
               Confirmar Retirada
             </button>
+          ) : order.status === 'Pendente' ? (
+            /* One-touch accept: time picker + big green button */
+            <div className="space-y-2">
+              <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Tempo estimado de preparo</p>
+              <div className="flex gap-1.5 flex-wrap">
+                {[10, 20, 30, 45, 60].map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setEstimatedTime(t)}
+                    className={`flex-1 min-w-[2.5rem] py-1.5 text-xs font-bold rounded-lg transition-all ${
+                      estimatedTime === t
+                        ? 'bg-orange-500 text-white shadow'
+                        : 'bg-gray-100 text-gray-600 hover:bg-orange-100'
+                    }`}
+                  >
+                    {t}min
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => onAcceptOrder ? onAcceptOrder(order.id, estimatedTime) : onUpdateStatus(order.id, 'accepted')}
+                className="w-full px-4 py-3 text-sm font-bold text-white bg-green-600 rounded-xl shadow hover:bg-green-700 active:scale-95 transition-all flex items-center justify-center gap-2 min-h-[48px]"
+              >
+                <CheckCircle size={18} />
+                Aceitar pedido ({estimatedTime}min)
+              </button>
+              {order.status !== 'Concluído' && order.status !== 'Cancelado' && (
+                <button
+                  onClick={() => onUpdateStatus(order.id, 'cancelled')}
+                  className="w-full px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors border border-red-100"
+                >
+                  Recusar pedido
+                </button>
+              )}
+            </div>
+          ) : order.status === 'Preparando' ? (
+            /* Big orange "ready" button */
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => onUpdateStatus(order.id, 'ready')}
+                className="w-full px-4 py-3 text-sm font-bold text-white bg-orange-500 rounded-xl shadow hover:bg-orange-600 active:scale-95 transition-all flex items-center justify-center gap-2 min-h-[48px]"
+              >
+                📦 Marcar como pronto
+              </button>
+            </div>
           ) : (
             <div className="flex gap-2">
               {mainAction && (
                 <button
                   onClick={() => onUpdateStatus(order.id, mainAction.nextStatus)}
-                  className="flex-1 px-3 py-2 text-xs font-medium text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  className="flex-1 px-3 py-2 text-xs font-medium text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-700 transition-colors min-h-[44px]"
                 >
                   {mainAction.text}
                 </button>
               )}
-
               {order.status !== 'Concluído' && order.status !== 'Cancelado' && order.status !== 'Entregue' && (
                 <button
                   onClick={() => onUpdateStatus(order.id, 'cancelled')}
-                  className="px-3 py-2 text-xs font-medium text-white bg-red-600 rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                  title="Cancelar pedido"
+                  className="px-3 py-2 text-xs font-medium text-white bg-red-600 rounded-md shadow-sm hover:bg-red-700 transition-colors min-h-[44px]"
                 >
                   Cancelar
                 </button>

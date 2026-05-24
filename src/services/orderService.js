@@ -130,6 +130,20 @@ export const orderService = {
     }
   },
 
+  async acceptOrder(orderId, estimatedTime) {
+    try {
+      const response = await api.patch(`/api/orders/${orderId}/restaurant-accept`, {
+        estimated_time: estimatedTime,
+      }, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+      return translateOrderStatus(response.data);
+    } catch (error) {
+      console.error(`Erro ao aceitar pedido ${orderId}:`, error);
+      throw error;
+    }
+  },
+
   async createOrder(orderData) {
     try {
       const response = await api.post('/api/orders', orderData);
