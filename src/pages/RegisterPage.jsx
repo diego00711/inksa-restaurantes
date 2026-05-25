@@ -40,18 +40,13 @@ export function RegisterPage() {
 
         setIsLoading(true);
         try {
-            // Prepara os dados para enviar à API
+            // Prepara os dados para enviar à API (campos no nível raiz conforme esperado pelo backend)
             const registrationData = {
                 email: formData.email,
                 password: formData.password,
-                // Adiciona os dados extras que a sua API de registo deve esperar
-                options: {
-                    data: {
-                        restaurant_name: formData.restaurant_name,
-                        phone: formData.phone,
-                        user_type: 'restaurant' // Define o tipo de utilizador
-                    }
-                }
+                name: formData.restaurant_name,
+                phone: formData.phone,
+                user_type: 'restaurant'
             };
 
             await authService.register(registrationData);
