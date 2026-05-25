@@ -26,7 +26,8 @@ export const ProfileProvider = ({ children }) => {
       setProfile(response.data);
     } catch (error) {
       console.error("Erro ao carregar perfil no context:", error);
-      setProfile(null);
+      // Usa objeto vazio para não travar a UI — o backend auto-cria o perfil na próxima requisição GET
+      setProfile({});
     } finally {
       setLoading(false);
     }
