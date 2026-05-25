@@ -1,57 +1,54 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { lazy, Suspense, useState, useEffect, useRef } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-
-// --- Páginas ---
-import { LoginPage } from './pages/LoginPage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import { RegisterPage } from './pages/RegisterPage';
-import { OrdersPage } from './pages/OrdersPage';
-import { MenuPage } from './pages/MenuPage';
-import { AnalyticsPage } from './pages/AnalyticsPage';
-import { SettingsPage } from './pages/SettingsPage';
-import { CategoryManagementPage } from './pages/CategoryManagementPage';
-import RestaurantGamificationPage from './pages/RestaurantGamificationPage';
-// <<< NOVO: Importar Central de Avaliações >>>
-import RestaurantEvaluationsCenter from './pages/RestaurantEvaluationsCenter';
-import FinancePage from './pages/FinancePage';
-// --- Componentes e Contextos ---
 import { PortalLayout } from './components/restaurant-portal/PortalLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ToastProvider, useToast } from './context/ToastContext.jsx';
 import { ProfileProvider } from './context/ProfileContext.jsx';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
-// --- Onboarding ---
 import OnboardingSlides from './components/onboarding/OnboardingSlides.jsx';
 import GuidedTour from './components/onboarding/GuidedTour.jsx';
 import GlobalError from './components/GlobalError';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
+import WakingUpScreen from './components/WakingUpScreen';
 
-// Componente interno que vive dentro do ToastProvider e pode usar useToast
+// --- Lazy-loaded pages ---
+const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
+const RegisterPage = lazy(() => import('./pages/RegisterPage').then(m => ({ default: m.RegisterPage })));
+const OrdersPage = lazy(() => import('./pages/OrdersPage').then(m => ({ default: m.OrdersPage })));
+const MenuPage = lazy(() => import('./pages/MenuPage').then(m => ({ default: m.MenuPage })));
+const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage').then(m => ({ default: m.AnalyticsPage })));
+const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const CategoryManagementPage = lazy(() => import('./pages/CategoryManagementPage').then(m => ({ default: m.CategoryManagementPage })));
+const RestaurantGamificationPage = lazy(() => import('./pages/RestaurantGamificationPage'));
+const RestaurantEvaluationsCenter = lazy(() => import('./pages/RestaurantEvaluationsCenter'));
+const FinancePage = lazy(() => import('./pages/FinancePage'));
+
+const PageLoader = () => (
+  <div className="flex h-screen items-center justify-center">
+    <div className="w-8 h-8 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin" />
+  </div>
+);
+
 function AppRoutes() {
   const navigate = useNavigate();
   const { addToast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
+  const [serverReady, setServerReady] = useState(false);
 
-  // Onboarding: exibe antes do login se ainda não foi visto
   const [showOnboarding, setShowOnboarding] = useState(
     () => localStorage.getItem('inksa_onboarding_done') !== 'true'
   );
-
-  // Tour guiado: exibe após login se ainda não foi feito
   const [showTour, setShowTour] = useState(false);
 
-  // Detecta transição para autenticado e dispara o tour
   useEffect(() => {
     if (!isLoading && isAuthenticated && localStorage.getItem('inksa_tour_done') !== 'true') {
       setShowTour(true);
     }
   }, [isAuthenticated, isLoading]);
 
-  // Quando o usuário faz logout, permite reexibir o tour no próximo login
   useEffect(() => {
-    if (!isAuthenticated) {
-      setShowTour(false);
-    }
+    if (!isAuthenticated) setShowTour(false);
   }, [isAuthenticated]);
 
   useEffect(() => {
@@ -59,11 +56,8 @@ function AppRoutes() {
       addToast('error', 'Sessão expirada, faça login novamente');
       navigate('/login', { replace: true });
     };
-
     window.addEventListener('auth:unauthorized', handleUnauthorized);
-    return () => {
-      window.removeEventListener('auth:unauthorized', handleUnauthorized);
-    };
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
   }, [addToast, navigate]);
 
   const isOnline = useOnlineStatus();
@@ -77,52 +71,50 @@ function AppRoutes() {
 
   return (
     <ProfileProvider>
-      <Routes>
-        {/* Rotas PÚBLICAS */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+      <WakingUpScreen onReady={() => setServerReady(true)} />
+      {serverReady && (
+        <>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/register" element={<RegisterPage />} />
 
-        {/* Rota PAI para o Portal (Protegida) */}
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <PortalLayout />
-            </ProtectedRoute>
-          }
-        >
-          {/* Rotas FILHAS do portal */}
-          <Route index element={<Navigate to="/pedidos" replace />} />
-          <Route path="pedidos" element={<OrdersPage />} />
-          <Route path="cardapio" element={<MenuPage />} />
-          <Route path="analytics" element={<AnalyticsPage />} />
-          <Route path="configuracoes" element={<SettingsPage />} />
-          <Route path="categorias" element={<CategoryManagementPage />} />
-          <Route path="gamificacao" element={<RestaurantGamificationPage />} />
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <PortalLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<Navigate to="/pedidos" replace />} />
+                <Route path="pedidos" element={<OrdersPage />} />
+                <Route path="cardapio" element={<MenuPage />} />
+                <Route path="analytics" element={<AnalyticsPage />} />
+                <Route path="configuracoes" element={<SettingsPage />} />
+                <Route path="categorias" element={<CategoryManagementPage />} />
+                <Route path="gamificacao" element={<RestaurantGamificationPage />} />
+                <Route path="avaliacoes" element={<RestaurantEvaluationsCenter />} />
+                <Route path="financeiro" element={<FinancePage />} />
+              </Route>
 
-          {/* <<< CENTRAL DE AVALIAÇÕES >>> */}
-          <Route path="avaliacoes" element={<RestaurantEvaluationsCenter />} />
-          <Route path="financeiro" element={<FinancePage />} />
-        </Route>
+              <Route path="/dashboard" element={<Navigate to="/pedidos" replace />} />
+            </Routes>
+          </Suspense>
 
-        {/* Redirecionamento legado */}
-        <Route path="/dashboard" element={<Navigate to="/pedidos" replace />} />
-      </Routes>
-
-      {/* Overlays de onboarding — renderizados sobre todas as rotas */}
-      {showOnboarding && (
-        <OnboardingSlides
-          onComplete={() => {
-            localStorage.setItem('inksa_onboarding_done', 'true');
-            setShowOnboarding(false);
-          }}
-        />
+          {showOnboarding && (
+            <OnboardingSlides
+              onComplete={() => {
+                localStorage.setItem('inksa_onboarding_done', 'true');
+                setShowOnboarding(false);
+              }}
+            />
+          )}
+          {showTour && <GuidedTour onComplete={() => setShowTour(false)} />}
+          <GlobalError />
+        </>
       )}
-      {showTour && (
-        <GuidedTour onComplete={() => setShowTour(false)} />
-      )}
-      <GlobalError />
     </ProfileProvider>
   );
 }
