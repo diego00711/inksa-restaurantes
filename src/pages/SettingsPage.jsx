@@ -94,7 +94,7 @@ export function SettingsPage() {
       if (response && response.data) {
         const updatedProfile = response.data;
         
-        setProfileData(updatedProfile);
+        setProfileData(prev => ({ ...prev, ...updatedProfile }));
         if (updatedProfile.logo_url) {
           setLogoPreview(updatedProfile.logo_url);
         }

@@ -10,6 +10,7 @@ import GuidedTour from './components/onboarding/GuidedTour.jsx';
 import GlobalError from './components/GlobalError';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 import WakingUpScreen from './components/WakingUpScreen';
+import SupportButton from './components/SupportButton';
 
 // --- Lazy-loaded pages ---
 const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
@@ -74,6 +75,7 @@ function AppRoutes() {
       <WakingUpScreen onReady={() => setServerReady(true)} />
       {serverReady && (
         <>
+          <SupportButton />
           <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/login" element={<LoginPage />} />
