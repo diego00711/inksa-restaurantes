@@ -17,6 +17,7 @@ const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage').then(m => ({ default: m.RegisterPage })));
 const OrdersPage = lazy(() => import('./pages/OrdersPage').then(m => ({ default: m.OrdersPage })));
+const KdsPage = lazy(() => import('./pages/KdsPage').then(m => ({ default: m.KdsPage })));
 const MenuPage = lazy(() => import('./pages/MenuPage').then(m => ({ default: m.MenuPage })));
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage').then(m => ({ default: m.AnalyticsPage })));
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
@@ -92,6 +93,7 @@ function AppRoutes() {
               >
                 <Route index element={<Navigate to="/pedidos" replace />} />
                 <Route path="pedidos" element={<OrdersPage />} />
+                <Route path="cozinha" element={<KdsPage />} />
                 <Route path="cardapio" element={<MenuPage />} />
                 <Route path="analytics" element={<AnalyticsPage />} />
                 <Route path="configuracoes" element={<SettingsPage />} />

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
-import { ListOrdered, Utensils, Settings, LogOut, BarChart2, Tag, Trophy, Star, DollarSign, Menu, X } from 'lucide-react';
+import { ListOrdered, Utensils, Settings, LogOut, BarChart2, Tag, Trophy, Star, DollarSign, Menu, X, ChefHat } from 'lucide-react';
 import { authService } from '../../services/authService.js';
 import { useProfile } from '../../context/ProfileContext';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -15,6 +15,7 @@ export function PortalLayout() {
 
   const navItems = [
     { name: 'Pedidos', icon: ListOrdered, path: '/pedidos' },
+    { name: 'Cozinha (KDS)', icon: ChefHat, path: '/cozinha' },
     { name: 'Cardápio', icon: Utensils, path: '/cardapio' },
     { name: 'Analytics', icon: BarChart2, path: '/analytics' },
     { name: 'Avaliações', icon: Star, path: '/avaliacoes' },
