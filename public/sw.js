@@ -1,4 +1,4 @@
-const CACHE_NAME = 'inksa-restaurantes-v1';
+const CACHE_NAME = 'inksa-restaurantes-v2';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
