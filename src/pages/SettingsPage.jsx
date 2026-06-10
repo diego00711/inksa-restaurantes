@@ -1,10 +1,11 @@
 // src/pages/SettingsPage.jsx - VERSÃO FINAL E OTIMIZADA
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { authService } from '../services/authService'; 
-import { Save, Loader } from 'lucide-react'; 
-import { useToast } from '../context/ToastContext.jsx'; 
+import { authService } from '../services/authService';
+import { Save, Loader } from 'lucide-react';
+import { useToast } from '../context/ToastContext.jsx';
 import { useProfile } from '../context/ProfileContext';
+import OpeningHoursEditor from '../components/OpeningHoursEditor';
 
 export function SettingsPage() {
   const [profileData, setProfileData] = useState({
@@ -19,6 +20,7 @@ export function SettingsPage() {
     bank_account_number: '', bank_account_type: 'corrente',
     pix_key: '', mp_account_id: '', delivery_type: 'platform',
     accepts_cash: true,
+    opening_hours: null, hours_auto: false,
   });
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState('');
@@ -216,6 +218,14 @@ export function SettingsPage() {
                 </div>
               )}
             </div>
+
+            {/* Horários de funcionamento */}
+            <OpeningHoursEditor
+              value={profileData.opening_hours}
+              onChange={(v) => setProfileData((prev) => ({ ...prev, opening_hours: v }))}
+              auto={profileData.hours_auto}
+              onAutoChange={(v) => setProfileData((prev) => ({ ...prev, hours_auto: v }))}
+            />
 
             {/* Aceitar dinheiro */}
             <div className="border-t pt-8">
