@@ -117,6 +117,20 @@ export const authService = {
     }
   },
 
+  resetPassword: async (token, newPassword) => {
+    try {
+      const response = await apiFetch(`${AUTH_BASE}/api/auth/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, new_password: newPassword }),
+      });
+      return processResponse(response);
+    } catch (error) {
+      console.error('Erro ao redefinir senha:', error);
+      throw error;
+    }
+  },
+
   // ✅ MÉTODO LOGOUT CORRIGIDO - AGORA CHAMA O BACKEND!
   logout: async () => {
     try {

@@ -15,6 +15,7 @@ import SupportButton from './components/SupportButton';
 // --- Lazy-loaded pages ---
 const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })));
 const RegisterPage = lazy(() => import('./pages/RegisterPage').then(m => ({ default: m.RegisterPage })));
 const OrdersPage = lazy(() => import('./pages/OrdersPage').then(m => ({ default: m.OrdersPage })));
 const KdsPage = lazy(() => import('./pages/KdsPage').then(m => ({ default: m.KdsPage })));
@@ -81,6 +82,7 @@ function AppRoutes() {
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/register" element={<RegisterPage />} />
 
               <Route
