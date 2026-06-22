@@ -153,6 +153,11 @@ export function PortalLayout() {
             <span className="hidden sm:block text-gray-600 text-sm font-medium">
               Bem-vindo, {loading ? '...' : (profile?.restaurant_name || 'Restaurante')}!
             </span>
+            {/* Status pill visible on mobile (sidebar is hidden) */}
+            <span className={`sm:hidden inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full ${profile?.is_open ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+              <span className={`w-2 h-2 rounded-full ${profile?.is_open ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+              {profile?.is_open ? 'Aberto' : 'Fechado'}
+            </span>
           </div>
         </header>
 
