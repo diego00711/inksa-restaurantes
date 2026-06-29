@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 import { authService } from '../services/authService';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx'; // Importando o useToast
@@ -13,6 +14,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   // Removido o estado de erro local para usar o toast, que é mais moderno.
   const [isLoading, setIsLoading] = useState(false);
+  const [showPwd, setShowPwd] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
   const { addToast } = useToast(); // Usando o hook de toast
@@ -88,14 +90,19 @@ export function LoginPage() {
                 Esqueceu a senha?
               </Link>
             </div>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-              required
-            />
+            <div className="relative">
+              <input
+                type={showPwd ? "text" : "password"}
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full pr-10 px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                required
+              />
+              <button type="button" onClick={() => setShowPwd(v => !v)} aria-label={showPwd ? "Ocultar senha" : "Mostrar senha"} tabIndex={-1} className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-600">
+                {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
 
           {/* O erro agora é tratado pelo Toast, então o <p> de erro pode ser removido se preferir */}

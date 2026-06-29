@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
 import { useToast } from '../context/ToastContext.jsx';
-import { Loader } from 'lucide-react';
+import { Loader, Eye, EyeOff } from 'lucide-react';
 
 // Exportado como uma função nomeada, para ser compatível com o seu App.jsx
 export function RegisterPage() {
@@ -16,6 +16,8 @@ export function RegisterPage() {
         confirmPassword: ''
     });
     const [isLoading, setIsLoading] = useState(false);
+    const [showPwd, setShowPwd] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
     const { addToast } = useToast();
     const navigate = useNavigate();
 
@@ -117,31 +119,41 @@ export function RegisterPage() {
                         <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                             Senha
                         </label>
-                        <input
-                            id="password"
-                            name="password"
-                            type="password"
-                            autoComplete="new-password"
-                            required
-                            value={formData.password}
-                            onChange={handleChange}
-                            className="mt-1 block w-full px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                        />
+                        <div className="relative mt-1">
+                          <input
+                              id="password"
+                              name="password"
+                              type={showPwd ? "text" : "password"}
+                              autoComplete="new-password"
+                              required
+                              value={formData.password}
+                              onChange={handleChange}
+                              className="block w-full pr-10 px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                          />
+                          <button type="button" onClick={() => setShowPwd(v => !v)} aria-label={showPwd ? "Ocultar senha" : "Mostrar senha"} tabIndex={-1} className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-600">
+                            {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
                     </div>
                      <div>
                         <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
                             Confirmar Senha
                         </label>
-                        <input
-                            id="confirmPassword"
-                            name="confirmPassword"
-                            type="password"
-                            autoComplete="new-password"
-                            required
-                            value={formData.confirmPassword}
-                            onChange={handleChange}
-                            className="mt-1 block w-full px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                        />
+                        <div className="relative mt-1">
+                          <input
+                              id="confirmPassword"
+                              name="confirmPassword"
+                              type={showConfirm ? "text" : "password"}
+                              autoComplete="new-password"
+                              required
+                              value={formData.confirmPassword}
+                              onChange={handleChange}
+                              className="block w-full pr-10 px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                          />
+                          <button type="button" onClick={() => setShowConfirm(v => !v)} aria-label={showConfirm ? "Ocultar senha" : "Mostrar senha"} tabIndex={-1} className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-600">
+                            {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
                     </div>
                     <div>
                         <button
