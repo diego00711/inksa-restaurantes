@@ -26,6 +26,7 @@ const CategoryManagementPage = lazy(() => import('./pages/CategoryManagementPage
 const RestaurantGamificationPage = lazy(() => import('./pages/RestaurantGamificationPage'));
 const RestaurantEvaluationsCenter = lazy(() => import('./pages/RestaurantEvaluationsCenter'));
 const FinancePage = lazy(() => import('./pages/FinancePage'));
+const SuportePage = lazy(() => import('./pages/SuportePage'));
 
 const PageLoader = () => (
   <div className="flex h-screen items-center justify-center">
@@ -103,6 +104,7 @@ function AppRoutes() {
                 <Route path="gamificacao" element={<RestaurantGamificationPage />} />
                 <Route path="avaliacoes" element={<RestaurantEvaluationsCenter />} />
                 <Route path="financeiro" element={<FinancePage />} />
+                <Route path="suporte" element={<SuportePage />} />
               </Route>
 
               <Route path="/dashboard" element={<Navigate to="/pedidos" replace />} />
