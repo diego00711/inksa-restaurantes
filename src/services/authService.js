@@ -16,18 +16,21 @@ const RESTAURANT_BASE = RESTAURANT_API_URL || AUTH_API_URL;
 export const authService = {
   login: async (email, password) => {
     try {
-      const response = await apiFetch(`${AUTH_BASE}/api/auth/login`, {
+      // NAO usa processResponse: no login, 401 e senha errada (nao sessao expirada)
+      const response = await fetch(`${AUTH_BASE}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, expected_user_type: 'restaurant' }),
       });
-      
-      const processedResponse = await processResponse(response);
+      const data = await response.json().catch(() => ({}));
 
-      if (processedResponse && processedResponse.data && processedResponse.data.token) {
-        return processedResponse.data;
+      if (!response.ok) {
+        throw new Error(data.error || data.message || 'Não foi possível entrar. Tente novamente.');
       }
-      throw new Error("Resposta de login inválida do servidor.");
+      if (data && data.data && data.data.token) {
+        return data.data;
+      }
+      throw new Error('Não foi possível entrar. Tente novamente.');
     } catch (error) {
       console.error('Falha no serviço de login:', error);
       throw error;
