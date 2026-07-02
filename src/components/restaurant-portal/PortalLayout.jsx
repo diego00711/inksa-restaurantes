@@ -1,7 +1,9 @@
 // Local: src/components/restaurant-portal/PortalLayout.jsx - VERSÃO CORRIGIDA
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
+import { RESTAURANT_API_URL, createAuthHeaders } from '../../services/api';
+import { apiFetch } from '../../services/apiClient';
 import { ListOrdered, Utensils, Settings, LogOut, BarChart2, Tag, Trophy, Star, DollarSign, Menu, X, ChefHat, LifeBuoy, AlertTriangle } from 'lucide-react';
 import { authService } from '../../services/authService.js';
 import { useProfile } from '../../context/ProfileContext';
@@ -31,12 +33,27 @@ function getMissingFields(profile) {
 export function PortalLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { profile, loading, updateProfileInContext } = useProfile();
+  const { profile, loading, updateProfileInContext, fetchProfile } = useProfile();
   const { addToast } = useToast();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const missingFields = loading ? [] : getMissingFields(profile);
   const cadastroIncompleto = missingFields.length > 0;
+
+  // Heartbeat: sinal de vida a cada 4 min enquanto o painel estiver aberto.
+  // Sem heartbeat por 45 min (token expirado, app fechado), o backend fecha o
+  // restaurante automaticamente para o cliente nao pedir em restaurante ausente.
+  useEffect(() => {
+    const ping = () => {
+      apiFetch(`${RESTAURANT_API_URL}/api/restaurant/heartbeat`, {
+        method: 'POST',
+        headers: createAuthHeaders(),
+      }).catch(() => {});
+    };
+    ping();
+    const id = setInterval(ping, 4 * 60 * 1000);
+    return () => clearInterval(id);
+  }, []);
 
   const navItems = [
     { name: 'Pedidos', icon: ListOrdered, path: '/pedidos' },
@@ -70,9 +87,16 @@ export function PortalLayout() {
     const newIsOpenStatus = !profile.is_open;
     // Bloqueia FICAR ABERTO se o cadastro estiver incompleto (previne o bug do frete em produção)
     if (newIsOpenStatus && cadastroIncompleto) {
-      addToast('error', `Complete seu cadastro para abrir. Falta: ${missingFields.join(', ')}.`);
-      navigate('/configuracoes');
-      return;
+      // O perfil em memória pode estar desatualizado (ex.: coordenadas recém-geocodificadas
+      // no servidor). Busca a versão fresca antes de decidir bloquear.
+      let fresh = null;
+      try { fresh = typeof fetchProfile === 'function' ? await fetchProfile() : null; } catch {}
+      const freshMissing = getMissingFields(fresh || profile);
+      if (freshMissing.length > 0) {
+        addToast('error', `Complete seu cadastro para abrir. Falta: ${freshMissing.join(', ')}.`);
+        navigate('/configuracoes');
+        return;
+      }
     }
     try {
       addToast('info', `A atualizar status para ${newIsOpenStatus ? 'Aberto' : 'Fechado'}...`);
@@ -100,7 +124,7 @@ export function PortalLayout() {
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed sm:static inset-y-0 left-0 z-30 w-64 bg-gray-900 text-white flex flex-col p-4 shadow-lg transform transition-transform duration-200 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} sm:translate-x-0`}>
+      <aside className={`fixed sm:static inset-y-0 left-0 z-30 w-64 bg-gray-900 text-white flex flex-col p-4 shadow-lg transform transition-transform duration-200 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} sm:translate-x-0 max-h-screen`} style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}>
         <div className="flex items-center gap-3 mb-8 p-2 border-b border-gray-700 pb-4">
           <Link to="/pedidos" className="flex items-center gap-3 w-full" onClick={closeSidebar}>
             {loading ? (
@@ -140,7 +164,8 @@ export function PortalLayout() {
             )}
         </div>
 
-        <nav className="flex-1 space-y-2">
+        {/* Nav rolável: em telas baixas os itens do fim (Categorias etc.) continuam acessíveis */}
+        <nav className="flex-1 space-y-2 overflow-y-auto min-h-0 pr-1">
           {navItems.map((item) => (
             <Link
               to={item.path}

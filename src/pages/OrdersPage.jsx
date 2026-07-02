@@ -61,15 +61,15 @@ function KPIBar({ orders }) {
   }, [orders]);
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 mb-4 sm:mb-6">
       {stats.map(({ label, value, icon: Icon, color, bg, border }) => (
-        <div key={label} className={`${bg} rounded-2xl p-4 border ${border} shadow-sm flex items-center gap-3`}>
-          <div className={`p-2.5 rounded-xl bg-white shadow-sm ${color}`}>
+        <div key={label} className={`${bg} rounded-xl sm:rounded-2xl p-2.5 sm:p-4 border ${border} shadow-sm flex items-center gap-2 sm:gap-3 min-w-0`}>
+          <div className={`hidden sm:block p-2.5 rounded-xl bg-white shadow-sm ${color}`}>
             <Icon className="w-5 h-5" />
           </div>
-          <div>
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide leading-none mb-1 break-words">{label}</p>
-            <p className={`text-base sm:text-xl font-black ${color} leading-none break-words`}>{value}</p>
+          <div className="min-w-0">
+            <p className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide leading-none mb-1 truncate">{label}</p>
+            <p className={`text-sm sm:text-xl font-black ${color} leading-none truncate`}>{value}</p>
           </div>
         </div>
       ))}

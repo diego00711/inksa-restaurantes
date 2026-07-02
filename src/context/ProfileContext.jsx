@@ -17,17 +17,19 @@ export const ProfileProvider = ({ children }) => {
     if (!isAuthenticated) {
       setLoading(false);
       setProfile(null);
-      return;
+      return null;
     }
     setLoading(true);
     try {
       const response = await authService.getProfile();
       // A resposta de getProfile já contém o objeto do perfil
       setProfile(response.data);
+      return response.data; // retorna o perfil fresco para quem precisa decidir na hora
     } catch (error) {
       console.error("Erro ao carregar perfil no context:", error);
       // Usa objeto vazio para não travar a UI — o backend auto-cria o perfil na próxima requisição GET
       setProfile({});
+      return null;
     } finally {
       setLoading(false);
     }
