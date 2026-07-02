@@ -78,6 +78,33 @@ export function SettingsPage() {
     try {
       let finalProfileData = { ...profileData };
 
+      // Geocodifica o endereço para lat/lng (necessário para o cálculo de frete por distância)
+      try {
+        const rua = finalProfileData.address_street;
+        const cidade = finalProfileData.address_city;
+        const uf = finalProfileData.address_state;
+        if (rua && cidade) {
+          const q = encodeURIComponent(
+            [rua, finalProfileData.address_neighborhood, cidade, uf, 'Brasil'].filter(Boolean).join(', ')
+          );
+          const geoRes = await fetch(
+            `https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1&countrycodes=br`,
+            { headers: { 'Accept-Language': 'pt-BR' } }
+          );
+          const arr = await geoRes.json();
+          if (Array.isArray(arr) && arr[0]) {
+            const lat = Number(arr[0].lat);
+            const lng = Number(arr[0].lon);
+            if (Number.isFinite(lat) && Number.isFinite(lng)) {
+              finalProfileData.latitude = lat;
+              finalProfileData.longitude = lng;
+            }
+          }
+        }
+      } catch {
+        // Geocodificação falhou — salva mesmo assim; frete usa taxa base até ter coords
+      }
+
       if (logoFile) {
         addToast('info', 'Enviando novo logo...');
         const uploadResponse = await authService.uploadRestaurantLogo(logoFile);
