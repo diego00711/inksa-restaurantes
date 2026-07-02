@@ -1,17 +1,42 @@
 // Local: src/components/restaurant-portal/PortalLayout.jsx - VERSÃO CORRIGIDA
 
 import React, { useState } from 'react';
-import { Link, useLocation, Outlet } from 'react-router-dom';
-import { ListOrdered, Utensils, Settings, LogOut, BarChart2, Tag, Trophy, Star, DollarSign, Menu, X, ChefHat, LifeBuoy } from 'lucide-react';
+import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
+import { ListOrdered, Utensils, Settings, LogOut, BarChart2, Tag, Trophy, Star, DollarSign, Menu, X, ChefHat, LifeBuoy, AlertTriangle } from 'lucide-react';
 import { authService } from '../../services/authService.js';
 import { useProfile } from '../../context/ProfileContext';
 import { useToast } from '../../context/ToastContext.jsx';
 
+// Campos obrigatórios para o restaurante poder RECEBER pedidos.
+// Sem o endereço completo (com coordenadas), o cálculo de frete falha.
+const REQUIRED_FIELDS = [
+  { key: 'restaurant_name', label: 'Nome do restaurante' },
+  { key: 'address_street', label: 'Rua' },
+  { key: 'address_city', label: 'Cidade' },
+  { key: 'address_state', label: 'Estado (UF)' },
+];
+
+function getMissingFields(profile) {
+  if (!profile) return REQUIRED_FIELDS.map((f) => f.label);
+  const missing = REQUIRED_FIELDS
+    .filter((f) => !String(profile[f.key] || '').trim())
+    .map((f) => f.label);
+  const hasCoords =
+    profile.latitude != null && profile.longitude != null &&
+    Number.isFinite(Number(profile.latitude)) && Number.isFinite(Number(profile.longitude));
+  if (!hasCoords) missing.push('Localização no mapa (salve o endereço)');
+  return missing;
+}
+
 export function PortalLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { profile, loading, updateProfileInContext } = useProfile();
   const { addToast } = useToast();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const missingFields = loading ? [] : getMissingFields(profile);
+  const cadastroIncompleto = missingFields.length > 0;
 
   const navItems = [
     { name: 'Pedidos', icon: ListOrdered, path: '/pedidos' },
@@ -43,6 +68,12 @@ export function PortalLayout() {
   const handleToggleIsOpen = async () => {
     if (loading || !profile) return;
     const newIsOpenStatus = !profile.is_open;
+    // Bloqueia FICAR ABERTO se o cadastro estiver incompleto (previne o bug do frete em produção)
+    if (newIsOpenStatus && cadastroIncompleto) {
+      addToast('error', `Complete seu cadastro para abrir. Falta: ${missingFields.join(', ')}.`);
+      navigate('/configuracoes');
+      return;
+    }
     try {
       addToast('info', `A atualizar status para ${newIsOpenStatus ? 'Aberto' : 'Fechado'}...`);
       const updatedProfileResponse = await authService.updateProfile({ is_open: newIsOpenStatus });
@@ -163,6 +194,27 @@ export function PortalLayout() {
         </header>
 
         <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
+          {/* Banner de cadastro incompleto — some sozinho quando o cadastro fica completo */}
+          {cadastroIncompleto && (
+            <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="font-semibold text-amber-900">Complete seu cadastro para receber pedidos</p>
+                  <p className="text-sm text-amber-800 mt-0.5">
+                    Falta: <strong>{missingFields.join(', ')}</strong>. Sem o endereço completo o app
+                    não calcula o frete e você não pode ficar <strong>Aberto</strong>.
+                  </p>
+                  <button
+                    onClick={() => navigate('/configuracoes')}
+                    className="inline-flex items-center gap-1 mt-2 text-sm font-bold text-amber-900 hover:text-amber-950"
+                  >
+                    Completar cadastro agora →
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           <Outlet />
         </main>
       </div>
