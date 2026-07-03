@@ -268,17 +268,9 @@ export function AnalyticsPage() {
         <div className="bg-white rounded-lg shadow-md p-6">
           <h3 className="text-xl font-bold text-gray-800 mb-4">Resumo de Performance</h3>
           <div className="space-y-4">
-            <div className="flex justify-between items-center py-2 border-b border-gray-100">
+            <div className="flex justify-between items-center py-2">
               <span className="text-gray-600">Pedidos Cancelados</span>
               <span className="font-semibold text-red-600">{metricas.pedidos_cancelados || 0}</span>
-            </div>
-            <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-gray-600">Taxa de Sucesso</span>
-              <span className="font-semibold text-green-600">{metricas.taxa_conversao || 0}%</span>
-            </div>
-            <div className="flex justify-between items-center py-2">
-              <span className="text-gray-600">Crescimento Mensal</span>
-              <span className="font-semibold text-blue-600">+{metricas.crescimento_mensal || 0}%</span>
             </div>
           </div>
         </div>

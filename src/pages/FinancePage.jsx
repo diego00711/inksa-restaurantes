@@ -1,18 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { DollarSign, Calendar, TrendingUp, AlertTriangle, Save } from 'lucide-react';
-import { useToast } from '../context/ToastContext.jsx';
+import { Link } from 'react-router-dom';
+import { DollarSign, Calendar, TrendingUp, AlertTriangle, Pencil } from 'lucide-react';
 import { RESTAURANT_API_URL, AUTH_TOKEN_KEY } from '../services/api';
-
-const PIX_KEY_STORAGE = 'restaurant_pix_key';
+import { useProfile } from '../context/ProfileContext';
 
 const fmt = (value) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
 
 export default function FinancePage() {
-  const { addToast } = useToast();
-
-  const [pixKey, setPixKey] = useState(() => localStorage.getItem(PIX_KEY_STORAGE) || '');
-  const [savingPix, setSavingPix] = useState(false);
+  const { profile } = useProfile();
 
   const [summary, setSummary] = useState({ balance: null, nextPayout: null, monthTotal: null });
   const [payouts, setPayouts] = useState([]);
@@ -43,15 +39,6 @@ export default function FinancePage() {
     };
     fetchPayouts();
   }, []);
-
-  const handleSavePix = () => {
-    setSavingPix(true);
-    setTimeout(() => {
-      localStorage.setItem(PIX_KEY_STORAGE, pixKey);
-      addToast('success', 'Chave PIX salva com sucesso!');
-      setSavingPix(false);
-    }, 400);
-  };
 
   const statusBadge = (status) => {
     const map = {
@@ -116,28 +103,21 @@ export default function FinancePage() {
         </div>
       </div>
 
-      {/* PIX Key Section */}
+      {/* PIX Key Section — somente leitura: a chave é configurada em Configurações
+          (fonte única; evita ter o mesmo dado editável em duas telas diferentes) */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-6 sm:mb-8">
         <h2 className="text-lg font-bold text-gray-800 mb-4">Chave PIX para Recebimento</h2>
-        <p className="text-sm text-gray-500 mb-4">
-          Informe sua chave PIX para receber os repasses. Pode ser CPF, CNPJ, e-mail, telefone ou chave aleatória.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <input
-            type="text"
-            value={pixKey}
-            onChange={(e) => setPixKey(e.target.value)}
-            placeholder="Ex: 00.000.000/0001-00 ou email@exemplo.com"
-            className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 min-h-[44px]"
-          />
-          <button
-            onClick={handleSavePix}
-            disabled={savingPix || !pixKey.trim()}
-            className="flex items-center justify-center gap-2 bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 min-h-[44px] font-medium"
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex-1 border border-gray-200 bg-gray-50 rounded-lg px-4 py-2 text-sm text-gray-700 min-h-[44px] flex items-center">
+            {profile?.pix_key ? profile.pix_key : <span className="text-gray-400">Nenhuma chave PIX cadastrada</span>}
+          </div>
+          <Link
+            to="/configuracoes"
+            className="flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors min-h-[44px] font-medium"
           >
-            <Save className="h-4 w-4" />
-            {savingPix ? 'Salvando...' : 'Salvar'}
-          </button>
+            <Pencil className="h-4 w-4" />
+            {profile?.pix_key ? 'Alterar' : 'Cadastrar'}
+          </Link>
         </div>
       </div>
 
