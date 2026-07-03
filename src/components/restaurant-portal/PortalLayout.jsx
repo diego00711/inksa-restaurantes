@@ -192,7 +192,10 @@ export function PortalLayout() {
 
       {/* Conteúdo principal */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="bg-white p-4 shadow-sm flex items-center justify-between z-10 border-b border-gray-200">
+        <header
+          className="bg-white p-4 shadow-sm flex items-center justify-between z-10 border-b border-gray-200"
+          style={{ paddingTop: 'calc(1rem + env(safe-area-inset-top))' }}
+        >
           <div className="flex items-center gap-3">
             {/* Botão hambúrguer — visível apenas em mobile */}
             <button
