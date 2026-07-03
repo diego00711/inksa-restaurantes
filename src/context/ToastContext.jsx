@@ -41,14 +41,17 @@ export const ToastProvider = ({ children }) => {
   return (
     <ToastContext.Provider value={{ addToast }}>
       {children}
-      <div className="fixed bottom-5 right-5 z-[100] space-y-3">
+      <div
+        className="fixed z-[100] left-4 right-4 sm:left-auto sm:right-5 flex flex-col items-stretch sm:items-end gap-3"
+        style={{ bottom: 'calc(1.25rem + env(safe-area-inset-bottom))' }}
+      >
         {toasts.map(toast => {
           const config = toastConfig[toast.type] || toastConfig.info;
           return (
-            <div key={toast.id} className={`${config.bg} text-white py-3 px-5 rounded-lg shadow-xl flex items-center gap-3 animate-fade-in-right`}>
-              {config.icon}
-              <span>{toast.message}</span>
-              <button onClick={() => removeToast(toast.id)} className="ml-4 text-white hover:opacity-75">
+            <div key={toast.id} className={`${config.bg} text-white py-3 px-5 rounded-lg shadow-xl flex items-center gap-3 animate-fade-in-right w-full sm:w-auto sm:max-w-sm`}>
+              <span className="shrink-0">{config.icon}</span>
+              <span className="flex-1 min-w-0 break-words">{toast.message}</span>
+              <button onClick={() => removeToast(toast.id)} className="shrink-0 text-white hover:opacity-75">
                 <XCircle size={18} />
               </button>
             </div>
