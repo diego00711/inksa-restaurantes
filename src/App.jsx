@@ -39,6 +39,11 @@ function AppRoutes() {
   const { addToast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
   const [serverReady, setServerReady] = useState(false);
+  // Referência estável: se recriada a cada render (ex: função inline), o
+  // useEffect do WakingUpScreen reinicia do zero toda vez que este
+  // componente re-renderiza durante o boot — o timer de 60s nunca vence
+  // e a tela de "acordando servidor" fica em loop, mesmo com o backend ok.
+  const handleServerReady = React.useCallback(() => setServerReady(true), []);
 
   const [showOnboarding, setShowOnboarding] = useState(
     () => localStorage.getItem('inksa_onboarding_done') !== 'true'
@@ -75,7 +80,7 @@ function AppRoutes() {
 
   return (
     <ProfileProvider>
-      <WakingUpScreen onReady={() => setServerReady(true)} />
+      <WakingUpScreen onReady={handleServerReady} />
       {serverReady && (
         <>
           <SupportButton />
