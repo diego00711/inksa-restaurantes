@@ -93,14 +93,15 @@ export default function RestaurantGamificationPage() {
 
       const [statsData, lbData, challengesActive, challengesUser] = await Promise.allSettled([
         fetchJson(`${base}/api/gamification/user-points/${restaurantId}`),
-        fetchJson(`${base}/api/gamification/leaderboard?type=restaurants`),
+        fetchJson(`${base}/api/gamification/leaderboard?scope=restaurant`),
         fetchJson(`${base}/api/challenges/active?user_type=restaurant`),
         fetchJson(`${base}/api/challenges/user/${restaurantId}`),
       ]);
 
       if (statsData.status === 'fulfilled') setStats(statsData.value);
       if (lbData.status === 'fulfilled') {
-        const lb = lbData.value;
+        // Backend responde {items:[...], limit} -- "items", nao um array direto.
+        const lb = lbData.value?.items ?? lbData.value;
         setLeaderboard(Array.isArray(lb) ? lb : []);
       }
 
