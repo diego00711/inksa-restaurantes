@@ -193,24 +193,24 @@ export function PortalLayout() {
       {/* Conteúdo principal */}
       <div className="flex-1 flex flex-col min-w-0">
         <header
-          className="bg-white p-4 shadow-sm flex items-center justify-between z-10 border-b border-gray-200"
+          className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4 shadow-md flex items-center justify-between z-10"
           style={{ paddingTop: 'calc(1rem + env(safe-area-inset-top))' }}
         >
           <div className="flex items-center gap-3">
             {/* Botão hambúrguer — visível apenas em mobile */}
             <button
-              className="sm:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center"
+              className="sm:hidden p-2 rounded-lg text-white hover:bg-white/15 min-h-[44px] min-w-[44px] flex items-center justify-center"
               onClick={() => setSidebarOpen(true)}
               aria-label="Abrir menu"
             >
               <Menu className="h-5 w-5" />
             </button>
-            <h1 className="text-lg sm:text-xl font-bold text-gray-800">
+            <h1 className="text-lg sm:text-xl font-bold text-white">
               {navItems.find(item => location.pathname.startsWith(item.path))?.name || 'Painel'}
             </h1>
           </div>
           <div className="flex items-center gap-3">
-            <span className="hidden sm:block text-gray-600 text-sm font-medium">
+            <span className="hidden sm:block text-white/90 text-sm font-medium">
               Bem-vindo, {loading ? '...' : (profile?.restaurant_name || 'Restaurante')}!
             </span>
             {/* Status pill visible on mobile (sidebar is hidden) */}
