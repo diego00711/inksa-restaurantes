@@ -19,7 +19,7 @@ export default function FinancePage() {
       setLoadingData(true);
       try {
         const token = localStorage.getItem(AUTH_TOKEN_KEY);
-        const res = await fetch(`${RESTAURANT_API_URL}/api/admin/payouts`, {
+        const res = await fetch(`${RESTAURANT_API_URL}/api/restaurant/payouts`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         if (res.ok) {
