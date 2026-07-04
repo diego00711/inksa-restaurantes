@@ -193,22 +193,25 @@ export function PortalLayout() {
       {/* Conteúdo principal */}
       <div className="flex-1 flex flex-col min-w-0">
         <header
-          className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4 shadow-md flex items-center justify-between z-10"
+          className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4 shadow-md flex items-center justify-between gap-3 z-10"
           style={{ paddingTop: 'calc(1rem + env(safe-area-inset-top))' }}
         >
-          <div className="flex items-center gap-3">
-            {/* Botão hambúrguer — visível apenas em mobile */}
-            <button
-              className="sm:hidden p-2 rounded-lg text-white hover:bg-white/15 min-h-[44px] min-w-[44px] flex items-center justify-center"
-              onClick={() => setSidebarOpen(true)}
-              aria-label="Abrir menu"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-            <h1 className="text-lg sm:text-xl font-bold text-white">
+          {/* Botão hambúrguer — visível apenas em mobile */}
+          <button
+            className="sm:hidden p-2 rounded-lg text-white hover:bg-white/15 min-h-[44px] min-w-[44px] flex items-center justify-center"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Abrir menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+
+          <div className="flex items-center gap-2 min-w-0">
+            <img src="/inka-logo.png" alt="Inksa" className="h-7 w-7 rounded-lg object-cover shrink-0" />
+            <h1 className="text-lg sm:text-xl font-bold text-white truncate">
               {navItems.find(item => location.pathname.startsWith(item.path))?.name || 'Painel'}
             </h1>
           </div>
+
           <div className="flex items-center gap-3">
             <span className="hidden sm:block text-white/90 text-sm font-medium">
               Bem-vindo, {loading ? '...' : (profile?.restaurant_name || 'Restaurante')}!
