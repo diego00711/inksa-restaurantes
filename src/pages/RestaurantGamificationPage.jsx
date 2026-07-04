@@ -67,6 +67,7 @@ export default function RestaurantGamificationPage() {
   const { profile, loading: profileLoading } = useProfile();
 
   const [stats, setStats]           = useState(null);
+  const [pointRules, setPointRules] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
   const [goals, setGoals]           = useState([]);
   const [challenges, setChallenges] = useState([]);
@@ -91,14 +92,19 @@ export default function RestaurantGamificationPage() {
     try {
       const base = RESTAURANT_API_URL;
 
-      const [statsData, lbData, challengesActive, challengesUser] = await Promise.allSettled([
+      const [statsData, rulesData, lbData, challengesActive, challengesUser] = await Promise.allSettled([
         fetchJson(`${base}/api/gamification/user-points/${restaurantId}`),
+        fetchJson(`${base}/api/gamification/point-rules?applies_to=restaurant`),
         fetchJson(`${base}/api/gamification/leaderboard?scope=restaurant`),
         fetchJson(`${base}/api/challenges/active?user_type=restaurant`),
         fetchJson(`${base}/api/challenges/user/${restaurantId}`),
       ]);
 
       if (statsData.status === 'fulfilled') setStats(statsData.value);
+      if (rulesData.status === 'fulfilled') {
+        const rules = rulesData.value?.items ?? rulesData.value;
+        setPointRules(Array.isArray(rules) ? rules : []);
+      }
       if (lbData.status === 'fulfilled') {
         // Backend responde {items:[...], limit} -- "items", nao um array direto.
         const lb = lbData.value?.items ?? lbData.value;
@@ -346,6 +352,26 @@ export default function RestaurantGamificationPage() {
             <Medal className="h-12 w-12 text-indigo-300" />
           </div>
         </div>
+      </div>
+
+      {/* ── Como ganhar pontos ────────────────────────────────────────────── */}
+      <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6">
+        <div className="flex items-center gap-2 mb-3">
+          <Zap className="h-5 w-5 text-orange-500" />
+          <h2 className="text-lg font-bold text-gray-800">Como ganhar pontos</h2>
+        </div>
+        {pointRules.length === 0 ? (
+          <p className="text-sm text-gray-400 py-2">Nenhuma regra disponível no momento.</p>
+        ) : (
+          <div className="divide-y divide-gray-100">
+            {pointRules.map((rule) => (
+              <div key={rule.action_key} className="flex justify-between items-center py-2.5">
+                <span className="text-sm text-gray-600">{rule.label}</span>
+                <span className="text-sm font-bold text-green-600">+{rule.points}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ── 2. Ranking de Restaurantes ──────────────────────────────────── */}
