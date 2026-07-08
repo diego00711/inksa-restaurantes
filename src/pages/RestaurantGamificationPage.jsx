@@ -100,7 +100,12 @@ export default function RestaurantGamificationPage() {
         fetchJson(`${base}/api/challenges/user/${restaurantId}`),
       ]);
 
-      if (statsData.status === 'fulfilled') setStats(statsData.value);
+      if (statsData.status === 'fulfilled') {
+        // O endpoint /user-points retorna `points` (não `total_points`);
+        // normaliza aqui para o resto da página, senão mostrava 0 pts sempre.
+        const s = statsData.value || {};
+        setStats({ ...s, total_points: Number(s.points ?? s.total_points ?? 0) });
+      }
       if (rulesData.status === 'fulfilled') {
         const rules = rulesData.value?.items ?? rulesData.value;
         setPointRules(Array.isArray(rules) ? rules : []);
