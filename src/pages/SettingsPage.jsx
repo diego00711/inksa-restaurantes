@@ -7,6 +7,55 @@ import { useToast } from '../context/ToastContext.jsx';
 import { useProfile } from '../context/ProfileContext';
 import OpeningHoursEditor from '../components/OpeningHoursEditor';
 
+// Uma consulta ao Nominatim (OpenStreetMap). Retorna {lat,lng} ou null.
+async function geocodeOnce(query) {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&countrycodes=br`,
+      { headers: { 'Accept-Language': 'pt-BR' } }
+    );
+    const arr = await res.json();
+    if (Array.isArray(arr) && arr[0]) {
+      const lat = Number(arr[0].lat);
+      const lng = Number(arr[0].lon);
+      if (Number.isFinite(lat) && Number.isFinite(lng)) return { lat, lng };
+    }
+  } catch {
+    /* falha de rede/limite — o chamador tenta a próxima variante */
+  }
+  return null;
+}
+
+// Geocodifica o endereço tentando do mais específico ao mais amplo e parando
+// no primeiro que resolver. Muitas ruas de cidades menores não existem no
+// OpenStreetMap; sem esse fallback o restaurante ficava SEM coordenadas e
+// travado no gate ("Complete seu cadastro: Localização no mapa"), sem saída.
+// Com a cadeia, no pior caso cai no centro do bairro/cidade — coordenada
+// aproximada, mas suficiente para liberar o cadastro e o cálculo de frete.
+async function geocodeProfileAddress(p) {
+  const rua = (p.address_street || '').trim();
+  const bairro = (p.address_neighborhood || '').trim();
+  const cidade = (p.address_city || '').trim();
+  const uf = (p.address_state || '').trim();
+  if (!cidade || !uf) return null; // sem cidade/UF não há como localizar
+
+  const variants = [
+    [rua, bairro, cidade, uf, 'Brasil'],
+    [rua, cidade, uf, 'Brasil'],
+    [bairro, cidade, uf, 'Brasil'],
+    [cidade, uf, 'Brasil'],
+  ];
+  const seen = new Set();
+  for (const parts of variants) {
+    const q = parts.filter(Boolean).join(', ');
+    if (!q || seen.has(q)) continue;
+    seen.add(q);
+    const hit = await geocodeOnce(q);
+    if (hit) return hit;
+  }
+  return null;
+}
+
 export function SettingsPage() {
   const [profileData, setProfileData] = useState({
     restaurant_name: '', business_name: '', cnpj: '', phone: '',
@@ -83,31 +132,21 @@ export function SettingsPage() {
     try {
       let finalProfileData = { ...profileData };
 
-      // Geocodifica o endereço para lat/lng (necessário para o cálculo de frete por distância)
-      try {
-        const rua = finalProfileData.address_street;
-        const cidade = finalProfileData.address_city;
-        const uf = finalProfileData.address_state;
-        if (rua && cidade) {
-          const q = encodeURIComponent(
-            [rua, finalProfileData.address_neighborhood, cidade, uf, 'Brasil'].filter(Boolean).join(', ')
-          );
-          const geoRes = await fetch(
-            `https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1&countrycodes=br`,
-            { headers: { 'Accept-Language': 'pt-BR' } }
-          );
-          const arr = await geoRes.json();
-          if (Array.isArray(arr) && arr[0]) {
-            const lat = Number(arr[0].lat);
-            const lng = Number(arr[0].lon);
-            if (Number.isFinite(lat) && Number.isFinite(lng)) {
-              finalProfileData.latitude = lat;
-              finalProfileData.longitude = lng;
-            }
-          }
+      // Geocodifica o endereço para lat/lng (necessário para o cálculo de frete
+      // por distância e para o restaurante poder ficar Aberto). Tenta uma cadeia
+      // de fallback (rua → bairro+cidade → cidade) para nunca salvar sem
+      // coordenadas — o que antes travava o restaurante no gate sem saída.
+      const geo = await geocodeProfileAddress(finalProfileData);
+      if (geo) {
+        finalProfileData.latitude = geo.lat;
+        finalProfileData.longitude = geo.lng;
+      } else {
+        const jaTinhaCoords =
+          Number.isFinite(Number(finalProfileData.latitude)) &&
+          Number.isFinite(Number(finalProfileData.longitude));
+        if (!jaTinhaCoords) {
+          addToast('error', 'Não consegui localizar seu endereço no mapa. Confira a Cidade e o Estado (UF) e salve novamente.');
         }
-      } catch {
-        // Geocodificação falhou — salva mesmo assim; frete usa taxa base até ter coords
       }
 
       if (logoFile) {
