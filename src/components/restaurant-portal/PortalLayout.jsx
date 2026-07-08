@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import { RESTAURANT_API_URL, createAuthHeaders } from '../../services/api';
 import { apiFetch } from '../../services/apiClient';
-import { ListOrdered, Utensils, Settings, LogOut, BarChart2, Tag, Trophy, Star, DollarSign, Menu, X, ChefHat, LifeBuoy, AlertTriangle } from 'lucide-react';
+import { ListOrdered, Utensils, Settings, LogOut, BarChart2, Tag, Trophy, Medal, Star, DollarSign, Menu, X, ChefHat, LifeBuoy, AlertTriangle } from 'lucide-react';
 import { authService } from '../../services/authService.js';
 import { useProfile } from '../../context/ProfileContext';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -62,6 +62,7 @@ export function PortalLayout() {
     { name: 'Analytics', icon: BarChart2, path: '/analytics' },
     { name: 'Avaliações', icon: Star, path: '/avaliacoes' },
     { name: 'Gamificação', icon: Trophy, path: '/gamificacao' },
+    { name: 'Clube Inksa', icon: Medal, path: '/clube' },
     { name: 'Financeiro', icon: DollarSign, path: '/financeiro' },
     { name: 'Suporte', icon: LifeBuoy, path: '/suporte' },
     { name: 'Configurações', icon: Settings, path: '/configuracoes' },
