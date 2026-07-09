@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNotificationSound } from '../hooks/useNotificationSound';
 import { supabase } from '../lib/supabase';
 import { SlidersHorizontal, Trash2, TrendingUp, ShoppingBag, DollarSign, Clock, AlertCircle } from 'lucide-react';
+import SocialDayBanner from '../components/SocialDayBanner';
 
 // ─── OrderTimer ───────────────────────────────────────────────────────────────
 function OrderTimer({ createdAt, acceptedAt }) {
@@ -289,6 +290,8 @@ export function OrdersPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 min-h-full flex flex-col bg-gray-50">
+      {/* Dia I — Inksa Social (só aparece quando habilitado no admin) */}
+      <SocialDayBanner />
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex flex-wrap justify-between items-center gap-3 mb-5">
         <div className="flex items-center gap-3">
