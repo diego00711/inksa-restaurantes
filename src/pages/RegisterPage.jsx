@@ -155,6 +155,12 @@ export function RegisterPage() {
                           </button>
                         </div>
                     </div>
+                    <p className="text-xs text-center text-gray-500">
+                        Ao criar sua conta, você concorda com os{' '}
+                        <a href="https://inksadelivery.com.br/termos" target="_blank" rel="noopener noreferrer" className="text-indigo-600 underline">Termos de Uso</a>{' '}
+                        e a{' '}
+                        <a href="https://inksadelivery.com.br/privacidade" target="_blank" rel="noopener noreferrer" className="text-indigo-600 underline">Política de Privacidade</a>.
+                    </p>
                     <div>
                         <button
                             type="submit"
