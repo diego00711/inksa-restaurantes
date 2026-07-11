@@ -67,7 +67,7 @@ export function SettingsPage() {
     payout_frequency: 'weekly',
     bank_name: '', bank_agency: '',
     bank_account_number: '', bank_account_type: 'corrente',
-    pix_key: '', mp_account_id: '', delivery_type: 'platform',
+    pix_key: '', pix_key_type: '', mp_account_id: '', delivery_type: 'platform',
     accepts_cash: true,
     opening_hours: null, hours_auto: false,
   });
@@ -414,6 +414,18 @@ export function SettingsPage() {
                 <div>
                   <label htmlFor="pix_key" className="block text-sm font-medium text-gray-700">Chave PIX</label>
                   <input type="text" name="pix_key" value={profileData.pix_key || ''} onChange={handleChange} disabled={!isEditing} className="mt-1 w-full px-3 py-2 text-base border border-gray-300 rounded-md"/>
+                </div>
+                <div>
+                  <label htmlFor="pix_key_type" className="block text-sm font-medium text-gray-700">Tipo da chave PIX</label>
+                  <select name="pix_key_type" id="pix_key_type" value={profileData.pix_key_type || ''} onChange={handleChange} disabled={!isEditing} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                    <option value="">Selecione…</option>
+                    <option value="CPF">CPF</option>
+                    <option value="CNPJ">CNPJ</option>
+                    <option value="EMAIL">E-mail</option>
+                    <option value="PHONE">Telefone (celular)</option>
+                    <option value="EVP">Chave aleatória</option>
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">Necessário para o repasse automático via PIX cair sem erro.</p>
                 </div>
               </div>
             </div>
