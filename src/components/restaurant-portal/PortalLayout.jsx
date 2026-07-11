@@ -203,7 +203,7 @@ export function PortalLayout() {
             onClick={() => setSidebarOpen(true)}
             aria-label="Abrir menu"
           >
-            <Menu className="h-5 w-5" />
+            <Menu className="h-7 w-7" />
           </button>
 
           <div className="flex items-center gap-2 min-w-0">
