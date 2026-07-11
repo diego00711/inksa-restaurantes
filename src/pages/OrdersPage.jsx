@@ -5,6 +5,7 @@ import OrderCard from '../components/OrderCard';
 import { OrderDetailsModal } from '../components/OrderDetailsModal';
 import { PickupConfirmationModal } from '../components/PickupConfirmationModal';
 import { useToast } from '../context/ToastContext.jsx';
+import { useConfirm } from '../components/ConfirmProvider.jsx';
 import { useAuth } from '../context/AuthContext';
 import { useNotificationSound } from '../hooks/useNotificationSound';
 import { supabase } from '../lib/supabase';
@@ -96,6 +97,7 @@ export function OrdersPage() {
   const [allOrders, setAllOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const { addToast } = useToast();
+  const confirm = useConfirm();
   const { user } = useAuth();
   const playSound = useNotificationSound();
 
@@ -211,7 +213,7 @@ export function OrdersPage() {
   };
 
   const handleRemoveOrder = async (orderId) => {
-    if (!window.confirm('Remover este pedido do painel?')) return;
+    if (!(await confirm({ title: 'Remover pedido', message: 'Remover este pedido do painel?', confirmText: 'Remover', danger: true }))) return;
     try {
       await orderService.updateOrderStatus(orderId, 'Arquivado');
       addToast('success', 'Pedido removido do painel!');

@@ -4,7 +4,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { PlusCircle, Edit, Trash2, Image as ImageIcon } from 'lucide-react';
 import { menuService } from '../services/menuService';
 import { MenuItemModal } from '../components/MenuItemModal';
-import { useToast } from '../context/ToastContext.jsx'; 
+import { useToast } from '../context/ToastContext.jsx';
+import { useConfirm } from '../components/ConfirmProvider.jsx';
 
 export function MenuPage() {
   const [menuItems, setMenuItems] = useState([]);
@@ -13,6 +14,7 @@ export function MenuPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null); 
   const { addToast } = useToast();
+  const confirm = useConfirm();
 
   const fetchMenuItems = useCallback(async () => {
     setIsLoading(true);
@@ -45,7 +47,7 @@ export function MenuPage() {
   };
 
   const handleDeleteItem = async (itemId) => {
-    if (!window.confirm('Tem certeza que deseja excluir este item?')) {
+    if (!(await confirm({ title: 'Excluir item', message: 'Tem certeza que deseja excluir este item?', confirmText: 'Excluir', danger: true }))) {
       return;
     }
     try {

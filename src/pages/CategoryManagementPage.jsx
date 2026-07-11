@@ -4,11 +4,13 @@ import React, { useState, useEffect } from 'react';
 // ✅ CORREÇÃO 1: Importando do serviço correto 'categoryService'
 import { categoryService } from '@/services/categoryService'; 
 import { useAuth } from '@/context/AuthContext.jsx'; 
-import { useToast } from '@/context/ToastContext.jsx'; 
+import { useToast } from '@/context/ToastContext.jsx';
+import { useConfirm } from '@/components/ConfirmProvider.jsx';
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 
 export function CategoryManagementPage() {
-    const { addToast } = useToast(); 
+    const { addToast } = useToast();
+    const confirm = useConfirm(); 
     const { user, isLoading: authLoading } = useAuth();
 
     const [categories, setCategories] = useState([]);
@@ -93,7 +95,7 @@ export function CategoryManagementPage() {
     };
 
     const handleDeleteCategory = async (categoryId) => {
-        if (!window.confirm("Tem certeza que deseja excluir esta categoria?")) {
+        if (!(await confirm({ title: 'Excluir categoria', message: 'Tem certeza que deseja excluir esta categoria?', confirmText: 'Excluir', danger: true }))) {
             return;
         }
         try {
