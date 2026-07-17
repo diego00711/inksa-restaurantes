@@ -6,7 +6,8 @@ import {
   processResponse,
   createAuthHeaders,
   AUTH_TOKEN_KEY,
-  USER_DATA_KEY
+  USER_DATA_KEY,
+  REFRESH_TOKEN_KEY
 } from './api';
 import { apiFetch } from './apiClient';
 
@@ -28,6 +29,12 @@ export const authService = {
         throw new Error(data.error || data.message || 'Não foi possível entrar. Tente novamente.');
       }
       if (data && data.data && data.data.token) {
+        // Guarda o refresh_token pro apiClient/axios renovarem a sessão (o
+        // AuthContext guarda o access token + user). Sem ele, o restaurante
+        // deslogava sozinho quando o access token vencia (~1h).
+        if (data.data.refresh_token) {
+          try { localStorage.setItem(REFRESH_TOKEN_KEY, data.data.refresh_token); } catch {}
+        }
         return data.data;
       }
       throw new Error('Não foi possível entrar. Tente novamente.');

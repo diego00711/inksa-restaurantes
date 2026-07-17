@@ -45,6 +45,7 @@ export function AuthProvider({ children }) {
             // Limpa o estado local imediatamente
             localStorage.removeItem('restaurantUser');
             localStorage.removeItem('restaurantAuthToken');
+            localStorage.removeItem('restaurantRefreshToken');
             setUser(null);
             setToken(null);
             
@@ -55,6 +56,7 @@ export function AuthProvider({ children }) {
             // Garante que limpa mesmo se der erro
             localStorage.removeItem('restaurantUser');
             localStorage.removeItem('restaurantAuthToken');
+            localStorage.removeItem('restaurantRefreshToken');
             setUser(null);
             setToken(null);
         }
