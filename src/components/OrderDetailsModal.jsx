@@ -3,7 +3,18 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { orderService } from '../services/orderService';
-import { useToast } from '../context/ToastContext.jsx'; 
+import { useToast } from '../context/ToastContext.jsx';
+
+// O checkout do cliente grava a taxa de entrega como um ITEM do pedido, além de
+// ter a linha "Taxa de Entrega" própria (delivery_fee) — mostrar os dois é
+// redundante. Aqui a gente esconde só esse item da LISTA. Discriminador seguro:
+// item de comida sempre tem menu_item_id; o de taxa não, e o título casa com
+// "taxa de entrega"/"frete". Exige as duas condições pra nunca esconder comida.
+const isDeliveryFeeItem = (item) => {
+  const title = String(item?.title || item?.name || '').trim().toLowerCase();
+  const semMenuItem = !item?.menu_item_id;
+  return semMenuItem && (title === 'taxa de entrega' || title === 'frete');
+};
 
 export function OrderDetailsModal({ order, onClose }) {
   const [fullOrderDetails, setFullOrderDetails] = useState(null);
@@ -134,20 +145,24 @@ export function OrderDetailsModal({ order, onClose }) {
             <div>
               <h3 className="text-lg font-semibold text-gray-700 mb-2">Itens do Pedido:</h3>
               <ul className="space-y-2">
-                {fullOrderDetails.items && fullOrderDetails.items.length > 0 ? (
-                  fullOrderDetails.items.map((item, index) => (
-                    <li key={index} className="flex justify-between items-center text-gray-700 py-2 border-b border-gray-100">
-                      <span className="flex-1">
-                        {/* itens gravados pelo app cliente usam title/unit_price;
-                            mantém name/price como fallback pra formatos antigos */}
-                        <span className="font-medium">{item.quantity || 1}x</span> {item.title || item.name || 'Item sem nome'}
-                      </span>
-                      <span className="font-medium">{formatCurrency(item.unit_price ?? item.price)}</span>
-                    </li>
-                  ))
-                ) : (
-                  <li className="text-gray-500 py-4 text-center">Nenhum item listado neste pedido.</li>
-                )}
+                {(() => {
+                  // Esconde o item de taxa de entrega (já tem linha própria).
+                  const visibleItems = (fullOrderDetails.items || []).filter(i => !isDeliveryFeeItem(i));
+                  return visibleItems.length > 0 ? (
+                    visibleItems.map((item, index) => (
+                      <li key={index} className="flex justify-between items-center text-gray-700 py-2 border-b border-gray-100">
+                        <span className="flex-1">
+                          {/* itens gravados pelo app cliente usam title/unit_price;
+                              mantém name/price como fallback pra formatos antigos */}
+                          <span className="font-medium">{item.quantity || 1}x</span> {item.title || item.name || 'Item sem nome'}
+                        </span>
+                        <span className="font-medium">{formatCurrency(item.unit_price ?? item.price)}</span>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="text-gray-500 py-4 text-center">Nenhum item listado neste pedido.</li>
+                  );
+                })()}
               </ul>
             </div>
 
