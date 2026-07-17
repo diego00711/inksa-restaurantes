@@ -101,7 +101,12 @@ export const orderService = {
   async getOrderById(orderId) {
     try {
       const response = await api.get(`/api/orders/${orderId}`);
-      return translateOrderStatus(response.data);
+      // O backend responde { status: "success", data: {pedido} }. Sem
+      // desembrulhar o .data, o modal lia o envelope (Status virava "success"
+      // e cliente/itens/total ficavam vazios). ?? response.data é rede de
+      // segurança caso algum endpoint devolva o pedido direto.
+      const payload = response.data?.data ?? response.data;
+      return translateOrderStatus(payload);
     } catch (error) {
       console.error(`Erro ao buscar pedido ${orderId}:`, error);
       throw error;

@@ -138,10 +138,11 @@ export function OrderDetailsModal({ order, onClose }) {
                   fullOrderDetails.items.map((item, index) => (
                     <li key={index} className="flex justify-between items-center text-gray-700 py-2 border-b border-gray-100">
                       <span className="flex-1">
-                        <span className="font-medium">{item.quantity || 1}x</span> {item.name || 'Item sem nome'}
+                        {/* itens gravados pelo app cliente usam title/unit_price;
+                            mantém name/price como fallback pra formatos antigos */}
+                        <span className="font-medium">{item.quantity || 1}x</span> {item.title || item.name || 'Item sem nome'}
                       </span>
-                      {/* ✅ CORRIGIDO: Usando formatCurrency ao invés de toFixed */}
-                      <span className="font-medium">{formatCurrency(item.price)}</span>
+                      <span className="font-medium">{formatCurrency(item.unit_price ?? item.price)}</span>
                     </li>
                   ))
                 ) : (
