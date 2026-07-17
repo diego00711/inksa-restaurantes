@@ -135,7 +135,7 @@ export function OrdersPage() {
           o => ['pending', 'Pendente'].includes(o.status) && !knownOrderIds.current.has(o.id)
         );
         if (arrived.length > 0) {
-          playSound('new_order');
+          // som fica por conta do alarme em loop (useEffect mais abaixo)
           addToast(
             'success',
             arrived.length === 1 ? '🔔 Novo pedido recebido!' : `🔔 ${arrived.length} novos pedidos!`
@@ -178,7 +178,7 @@ export function OrdersPage() {
       .on('postgres_changes', channelConfig, (payload) => {
         if (payload.eventType === 'INSERT' ||
           (payload.eventType === 'UPDATE' && ['pending', 'Pendente'].includes(payload.new?.status))) {
-          playSound('new_order');
+          // som fica por conta do alarme em loop (useEffect mais abaixo)
           addToast('success', '🔔 Novo pedido recebido!');
         }
         fetchOrders(filters);
@@ -250,6 +250,18 @@ export function OrdersPage() {
   }, [allOrders]);
 
   const hasNewOrders = newOrderIds.size > 0;
+
+  // ── Alarme sonoro: repete enquanto houver pedido em "Novos" (aguardando o
+  // restaurante aceitar). Para sozinho quando o restaurante aceita todos (saem
+  // da coluna). Depende do BOOLEANO pra a cadência de 5s ficar estável.
+  // (Diego: aviso sonoro quando o restaurante recebe um pedido.)
+  const hasPendingNovos = columns.novos.length > 0;
+  useEffect(() => {
+    if (!hasPendingNovos) return;
+    playSound('new_order');
+    const id = window.setInterval(() => playSound('new_order'), 5000);
+    return () => window.clearInterval(id);
+  }, [hasPendingNovos, playSound]);
 
   // ── Column wrapper ──────────────────────────────────────────────────────────
   const Col = ({ bg, emoji, title, count, textColor, badgeColor, orders, showRemove = false, isNewCol = false }) => (
