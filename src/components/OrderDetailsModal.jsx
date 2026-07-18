@@ -1,7 +1,7 @@
 // src/components/OrderDetailsModal.jsx - VERSÃO CORRIGIDA
 
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, Printer } from 'lucide-react';
 import { orderService } from '../services/orderService';
 import { useToast } from '../context/ToastContext.jsx';
 
@@ -73,6 +73,94 @@ export function OrderDetailsModal({ order, onClose }) {
       case 'Cancelado': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  // Comanda pra impressora térmica (bobina 80mm). Monta um HTML enxuto num
+  // iframe escondido e chama print() só nele — assim a impressão sai formatada
+  // pro papel estreito sem envolver o layout do app. Se o parceiro não tiver
+  // térmica, a mesma caixa de diálogo imprime em qualquer impressora / PDF.
+  const handlePrint = () => {
+    if (!fullOrderDetails) return;
+    const esc = (s) =>
+      String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const d = fullOrderDetails;
+    const shortId = order.id ? String(order.id).substring(0, 8) : 'N/A';
+    const clientName =
+      d.client_name ||
+      [d.client_first_name, d.client_last_name].filter(Boolean).join(' ') ||
+      'Não informado';
+    const address =
+      typeof d.delivery_address === 'string'
+        ? d.delivery_address
+        : d.delivery_address?.street || 'Não informado';
+    const items = (d.items || []).filter((i) => !isDeliveryFeeItem(i));
+    const now = new Date().toLocaleString('pt-BR', {
+      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    });
+
+    const itemsHtml = items.length
+      ? items
+          .map(
+            (i) =>
+              `<div class="row"><span class="l">${esc(i.quantity || 1)}x ${esc(
+                i.title || i.name || 'Item'
+              )}</span><span class="r">${esc(formatCurrency(i.unit_price ?? i.price))}</span></div>`
+          )
+          .join('')
+      : '<div class="center muted">Nenhum item</div>';
+    const subtotal = d.total_amount_items
+      ? `<div class="row"><span>Subtotal</span><span class="r">${esc(formatCurrency(d.total_amount_items))}</span></div>`
+      : '';
+    const fee = d.delivery_fee
+      ? `<div class="row"><span>Taxa de entrega</span><span class="r">${esc(formatCurrency(d.delivery_fee))}</span></div>`
+      : '';
+    const notes = d.notes
+      ? `<div class="hr"></div><div class="muted"><b>Obs:</b> ${esc(d.notes)}</div>`
+      : '';
+
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Pedido ${esc(shortId)}</title><style>
+      @page{size:80mm auto;margin:0}
+      *{margin:0;padding:0;box-sizing:border-box}
+      body{width:80mm;padding:4mm 3mm;font-family:'Courier New',monospace;font-size:12px;line-height:1.35;color:#000}
+      .center{text-align:center}.big{font-size:17px;font-weight:bold;letter-spacing:2px}
+      .hr{border-top:1px dashed #000;margin:6px 0}
+      .row{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+      .row .l{flex:1}.row .r{white-space:nowrap}
+      .muted{font-size:11px}.total{font-weight:bold;font-size:14px}.mt{margin-top:4px}
+    </style></head><body>
+      <div class="center big">PEDIDO</div>
+      <div class="center">#${esc(shortId)}</div>
+      <div class="center muted">${esc(now)}</div>
+      <div class="hr"></div>
+      <div><b>Cliente:</b> ${esc(clientName)}</div>
+      <div class="mt"><b>Entrega:</b> ${esc(address)}</div>
+      <div class="hr"></div>
+      ${itemsHtml}
+      <div class="hr"></div>
+      ${subtotal}${fee}
+      <div class="row total mt"><span>TOTAL</span><span class="r">${esc(formatCurrency(d.total_amount))}</span></div>
+      ${notes}
+      <div class="hr"></div>
+      <div class="center muted">Inksa Delivery</div>
+    </body></html>`;
+
+    const iframe = document.createElement('iframe');
+    iframe.setAttribute('aria-hidden', 'true');
+    Object.assign(iframe.style, { position: 'fixed', right: '0', bottom: '0', width: '0', height: '0', border: '0' });
+    document.body.appendChild(iframe);
+    const removeIframe = () => {
+      try { document.body.removeChild(iframe); } catch { /* já removido */ }
+    };
+    const doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write(html);
+    doc.close();
+    const win = iframe.contentWindow;
+    win.onafterprint = removeIframe;
+    // fallback: se onafterprint não disparar (varia por navegador), limpa depois
+    setTimeout(removeIframe, 60000);
+    // pequeno atraso pro layout aplicar antes de abrir a caixa de impressão
+    setTimeout(() => { win.focus(); win.print(); }, 200);
   };
 
   const modalBackdropStyle = {
@@ -189,11 +277,17 @@ export function OrderDetailsModal({ order, onClose }) {
               </p>
             </div>
 
-            {/* Botão Fechar */}
-            <div className="pt-4">
+            {/* Ações: imprimir comanda (térmica 80mm) + fechar */}
+            <div className="pt-4 flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={handlePrint}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded-lg transition-colors min-h-[44px]"
+              >
+                <Printer size={18} /> Imprimir comanda
+              </button>
               <button
                 onClick={onClose}
-                className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors min-h-[44px]"
+                className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors min-h-[44px]"
               >
                 Fechar
               </button>
