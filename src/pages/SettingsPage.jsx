@@ -87,7 +87,8 @@ export function SettingsPage() {
       const response = await authService.getProfile();
       if (response && response.data) {
         const profile = response.data;
-        const merged = { ...profileData, ...profile, is_open: profile.is_open ?? false };
+        // payout_frequency é sempre semanal por ora (form mostra campo fixo)
+        const merged = { ...profileData, ...profile, is_open: profile.is_open ?? false, payout_frequency: 'weekly' };
         setProfileData(merged);
         setSavedSnapshot(merged);
         if (profile.logo_url) {
@@ -385,12 +386,13 @@ export function SettingsPage() {
               <h2 className="text-xl font-semibold mb-4 text-gray-700">Informações de Pagamento</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
-                  <label htmlFor="payout_frequency" className="block text-sm font-medium text-gray-700">Frequência de Pagamento</label>
-                  <select name="payout_frequency" id="payout_frequency" value={profileData.payout_frequency || 'weekly'} onChange={handleChange} disabled={!isEditing} className="mt-1 block w-full px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                      <option value="weekly">Semanal</option>
-                      <option value="biweekly">Quinzenal</option>
-                      <option value="monthly">Mensal</option>
-                  </select>
+                  <label className="block text-sm font-medium text-gray-700">Frequência de Pagamento</label>
+                  {/* Só semanal por ora — padrão do mercado e mais previsível.
+                      Quinzenal/mensal podem voltar depois (o backend já aceita). */}
+                  <div className="mt-1 flex items-center gap-2 rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-base text-gray-700">
+                    <span className="font-medium">Semanal</span>
+                    <span className="text-xs text-gray-400">· seus repasses caem toda semana</span>
+                  </div>
                 </div>
                 <div className="md:col-span-2">
                   <label htmlFor="bank_name" className="block text-sm font-medium text-gray-700">Nome do Banco</label>
