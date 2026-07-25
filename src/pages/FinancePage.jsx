@@ -10,7 +10,7 @@ const fmt = (value) =>
 export default function FinancePage() {
   const { profile } = useProfile();
 
-  const [summary, setSummary] = useState({ balance: null, nextPayout: null, monthTotal: null });
+  const [summary, setSummary] = useState({ balance: null, nextPayout: null, monthTotal: null, pendingCount: 0 });
   const [payouts, setPayouts] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
 
@@ -25,9 +25,10 @@ export default function FinancePage() {
         if (res.ok) {
           const data = await res.json();
           setSummary({
-            balance: data.balance ?? null,
+            balance: data.a_receber ?? data.balance ?? null,
             nextPayout: data.next_payout_date ?? null,
             monthTotal: data.month_total ?? null,
+            pendingCount: data.pendente_pedidos_count ?? 0,
           });
           setPayouts(Array.isArray(data.payouts) ? data.payouts : []);
         }
@@ -62,43 +63,52 @@ export default function FinancePage() {
         <p className="text-gray-500 text-sm sm:text-base mt-1">Acompanhe seus repasses e configure o recebimento</p>
       </div>
 
-      {/* Summary Cards */}
+      {/* Summary Cards — contam a história do dinheiro: A Receber → quando cai → Recebido */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500">Saldo a Receber</p>
-              <p className="text-3xl font-bold text-orange-600 mt-1">
-                {loadingData ? '...' : summary.balance !== null ? fmt(summary.balance) : '--'}
-              </p>
-            </div>
-            <DollarSign className="h-12 w-12 text-orange-300" />
+        {/* A Receber — já inclui os pedidos entregues que ainda não viraram repasse */}
+        <div className="relative overflow-hidden rounded-2xl shadow-lg bg-gradient-to-br from-orange-500 to-amber-500 p-6 text-white">
+          <DollarSign className="absolute -top-3 -right-3 h-24 w-24 opacity-20" />
+          <div className="relative">
+            <div className="inline-flex p-2 rounded-xl bg-white/20 mb-3"><DollarSign className="h-5 w-5" /></div>
+            <p className="text-sm font-medium text-white/90">A Receber</p>
+            <p className="text-3xl font-black mt-1 break-words">
+              {loadingData ? '...' : summary.balance !== null ? fmt(summary.balance) : '--'}
+            </p>
+            <p className="text-xs text-white/80 mt-1">
+              {summary.pendingCount > 0
+                ? `de ${summary.pendingCount} pedido${summary.pendingCount > 1 ? 's' : ''} entregue${summary.pendingCount > 1 ? 's' : ''}`
+                : 'tudo repassado 🎉'}
+            </p>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500">Próximo Repasse</p>
-              <p className="text-2xl font-bold text-blue-600 mt-1">
-                {loadingData ? '...' : summary.nextPayout
-                  ? new Date(summary.nextPayout).toLocaleDateString('pt-BR')
-                  : 'A definir'}
-              </p>
-            </div>
-            <Calendar className="h-12 w-12 text-blue-300" />
+        {/* Próximo Repasse — responde "quando cai?" */}
+        <div className="relative overflow-hidden rounded-2xl shadow-lg bg-gradient-to-br from-blue-500 to-indigo-600 p-6 text-white">
+          <Calendar className="absolute -top-3 -right-3 h-24 w-24 opacity-20" />
+          <div className="relative">
+            <div className="inline-flex p-2 rounded-xl bg-white/20 mb-3"><Calendar className="h-5 w-5" /></div>
+            <p className="text-sm font-medium text-white/90">Próximo Repasse</p>
+            <p className="text-2xl font-black mt-1">
+              {loadingData ? '...' : summary.nextPayout
+                ? new Date(summary.nextPayout).toLocaleDateString('pt-BR')
+                : 'Toda semana'}
+            </p>
+            <p className="text-xs text-white/80 mt-1">
+              {summary.nextPayout ? 'data prevista do repasse' : 'os repasses caem toda semana'}
+            </p>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500">Total Recebido (mês)</p>
-              <p className="text-3xl font-bold text-green-600 mt-1">
-                {loadingData ? '...' : summary.monthTotal !== null ? fmt(summary.monthTotal) : '--'}
-              </p>
-            </div>
-            <TrendingUp className="h-12 w-12 text-green-300" />
+        {/* Recebido — o que já caiu na conta */}
+        <div className="relative overflow-hidden rounded-2xl shadow-lg bg-gradient-to-br from-green-500 to-emerald-600 p-6 text-white">
+          <TrendingUp className="absolute -top-3 -right-3 h-24 w-24 opacity-20" />
+          <div className="relative">
+            <div className="inline-flex p-2 rounded-xl bg-white/20 mb-3"><TrendingUp className="h-5 w-5" /></div>
+            <p className="text-sm font-medium text-white/90">Recebido no mês</p>
+            <p className="text-3xl font-black mt-1 break-words">
+              {loadingData ? '...' : summary.monthTotal !== null ? fmt(summary.monthTotal) : '--'}
+            </p>
+            <p className="text-xs text-white/80 mt-1">já caiu na sua conta</p>
           </div>
         </div>
       </div>
@@ -171,7 +181,8 @@ export default function FinancePage() {
       <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-lg p-4">
         <AlertTriangle className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
         <p className="text-sm text-amber-800">
-          Os repasses são processados automaticamente. Para dúvidas entre em contato com o suporte Inksa.
+          O <strong>A Receber</strong> já soma seus pedidos entregues (valor líquido, depois da comissão).
+          Toda semana esse saldo é fechado e cai na sua chave PIX automaticamente. Dúvidas? Fale com o suporte Inksa.
         </p>
       </div>
     </div>
