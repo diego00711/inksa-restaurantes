@@ -8,6 +8,7 @@ import { ListOrdered, Utensils, Settings, LogOut, BarChart2, Tag, Trophy, Medal,
 import { authService } from '../../services/authService.js';
 import { useProfile } from '../../context/ProfileContext';
 import { useToast } from '../../context/ToastContext.jsx';
+import { useNewOrderAlarm } from '../../hooks/useNewOrderAlarm.js';
 
 // Campos obrigatórios para o restaurante poder RECEBER pedidos.
 // Sem o endereço completo (com coordenadas), o cálculo de frete falha.
@@ -39,6 +40,9 @@ export function PortalLayout() {
 
   const missingFields = loading ? [] : getMissingFields(profile);
   const cadastroIncompleto = missingFields.length > 0;
+
+  // Alarme de novo pedido em qualquer tela do painel (não só na tela Pedidos)
+  useNewOrderAlarm(!loading);
 
   // Heartbeat: sinal de vida a cada 4 min enquanto o painel estiver aberto.
   // Sem heartbeat por 45 min (token expirado, app fechado), o backend fecha o

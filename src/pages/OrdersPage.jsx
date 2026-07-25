@@ -254,17 +254,9 @@ export function OrdersPage() {
 
   const hasNewOrders = newOrderIds.size > 0;
 
-  // ── Alarme sonoro: repete enquanto houver pedido em "Novos" (aguardando o
-  // restaurante aceitar). Para sozinho quando o restaurante aceita todos (saem
-  // da coluna). Depende do BOOLEANO pra a cadência de 5s ficar estável.
-  // (Diego: aviso sonoro quando o restaurante recebe um pedido.)
-  const hasPendingNovos = columns.novos.length > 0;
-  useEffect(() => {
-    if (!hasPendingNovos) return;
-    playSound('new_order');
-    const id = window.setInterval(() => playSound('new_order'), 5000);
-    return () => window.clearInterval(id);
-  }, [hasPendingNovos, playSound]);
+  // Alarme sonoro de novo pedido MOVIDO pro PortalLayout (hook useNewOrderAlarm):
+  // agora toca em QUALQUER tela do painel enquanto houver pedido novo, não só
+  // aqui na tela Pedidos. Aqui ficaria mudo assim que trocasse de aba.
 
   // ── Column wrapper ──────────────────────────────────────────────────────────
   const Col = ({ bg, emoji, title, count, textColor, badgeColor, orders, showRemove = false, isNewCol = false }) => (
