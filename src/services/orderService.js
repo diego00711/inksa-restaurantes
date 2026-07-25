@@ -198,7 +198,9 @@ export const orderService = {
   async getOrdersPendingReview(restaurantId, signal) {
     try {
       console.log('🔍 Buscando pedidos para restaurante avaliar...');
-      const response = await api.get('/api/orders/pending-client-review', { signal });
+      // Endpoint PRÓPRIO do restaurante. Antes chamava /pending-client-review,
+      // que é exclusivo de cliente (dava 403) — por isso nunca aparecia nada.
+      const response = await api.get('/api/orders/pending-restaurant-review', { signal });
       const orders = Array.isArray(response.data) ? response.data : response;
       console.log(`✅ ${orders.length} pedidos pendentes encontrados`);
       return orders.map(translateOrderStatus);
