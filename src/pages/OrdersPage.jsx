@@ -43,13 +43,16 @@ function OrderTimer({ createdAt, acceptedAt }) {
 function KPIBar({ orders }) {
   const stats = useMemo(() => {
     const today = new Date().toDateString();
+    // Não conta pedido "fantasma" nas métricas: aguardando pagamento (não pago),
+    // cancelado ou arquivado. Assim Pedidos/Faturamento/Ticket ficam consistentes
+    // entre si (antes Pedidos Hoje contava tudo, mas Faturamento só os entregues).
+    const JUNK = ['awaiting_payment', 'cancelled', 'canceled', 'Cancelado', 'archived', 'Arquivado'];
     const todayOrds = orders.filter(o => {
-      try { return new Date(o.created_at).toDateString() === today; }
+      try { return new Date(o.created_at).toDateString() === today && !JUNK.includes(o.status); }
       catch { return false; }
     });
-    const delivered = todayOrds.filter(o => ['delivered', 'Entregue'].includes(o.status));
-    const revenue = delivered.reduce((s, o) => s + parseFloat(o.total_amount || o.total || 0), 0);
-    const ticket = delivered.length ? revenue / delivered.length : 0;
+    const revenue = todayOrds.reduce((s, o) => s + parseFloat(o.total_amount || o.total || 0), 0);
+    const ticket = todayOrds.length ? revenue / todayOrds.length : 0;
     const inProgress = orders.filter(o =>
       ['pending', 'Pendente', 'accepted', 'Aceito', 'preparing', 'Preparando', 'ready', 'Pronto'].includes(o.status)
     ).length;

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import { RESTAURANT_API_URL, createAuthHeaders } from '../../services/api';
 import { apiFetch } from '../../services/apiClient';
-import { ListOrdered, Utensils, Settings, LogOut, BarChart2, Tag, Trophy, Medal, Star, DollarSign, Menu, X, ChefHat, LifeBuoy, AlertTriangle } from 'lucide-react';
+import { ListOrdered, Utensils, Settings, LogOut, BarChart2, Tag, Trophy, Medal, Star, DollarSign, Menu, X, LifeBuoy, AlertTriangle } from 'lucide-react';
 import { authService } from '../../services/authService.js';
 import { useProfile } from '../../context/ProfileContext';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -57,7 +57,6 @@ export function PortalLayout() {
 
   const navItems = [
     { name: 'Pedidos', icon: ListOrdered, path: '/pedidos' },
-    { name: 'Cozinha (KDS)', icon: ChefHat, path: '/cozinha' },
     { name: 'Cardápio', icon: Utensils, path: '/cardapio' },
     { name: 'Analytics', icon: BarChart2, path: '/analytics' },
     { name: 'Avaliações', icon: Star, path: '/avaliacoes' },
