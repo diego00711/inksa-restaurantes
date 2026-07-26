@@ -254,7 +254,10 @@ export function OrdersPage() {
 
   // ── Column data ─────────────────────────────────────────────────────────────
   const columns = useMemo(() => {
-    const active = allOrders.filter(o => !['Arquivado', 'archived'].includes(o.status));
+    // Arquivar não muda mais o status (fica 'delivered' + archived_at), então
+    // esconde pelo archived_at — não pelo status. O backend já filtra, isto é
+    // só defesa caso algum arquivado chegue.
+    const active = allOrders.filter(o => !o.archived_at && !['Arquivado', 'archived'].includes(o.status));
     return {
       novos:              active.filter(o => ['pending', 'Pendente'].includes(o.status)),
       emPreparo:          active.filter(o => ['accepted', 'Aceito', 'preparing', 'Preparando'].includes(o.status)),
