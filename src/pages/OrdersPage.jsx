@@ -9,8 +9,9 @@ import { useConfirm } from '../components/ConfirmProvider.jsx';
 import { useAuth } from '../context/AuthContext';
 import { useNotificationSound } from '../hooks/useNotificationSound';
 import { supabase } from '../lib/supabase';
-import { SlidersHorizontal, Trash2, TrendingUp, ShoppingBag, DollarSign, Clock, AlertCircle } from 'lucide-react';
+import { SlidersHorizontal, Trash2, TrendingUp, ShoppingBag, DollarSign, Clock, AlertCircle, Star, X } from 'lucide-react';
 import SocialDayBanner from '../components/SocialDayBanner';
+import ClientReviewForm from '../components/ClientReviewForm';
 
 // ─── OrderTimer ───────────────────────────────────────────────────────────────
 function OrderTimer({ createdAt, acceptedAt }) {
@@ -119,6 +120,9 @@ export function OrdersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedOrderForPickup, setSelectedOrderForPickup] = useState(null);
   const [showPickupModal, setShowPickupModal] = useState(false);
+  // Avaliação do cliente após a retirada ("Avaliar / deixar pra depois")
+  const [pendingReviewOrder, setPendingReviewOrder] = useState(null);
+  const [showReviewForm, setShowReviewForm] = useState(false);
 
   // ── Fetch orders ────────────────────────────────────────────────────────────
   const fetchOrders = useCallback(async (currentFilters) => {
@@ -228,7 +232,16 @@ export function OrdersPage() {
 
   const handleOpenPickupModal = (order) => { setSelectedOrderForPickup(order); setShowPickupModal(true); };
   const handleClosePickupModal = () => { setSelectedOrderForPickup(null); setShowPickupModal(false); };
-  const handlePickupSuccess = () => { fetchOrders(filters); };
+  const handlePickupSuccess = () => {
+    // onSuccess roda antes do onClose, então o pedido ainda está aqui: guarda
+    // pra oferecer avaliar o cliente logo depois que o modal de retirada fechar.
+    const order = selectedOrderForPickup;
+    fetchOrders(filters);
+    if (order?.client_id) {
+      setShowReviewForm(false);
+      setPendingReviewOrder(order);
+    }
+  };
   const handleInputChange = (e) => { setFilters(prev => ({ ...prev, [e.target.name]: e.target.value })); };
   const handleApplyFilters = () => { fetchOrders(filters); };
   const handleClearFilters = () => {
@@ -414,6 +427,66 @@ export function OrdersPage() {
           onClose={handleClosePickupModal}
           onSuccess={handlePickupSuccess}
         />
+      )}
+
+      {/* ── Avaliar cliente após a retirada ─────────────────────────────────────
+          Depois que o entregador retira o pedido, oferece ao restaurante avaliar
+          o cliente. "Deixar para depois" não perde nada: o pedido segue na
+          Central de Avaliações pra avaliar quando quiser. */}
+      {pendingReviewOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => { setPendingReviewOrder(null); setShowReviewForm(false); }} />
+          <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6 max-h-[90vh] overflow-y-auto">
+            {!showReviewForm ? (
+              <div className="text-center">
+                <div className="text-5xl mb-2">⭐</div>
+                <h3 className="text-xl font-bold text-gray-800">Avaliar o cliente?</h3>
+                <p className="text-sm text-gray-500 mt-1 mb-5">
+                  Pedido de <span className="font-semibold text-gray-700">{pendingReviewOrder.client_name || pendingReviewOrder.client_first_name || 'o cliente'}</span> saiu para entrega. Que tal deixar uma avaliação rápida?
+                </p>
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => setShowReviewForm(true)}
+                    className="w-full py-3 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <Star className="h-4 w-4" />
+                    Avaliar agora
+                  </button>
+                  <button
+                    onClick={() => { setPendingReviewOrder(null); setShowReviewForm(false); }}
+                    className="w-full py-2.5 rounded-lg border border-gray-300 text-sm font-semibold text-gray-600 hover:bg-gray-50"
+                  >
+                    Deixar para depois
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <Star className="h-5 w-5 text-purple-600" />
+                    Avaliar cliente
+                  </h3>
+                  <button
+                    onClick={() => { setPendingReviewOrder(null); setShowReviewForm(false); }}
+                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <X className="w-5 h-5 text-gray-500" />
+                  </button>
+                </div>
+                <ClientReviewForm
+                  clientId={pendingReviewOrder.client_id}
+                  orderId={pendingReviewOrder.id}
+                  onSuccess={() => {
+                    addToast('success', 'Avaliação enviada! Obrigado 🙌');
+                    setPendingReviewOrder(null);
+                    setShowReviewForm(false);
+                  }}
+                />
+              </>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

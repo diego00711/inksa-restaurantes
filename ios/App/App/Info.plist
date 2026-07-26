@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
-	<string>en</string>
+	<string>pt-BR</string>
 	<key>CFBundleDisplayName</key>
-        <string>Inksa Restaurante</string>
+	<string>Inksa Restaurante</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -20,6 +20,12 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>pt-BR</string>
+	</array>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
@@ -45,5 +51,11 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>O Inksa Restaurante usa a câmera para você tirar fotos dos pratos do cardápio e da logo do estabelecimento.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>O Inksa Restaurante acessa suas fotos para você anexar imagens dos pratos do cardápio.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>O Inksa Restaurante salva relatórios e comprovantes no rolo da câmera.</string>
 </dict>
 </plist>
