@@ -44,10 +44,12 @@ function OrderTimer({ createdAt, acceptedAt }) {
 function KPIBar({ orders }) {
   const stats = useMemo(() => {
     const today = new Date().toDateString();
-    // Não conta pedido "fantasma" nas métricas: aguardando pagamento (não pago),
-    // cancelado ou arquivado. Assim Pedidos/Faturamento/Ticket ficam consistentes
-    // entre si (antes Pedidos Hoje contava tudo, mas Faturamento só os entregues).
-    const JUNK = ['awaiting_payment', 'cancelled', 'canceled', 'Cancelado', 'archived', 'Arquivado'];
+    // Não conta pedido "fantasma" nas métricas: aguardando pagamento (não pago)
+    // ou cancelado. Arquivar NÃO tira da conta: o pedido arquivado continua com
+    // o status real (delivered) e é uma venda do dia — só some das colunas do
+    // kanban, não do faturamento. (O status 'archived' nem existe mais no modelo
+    // novo, mas fica na lista por segurança pra dados antigos.)
+    const JUNK = ['awaiting_payment', 'cancelled', 'canceled', 'Cancelado'];
     const todayOrds = orders.filter(o => {
       try { return new Date(o.created_at).toDateString() === today && !JUNK.includes(o.status); }
       catch { return false; }
@@ -115,6 +117,10 @@ export function OrdersPage() {
     sortOrder: 'desc',
   });
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  // Feedback do botão Aplicar: "applying" enquanto busca; "appliedRange" guarda
+  // o filtro que está ativo agora (pra marcar o botão como "aplicado").
+  const [applying, setApplying] = useState(false);
+  const [appliedRange, setAppliedRange] = useState({ startDate: '', endDate: '', sortBy: 'created_at', sortOrder: 'desc' });
 
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -243,12 +249,29 @@ export function OrdersPage() {
     }
   };
   const handleInputChange = (e) => { setFilters(prev => ({ ...prev, [e.target.name]: e.target.value })); };
-  const handleApplyFilters = () => { fetchOrders(filters); };
+  const handleApplyFilters = async () => {
+    setApplying(true);
+    try {
+      await fetchOrders(filters);
+      setAppliedRange({ ...filters });
+    } finally {
+      setApplying(false);
+    }
+  };
   const handleClearFilters = () => {
     const d = { startDate: '', endDate: '', sortBy: 'created_at', sortOrder: 'desc' };
     setFilters(d);
+    setAppliedRange(d);
     fetchOrders(d);
   };
+  // Filtro "aplicado" = há um período ativo E os inputs batem com o que foi
+  // aplicado (se o usuário mexer nas datas de novo, volta a "Aplicar").
+  const filterApplied =
+    (appliedRange.startDate || appliedRange.endDate) &&
+    appliedRange.startDate === filters.startDate &&
+    appliedRange.endDate === filters.endDate &&
+    appliedRange.sortBy === filters.sortBy &&
+    appliedRange.sortOrder === filters.sortOrder;
   const handleViewOrderDetails = (order) => { setSelectedOrder(order); setIsModalOpen(true); };
   const handleCloseModal = () => { setSelectedOrder(null); setIsModalOpen(false); };
 
@@ -362,9 +385,16 @@ export function OrdersPage() {
               </select>
             </div>
             <div className="flex gap-2">
-              <button onClick={handleApplyFilters}
-                className="flex-1 py-2 px-4 text-sm font-semibold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition-colors min-h-[44px]">
-                Aplicar
+              <button onClick={handleApplyFilters} disabled={applying}
+                className={`flex-1 py-2 px-4 text-sm font-semibold rounded-lg text-white transition-colors min-h-[44px] flex items-center justify-center gap-2 disabled:opacity-70 ${
+                  filterApplied ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-indigo-600 hover:bg-indigo-700'
+                }`}>
+                {applying ? (
+                  <>
+                    <span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    Aplicando...
+                  </>
+                ) : filterApplied ? '✓ Filtro aplicado' : 'Aplicar'}
               </button>
               <button onClick={handleClearFilters}
                 className="p-2 rounded-lg border hover:bg-gray-100 transition-colors min-h-[44px] min-w-[44px]" title="Limpar">
