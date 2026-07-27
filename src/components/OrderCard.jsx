@@ -97,19 +97,14 @@ export default function OrderCard({ order, onUpdateStatus, onViewDetails, onConf
         {/* Payment method badge */}
         {(() => {
           const method = order.payment_method;
-          const changeFor = parseFloat(order.change_for || 0);
           if (method === 'cash') {
+            // O troco NÃO aparece pro restaurante — quem leva o troco é o
+            // entregador, então esse dado fica só no app do entregador. Aqui só
+            // sinaliza que o pagamento é em dinheiro.
             return (
-              <div className="flex flex-col gap-0.5">
-                <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-800 bg-green-100 px-2 py-1 rounded-full w-fit">
-                  💵 Dinheiro
-                </span>
-                {changeFor > 0 && (
-                  <span className="text-xs text-gray-500 pl-1">
-                    Troco para {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(changeFor)}
-                  </span>
-                )}
-              </div>
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-800 bg-green-100 px-2 py-1 rounded-full w-fit">
+                💵 Dinheiro
+              </span>
             );
           }
           if (method === 'pix') {
