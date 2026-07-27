@@ -54,7 +54,18 @@ function KPIBar({ orders }) {
       try { return new Date(o.created_at).toDateString() === today && !JUNK.includes(o.status); }
       catch { return false; }
     });
-    const revenue = todayOrds.reduce((s, o) => s + parseFloat(o.total_amount || o.total || 0), 0);
+    // Faturamento = o que o RESTAURANTE recebe, não o total do pedido. O total
+    // inclui o frete (que é do entregador) e não desconta a comissão da
+    // plataforma. O valor certo é o repasse do restaurante
+    // (valor_repassado_restaurante = itens − comissão), o MESMO que o Financeiro
+    // usa. Fallback pro subtotal dos itens (sem frete) quando o pedido ainda não
+    // foi liquidado (ex.: dinheiro em preparo) — nunca soma o frete.
+    const receitaRestaurante = (o) => {
+      const v = o.valor_repassado_restaurante;
+      if (v !== null && v !== undefined && v !== '') return parseFloat(v) || 0;
+      return parseFloat(o.total_amount_items ?? 0) || 0;
+    };
+    const revenue = todayOrds.reduce((s, o) => s + receitaRestaurante(o), 0);
     const ticket = todayOrds.length ? revenue / todayOrds.length : 0;
     const inProgress = orders.filter(o =>
       ['pending', 'Pendente', 'accepted', 'Aceito', 'preparing', 'Preparando', 'ready', 'Pronto'].includes(o.status)
