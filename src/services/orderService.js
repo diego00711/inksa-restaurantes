@@ -86,6 +86,30 @@ const translateOrderStatus = (order) => {
 };
 
 export const orderService = {
+  // Ocorrências de entrega dos pedidos deste restaurante que precisam de ação
+  // dele: decidir se quer a devolução, ou confirmar que o pedido voltou.
+  async getMyIncidents() {
+    try {
+      const response = await api.get('/api/orders/incidents/restaurant');
+      return response.data?.data || [];
+    } catch (error) {
+      console.error('Erro ao buscar ocorrências:', error);
+      return [];
+    }
+  },
+
+  // Restaurante decide se QUER a devolução (true) ou pode descartar (false).
+  async decideIncidentReturn(orderId, wantReturn) {
+    const response = await api.post(`/api/orders/${orderId}/incident/restaurant-decision`, { want_return: !!wantReturn });
+    return response.data;
+  },
+
+  // Restaurante confirma que recebeu a devolução, validando o código do entregador.
+  async confirmIncidentReturn(orderId, returnCode) {
+    const response = await api.post(`/api/orders/${orderId}/incident/confirm-return`, { return_code: returnCode });
+    return response.data;
+  },
+
   async getOrders(params) {
     try {
       const queryString = params ? `?${params.toString()}` : '';

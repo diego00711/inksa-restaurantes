@@ -12,6 +12,7 @@ import { supabase } from '../lib/supabase';
 import { SlidersHorizontal, Trash2, TrendingUp, ShoppingBag, DollarSign, Clock, AlertCircle, Star, X } from 'lucide-react';
 import SocialDayBanner from '../components/SocialDayBanner';
 import ClientReviewForm from '../components/ClientReviewForm';
+import IncidentAlerts from '../components/IncidentAlerts.jsx';
 
 // ─── OrderTimer ───────────────────────────────────────────────────────────────
 function OrderTimer({ createdAt, acceptedAt }) {
@@ -373,6 +374,9 @@ export function OrdersPage() {
           {showAdvancedFilters ? 'Ocultar Filtros' : 'Filtros'}
         </button>
       </div>
+
+      {/* Avisos de ocorrência de entrega (quer devolução? / confirmar devolução) */}
+      <IncidentAlerts />
 
       {/* ── KPI Bar ────────────────────────────────────────────────────────── */}
       <KPIBar orders={allOrders} />
