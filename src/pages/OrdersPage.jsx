@@ -182,7 +182,7 @@ export function OrdersPage() {
   // ── Polling ─────────────────────────────────────────────────────────────────
   useEffect(() => {
     fetchOrders(filters);
-    const intervalId = setInterval(() => fetchOrders(filters), 10000);
+    const intervalId = setInterval(() => fetchOrders(filters), 6000);
     return () => clearInterval(intervalId);
   }, [fetchOrders, filters]);
 
