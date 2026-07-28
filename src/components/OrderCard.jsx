@@ -24,6 +24,17 @@ const StatusBadge = ({ status }) => {
 
 export default function OrderCard({ order, onUpdateStatus, onViewDetails, onConfirmPickup, onAcceptOrder }) {
   const [estimatedTime, setEstimatedTime] = useState(20);
+  // Trava de clique único: sem isto, dois toques rápidos em Aceitar/Pronto/etc.
+  // disparam a mesma ação 2x e o backend devolve erro (status já mudou),
+  // confundindo o dono. Enquanto uma ação está em voo, todos os botões travam.
+  const [busy, setBusy] = useState(false);
+  const run = async (fn, ...args) => {
+    if (busy || !fn) return;
+    setBusy(true);
+    try { await fn(...args); }
+    catch { /* o toast de erro é tratado na página; aqui só libera o botão */ }
+    finally { setBusy(false); }
+  };
   // ⚠️ order.status aqui é exibido em PT-BR; ao enviar para API usamos os nomes internos (inglês)
 
   const getNextAction = () => {
@@ -86,6 +97,15 @@ export default function OrderCard({ order, onUpdateStatus, onViewDetails, onConf
               </ul>
             </div>
           )}
+
+          {/* Observação do cliente (ex.: "sem cebola") — destacada pra cozinha
+              ver sem precisar abrir o detalhe. Vem de orders.notes. */}
+          {order.notes && String(order.notes).trim() && (
+            <div className="mt-2 rounded-md bg-amber-50 border border-amber-200 px-2 py-1.5">
+              <p className="text-[11px] font-bold text-amber-800 uppercase tracking-wide mb-0.5">📝 Observação</p>
+              <p className="text-xs text-amber-900 italic whitespace-pre-wrap break-words">{order.notes}</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -127,8 +147,9 @@ export default function OrderCard({ order, onUpdateStatus, onViewDetails, onConf
         <div className="flex flex-col gap-2" onClick={(e) => e.stopPropagation()}>
           {showPickupButton && onConfirmPickup ? (
             <button
-              onClick={() => onConfirmPickup(order)}
-              className="w-full px-4 py-3 text-sm font-bold text-white bg-purple-600 rounded-xl shadow hover:bg-purple-700 transition-all flex items-center justify-center gap-2 min-h-[48px]"
+              onClick={() => run(onConfirmPickup, order)}
+              disabled={busy}
+              className="w-full px-4 py-3 text-sm font-bold text-white bg-purple-600 rounded-xl shadow hover:bg-purple-700 transition-all flex items-center justify-center gap-2 min-h-[48px] disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <Package size={16} />
               Confirmar Retirada
@@ -153,16 +174,18 @@ export default function OrderCard({ order, onUpdateStatus, onViewDetails, onConf
                 ))}
               </div>
               <button
-                onClick={() => onAcceptOrder ? onAcceptOrder(order.id, estimatedTime) : onUpdateStatus(order.id, 'accepted')}
-                className="w-full px-4 py-3 text-sm font-bold text-white bg-green-600 rounded-xl shadow hover:bg-green-700 active:scale-95 transition-all flex items-center justify-center gap-2 min-h-[48px]"
+                onClick={() => onAcceptOrder ? run(onAcceptOrder, order.id, estimatedTime) : run(onUpdateStatus, order.id, 'accepted')}
+                disabled={busy}
+                className="w-full px-4 py-3 text-sm font-bold text-white bg-green-600 rounded-xl shadow hover:bg-green-700 active:scale-95 transition-all flex items-center justify-center gap-2 min-h-[48px] disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <CheckCircle size={18} />
-                Aceitar pedido ({estimatedTime}min)
+                {busy ? 'Processando...' : `Aceitar pedido (${estimatedTime}min)`}
               </button>
               {order.status !== 'Concluído' && order.status !== 'Cancelado' && (
                 <button
-                  onClick={() => onUpdateStatus(order.id, 'cancelled')}
-                  className="w-full px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors border border-red-100"
+                  onClick={() => run(onUpdateStatus, order.id, 'cancelled')}
+                  disabled={busy}
+                  className="w-full px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors border border-red-100 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   Recusar pedido
                 </button>
@@ -172,26 +195,29 @@ export default function OrderCard({ order, onUpdateStatus, onViewDetails, onConf
             /* Big orange "ready" button */
             <div className="flex flex-col gap-2">
               <button
-                onClick={() => onUpdateStatus(order.id, 'ready')}
-                className="w-full px-4 py-3 text-sm font-bold text-white bg-orange-500 rounded-xl shadow hover:bg-orange-600 active:scale-95 transition-all flex items-center justify-center gap-2 min-h-[48px]"
+                onClick={() => run(onUpdateStatus, order.id, 'ready')}
+                disabled={busy}
+                className="w-full px-4 py-3 text-sm font-bold text-white bg-orange-500 rounded-xl shadow hover:bg-orange-600 active:scale-95 transition-all flex items-center justify-center gap-2 min-h-[48px] disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                📦 Marcar como pronto
+                {busy ? 'Processando...' : '📦 Marcar como pronto'}
               </button>
             </div>
           ) : (
             <div className="flex gap-2">
               {mainAction && (
                 <button
-                  onClick={() => onUpdateStatus(order.id, mainAction.nextStatus)}
-                  className="flex-1 px-3 py-2 text-xs font-medium text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-700 transition-colors min-h-[44px]"
+                  onClick={() => run(onUpdateStatus, order.id, mainAction.nextStatus)}
+                  disabled={busy}
+                  className="flex-1 px-3 py-2 text-xs font-medium text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-700 transition-colors min-h-[44px] disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {mainAction.text}
+                  {busy ? '...' : mainAction.text}
                 </button>
               )}
               {order.status !== 'Concluído' && order.status !== 'Cancelado' && order.status !== 'Entregue' && (
                 <button
-                  onClick={() => onUpdateStatus(order.id, 'cancelled')}
-                  className="px-3 py-2 text-xs font-medium text-white bg-red-600 rounded-md shadow-sm hover:bg-red-700 transition-colors min-h-[44px]"
+                  onClick={() => run(onUpdateStatus, order.id, 'cancelled')}
+                  disabled={busy}
+                  className="px-3 py-2 text-xs font-medium text-white bg-red-600 rounded-md shadow-sm hover:bg-red-700 transition-colors min-h-[44px] disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   Cancelar
                 </button>
