@@ -229,7 +229,7 @@ export function OrdersPage() {
   const handleAcceptOrder = async (orderId, estimatedTime) => {
     try {
       await orderService.acceptOrder(orderId, estimatedTime);
-      playSound('new_order');
+      playSound('accepted'); // som curto de confirmação (sem a voz de "novo pedido")
       addToast('success', `✅ Pedido aceito! Tempo estimado: ${estimatedTime} min`);
       fetchOrders(filters);
     } catch (err) {
