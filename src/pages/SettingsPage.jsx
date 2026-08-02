@@ -76,6 +76,7 @@ export function SettingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [cepLoading, setCepLoading] = useState(false);
   // Guarda o último estado salvo pra poder descartar alterações no "Cancelar"
   const [savedSnapshot, setSavedSnapshot] = useState(null);
   const { addToast } = useToast();
@@ -111,10 +112,43 @@ export function SettingsPage() {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setProfileData(prevData => ({ 
-      ...prevData, 
-      [name]: type === 'checkbox' ? checked : value 
+    setProfileData(prevData => ({
+      ...prevData,
+      [name]: type === 'checkbox' ? checked : value
     }));
+  };
+
+  // CEP -> ViaCEP: preenche rua/bairro/cidade/UF automaticamente. A cidade e a
+  // UF vêm do "localidade"/"uf" do ViaCEP (nome oficial dos Correios), então
+  // ficam travadas no form. É o que garante que "Lages" não vire "LAGES/Lajes".
+  const handleCepChange = async (e) => {
+    const digits = (e.target.value || '').replace(/\D/g, '').slice(0, 8);
+    const masked = digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits;
+    setProfileData(prev => ({ ...prev, address_zipcode: masked }));
+    if (digits.length !== 8) return;
+    try {
+      setCepLoading(true);
+      const resp = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+      const data = await resp.json();
+      if (data?.erro) {
+        addToast('warning', 'CEP não encontrado. Confira o número.');
+        return;
+      }
+      setProfileData(prev => ({
+        ...prev,
+        // logradouro/bairro só vêm em CEP de rua; em cidades menores podem vir
+        // vazios — nesse caso mantém o que o dono já tinha digitado.
+        address_street: data.logradouro || prev.address_street,
+        address_neighborhood: data.bairro || prev.address_neighborhood,
+        address_city: data.localidade || prev.address_city,
+        address_state: (data.uf || prev.address_state || '').toUpperCase(),
+      }));
+      addToast('success', 'Endereço preenchido pelo CEP. Confira o número.');
+    } catch {
+      addToast('warning', 'Não consegui consultar o CEP agora. Tente de novo.');
+    } finally {
+      setCepLoading(false);
+    }
   };
 
   const handleLogoChange = (e) => {
@@ -350,6 +384,13 @@ export function SettingsPage() {
             <div className="border-t pt-8">
               <h2 className="text-xl font-semibold mb-4 text-gray-700">Endereço do Restaurante</h2>
               <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
+                <div className="col-span-6 md:col-span-3">
+                  <label htmlFor="address_zipcode" className="block text-sm font-medium text-gray-700">
+                    CEP {cepLoading && <span className="text-indigo-600 font-normal">buscando…</span>}
+                  </label>
+                  <input type="text" name="address_zipcode" inputMode="numeric" maxLength="9" placeholder="00000-000" value={profileData.address_zipcode || ''} onChange={handleCepChange} disabled={!isEditing} className="mt-1 w-full px-3 py-2 text-base border border-gray-300 rounded-md"/>
+                  <p className="text-xs text-gray-500 mt-1">Preenche rua, bairro, cidade e UF automaticamente.</p>
+                </div>
                 <div className="col-span-6 md:col-span-4">
                   <label htmlFor="address_street" className="block text-sm font-medium text-gray-700">Rua</label>
                   <input type="text" name="address_street" value={profileData.address_street || ''} onChange={handleChange} disabled={!isEditing} className="mt-1 w-full px-3 py-2 text-base border border-gray-300 rounded-md"/>
@@ -366,17 +407,15 @@ export function SettingsPage() {
                   <label htmlFor="address_neighborhood" className="block text-sm font-medium text-gray-700">Bairro</label>
                   <input type="text" name="address_neighborhood" value={profileData.address_neighborhood || ''} onChange={handleChange} disabled={!isEditing} className="mt-1 w-full px-3 py-2 text-base border border-gray-300 rounded-md"/>
                 </div>
-                <div className="col-span-6 md:col-span-3">
+                <div className="col-span-6 md:col-span-2">
                   <label htmlFor="address_city" className="block text-sm font-medium text-gray-700">Cidade</label>
-                  <input type="text" name="address_city" value={profileData.address_city || ''} onChange={handleChange} disabled={!isEditing} className="mt-1 w-full px-3 py-2 text-base border border-gray-300 rounded-md"/>
+                  <input type="text" name="address_city" value={profileData.address_city || ''} readOnly disabled={!isEditing} title="Preenchido pelo CEP" className="mt-1 w-full px-3 py-2 text-base border border-gray-300 rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"/>
+                  <p className="text-xs text-gray-500 mt-1">Vem do CEP</p>
                 </div>
-                 <div className="col-span-6 md:col-span-3">
-                  <label htmlFor="address_state" className="block text-sm font-medium text-gray-700">Estado (UF)</label>
-                  <input type="text" name="address_state" maxLength="2" value={profileData.address_state || ''} onChange={handleChange} disabled={!isEditing} className="mt-1 w-full px-3 py-2 text-base border border-gray-300 rounded-md"/>
-                </div>
-                <div className="col-span-6 md:col-span-3">
-                  <label htmlFor="address_zipcode" className="block text-sm font-medium text-gray-700">CEP</label>
-                  <input type="text" name="address_zipcode" value={profileData.address_zipcode || ''} onChange={handleChange} disabled={!isEditing} className="mt-1 w-full px-3 py-2 text-base border border-gray-300 rounded-md"/>
+                <div className="col-span-6 md:col-span-1">
+                  <label htmlFor="address_state" className="block text-sm font-medium text-gray-700">UF</label>
+                  <input type="text" name="address_state" maxLength="2" value={profileData.address_state || ''} readOnly disabled={!isEditing} title="Preenchido pelo CEP" className="mt-1 w-full px-3 py-2 text-base border border-gray-300 rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"/>
+                  <p className="text-xs text-gray-500 mt-1">Vem do CEP</p>
                 </div>
               </div>
             </div>
