@@ -217,7 +217,7 @@ export function PortalLayout() {
 
           <div className="flex items-center gap-3">
             <span className="hidden sm:block text-white/90 text-sm font-medium">
-              Bem-vindo, {loading ? '...' : (profile?.restaurant_name || 'Restaurante')}!
+              Bem-vindo, {loading ? '...' : (profile?.restaurant_name || 'Parceiro')}!
             </span>
             {/* Status pill visible on mobile (sidebar is hidden) */}
             <span className={`sm:hidden inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full ${profile?.is_open ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
