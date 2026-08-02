@@ -56,8 +56,32 @@ async function geocodeProfileAddress(p) {
   return null;
 }
 
+// Segmento (vertical) do parceiro — eixo de expansão. O que aparece no topo do
+// filtro do cliente. O "tipo" abaixo depende do segmento escolhido.
+const SEGMENTS = [
+  { value: 'restaurante', label: 'Restaurante' },
+  { value: 'farmacia', label: 'Farmácia' },
+  { value: 'mercado', label: 'Supermercado / Mercado' },
+  { value: 'padaria', label: 'Padaria' },
+  { value: 'pet', label: 'Pet' },
+  { value: 'conveniencia', label: 'Conveniência' },
+  { value: 'bebidas', label: 'Bebidas / Adega' },
+];
+
+// Tipos controlados por segmento (vira o dropdown "Tipo" no cliente).
+const TYPES_BY_SEGMENT = {
+  restaurante: ['Pizza', 'Hambúrguer', 'Japonesa', 'Brasileira', 'Italiana', 'Mexicana', 'Árabe', 'Lanches', 'Marmita', 'Saudável', 'Vegetariana', 'Frango', 'Churrasco', 'Frutos do mar', 'Massas', 'Açaí', 'Sobremesa', 'Café', 'Bebidas'],
+  farmacia: ['Medicamentos', 'Manipulação', 'Dermocosméticos', 'Higiene', 'Conveniência'],
+  mercado: ['Hortifruti', 'Mercearia', 'Açougue', 'Bebidas', 'Limpeza', 'Padaria'],
+  padaria: ['Pães', 'Confeitaria', 'Salgados', 'Café', 'Frios'],
+  pet: ['Ração', 'Acessórios', 'Higiene', 'Farmácia pet'],
+  conveniencia: ['Bebidas', 'Snacks', 'Tabacaria', 'Mercearia'],
+  bebidas: ['Cervejas', 'Vinhos', 'Destilados', 'Não alcoólicas'],
+};
+
 export function SettingsPage() {
   const [profileData, setProfileData] = useState({
+    segment: 'restaurante',
     restaurant_name: '', business_name: '', cnpj: '', phone: '',
     description: '', cuisine_type: '', category: '',
     delivery_time: '', delivery_fee: 0, minimum_order: 0,
@@ -116,6 +140,19 @@ export function SettingsPage() {
       ...prevData,
       [name]: type === 'checkbox' ? checked : value
     }));
+  };
+
+  // "Tipo" é multi-seleção guardada em cuisine_type como texto separado por
+  // vírgula (ex.: "Pizza, Lanches"). O cliente filtra por "contém", então quem
+  // marca Pizza E Lanche aparece nos dois.
+  const cuisineList = (profileData.cuisine_type || '')
+    .split(',').map((s) => s.trim()).filter(Boolean);
+  const toggleCuisine = (t) => {
+    setProfileData((prev) => {
+      const list = (prev.cuisine_type || '').split(',').map((s) => s.trim()).filter(Boolean);
+      const next = list.includes(t) ? list.filter((x) => x !== t) : [...list, t];
+      return { ...prev, cuisine_type: next.join(', ') };
+    });
   };
 
   // CEP -> ViaCEP: preenche rua/bairro/cidade/UF automaticamente. A cidade e a
@@ -302,12 +339,34 @@ export function SettingsPage() {
                   <input type="tel" name="phone" id="phone" value={profileData.phone || ''} onChange={handleChange} disabled={!isEditing} className="mt-1 block w-full px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/>
                 </div>
                 <div>
-                  <label htmlFor="cuisine_type" className="block text-sm font-medium text-gray-700">Tipo de Cozinha (ex: Italiana, Japonesa)</label>
-                  <input type="text" name="cuisine_type" id="cuisine_type" value={profileData.cuisine_type || ''} onChange={handleChange} disabled={!isEditing} className="mt-1 block w-full px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/>
+                  <label htmlFor="segment" className="block text-sm font-medium text-gray-700">Segmento</label>
+                  <select name="segment" id="segment" value={profileData.segment || 'restaurante'} onChange={handleChange} disabled={!isEditing} className="mt-1 block w-full px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    {SEGMENTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">Como você aparece no app do cliente (filtro do topo).</p>
                 </div>
-                <div>
-                  <label htmlFor="category" className="block text-sm font-medium text-gray-700">Categoria (ex: Lanches, Pizzaria)</label>
-                  <input type="text" name="category" id="category" value={profileData.category || ''} onChange={handleChange} disabled={!isEditing} className="mt-1 block w-full px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    {(profileData.segment || 'restaurante') === 'restaurante' ? 'Tipo de cozinha' : 'Tipo'}{' '}
+                    <span className="text-gray-400 font-normal">(marque todos que se aplicam)</span>
+                  </label>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {(TYPES_BY_SEGMENT[profileData.segment || 'restaurante'] || []).map((t) => {
+                      const selected = cuisineList.includes(t);
+                      return (
+                        <button
+                          type="button"
+                          key={t}
+                          disabled={!isEditing}
+                          onClick={() => toggleCuisine(t)}
+                          className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${selected ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-300 hover:border-indigo-400'} ${!isEditing ? 'opacity-60 cursor-not-allowed' : ''}`}
+                        >
+                          {t}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {cuisineList.length === 0 && <p className="text-xs text-amber-600 mt-1">Selecione ao menos um — é como o cliente te encontra no filtro.</p>}
                 </div>
                 <div className="md:col-span-2">
                   <label htmlFor="description" className="block text-sm font-medium text-gray-700">Descrição Curta do Restaurante</label>
