@@ -26,7 +26,6 @@ const RestaurantGamificationPage = lazy(() => import('./pages/RestaurantGamifica
 const RestaurantEvaluationsCenter = lazy(() => import('./pages/RestaurantEvaluationsCenter'));
 const FinancePage = lazy(() => import('./pages/FinancePage'));
 const SuportePage = lazy(() => import('./pages/SuportePage'));
-const ClubePage = lazy(() => import('./pages/ClubePage'));
 
 const PageLoader = () => (
   <div className="flex h-screen items-center justify-center">
@@ -105,11 +104,12 @@ function AppRoutes() {
                 <Route path="analytics" element={<AnalyticsPage />} />
                 <Route path="configuracoes" element={<SettingsPage />} />
                 <Route path="categorias" element={<CategoryManagementPage />} />
-                <Route path="gamificacao" element={<RestaurantGamificationPage />} />
                 <Route path="avaliacoes" element={<RestaurantEvaluationsCenter />} />
                 <Route path="financeiro" element={<FinancePage />} />
                 <Route path="suporte" element={<SuportePage />} />
-                <Route path="clube" element={<ClubePage />} />
+                {/* Clube Inksa unificado (absorveu a antiga Gamificação) */}
+                <Route path="clube" element={<RestaurantGamificationPage />} />
+                <Route path="gamificacao" element={<Navigate to="/clube" replace />} />
               </Route>
 
               <Route path="/dashboard" element={<Navigate to="/pedidos" replace />} />

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Trophy, Star, Zap, Loader2, RefreshCw, AlertCircle,
-  Medal, TrendingUp, Target, Swords, CheckCircle2, Clock, Gift,
+  Medal, TrendingUp, Target, Swords, CheckCircle2, Clock, Gift, Crown,
 } from 'lucide-react';
 import { useProfile } from '../context/ProfileContext';
 import { RESTAURANT_API_URL, createAuthHeaders, processResponse } from '../services/api';
@@ -61,6 +61,123 @@ async function fetchJson(url) {
   return data?.data ?? data;
 }
 
+// ─── Clube Inksa (nível por vendas/mês) ─────────────────────────────────────────
+
+const CLUB_GRADIENT = {
+  bronze:   'from-amber-400 to-amber-600',
+  prata:    'from-slate-300 to-slate-500',
+  ouro:     'from-yellow-400 to-yellow-600',
+  diamante: 'from-cyan-400 to-cyan-600',
+};
+
+// Hero: identidade do restaurante (nível do mês por VENDAS) + pontos como MOEDA.
+// Um nível só — o do Clube. Pontos viram saldo pra Loja de Recompensas abaixo.
+function ClubHeroCard({ status, points, unit = 'venda' }) {
+  const cur = status?.current_level;
+  const next = status?.next_level;
+  const orders = status?.orders_this_month ?? 0;
+  const grad = CLUB_GRADIENT[cur?.level] || CLUB_GRADIENT.bronze;
+  const label = cur?.label || cur?.name || 'Bronze';
+  const totalPoints = Number(points?.total_points ?? points?.points ?? 0);
+  const pctBar = next?.min_orders ? Math.min(100, Math.round((orders / next.min_orders) * 100)) : 100;
+  const toNext = next ? Math.max(0, (next.min_orders || 0) - orders) : 0;
+  const plural = (n) => (n !== 1 ? 's' : '');
+  return (
+    <div className={`rounded-2xl bg-gradient-to-br ${grad} p-5 sm:p-6 text-white shadow-xl mb-6`}>
+      <div className="flex items-start justify-between mb-1">
+        <div>
+          <p className="text-white/70 text-xs uppercase tracking-widest mb-1">Seu nível no Clube</p>
+          <h2 className="text-3xl font-black flex items-center gap-2"><span>{cur?.emoji}</span> {label}</h2>
+        </div>
+        <div className="bg-white/20 rounded-full p-3"><Crown className="w-8 h-8 text-white" /></div>
+      </div>
+      <p className="text-white/90 text-sm mb-4">{orders} {unit}{plural(orders)} este mês</p>
+      {next ? (
+        <>
+          <div className="bg-black/20 rounded-full h-2.5 overflow-hidden">
+            <div className="bg-white h-2.5 rounded-full transition-all duration-700 ease-out" style={{ width: `${pctBar}%` }} />
+          </div>
+          <p className="text-white/80 text-xs mt-2">
+            Faltam <span className="font-bold text-white">{toNext} {unit}{plural(toNext)}</span> para {next.label || next.name} {next.emoji}
+          </p>
+        </>
+      ) : (
+        <p className="text-white/90 text-sm font-semibold">Nível máximo do Clube atingido! 🎉</p>
+      )}
+      {status?.motivation && <p className="text-white/90 text-sm font-semibold mt-2">{status.motivation}</p>}
+      <div className="mt-4 pt-4 border-t border-white/25 flex items-center gap-2">
+        <Star className="w-5 h-5 fill-white text-white shrink-0" />
+        <span className="text-lg font-black tabular-nums">{totalPoints.toLocaleString('pt-BR')}</span>
+        <span className="text-white/80 text-sm">pontos · troque por recompensas ↓</span>
+      </div>
+    </div>
+  );
+}
+
+function ClubBenefitsCard({ status }) {
+  const cur = status?.current_level;
+  const next = status?.next_level;
+  if (!cur?.benefits?.length && !next?.benefits?.length) return null;
+  const lockedNext = next?.benefits?.filter((b) => !cur?.benefits?.includes(b)) || [];
+  return (
+    <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6">
+      <div className="flex items-center gap-2 mb-3">
+        <Gift className="h-5 w-5 text-green-600" />
+        <h2 className="text-lg font-bold text-gray-800">Seus benefícios</h2>
+      </div>
+      <ul className="space-y-2">
+        {cur?.benefits?.map((b, i) => (
+          <li key={i} className="flex items-center gap-2 text-sm text-gray-700"><CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" /> {b}</li>
+        ))}
+        {!cur?.benefits?.length && <li className="text-sm text-gray-400">Nenhum benefício ativo ainda.</li>}
+      </ul>
+      {lockedNext.length > 0 && (
+        <>
+          <p className="text-xs font-bold text-gray-400 uppercase mt-4 mb-2">Desbloqueie no nível {next.label || next.name}</p>
+          <ul className="space-y-2 opacity-60">
+            {lockedNext.map((b, i) => (
+              <li key={i} className="flex items-center gap-2 text-sm text-gray-500"><Star className="w-4 h-4 shrink-0" /> {b}</li>
+            ))}
+          </ul>
+        </>
+      )}
+    </div>
+  );
+}
+
+function ClubLevelsCard({ levels, currentLevel, unit = 'venda' }) {
+  if (!levels?.length) return null;
+  return (
+    <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6">
+      <div className="flex items-center gap-2 mb-3">
+        <Medal className="h-5 w-5 text-amber-500" />
+        <h2 className="text-lg font-bold text-gray-800">Todos os níveis do Clube</h2>
+      </div>
+      <div className="space-y-2">
+        {levels.map((lvl) => {
+          const isCurrent = lvl.level === currentLevel;
+          return (
+            <div key={lvl.level} className={`rounded-xl p-3 border ${isCurrent ? 'border-orange-300 ring-2 ring-orange-200 bg-orange-50/40' : 'border-gray-100'}`}>
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">{lvl.emoji}</span>
+                <div className="flex-1">
+                  <p className="text-sm font-bold text-gray-800">
+                    {lvl.label || lvl.name}
+                    {isCurrent && <span className="ml-2 text-xs font-semibold bg-orange-500 text-white px-1.5 py-0.5 rounded-full">Você está aqui</span>}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {lvl.max_orders ? `${lvl.min_orders}–${lvl.max_orders}` : `${lvl.min_orders}+`} {unit}s/mês
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ─── main component ───────────────────────────────────────────────────────────
 
 export default function RestaurantGamificationPage() {
@@ -83,7 +200,25 @@ export default function RestaurantGamificationPage() {
   const [redeeming, setRedeeming]           = useState(null);
   const [redeemMsg, setRedeemMsg]           = useState(null); // {type:'success'|'error', text}
 
+  // Clube Inksa (nível por vendas/mês)
+  const [clubStatus, setClubStatus] = useState(null);
+  const [clubLevels, setClubLevels] = useState([]);
+
   const restaurantId = profile?.id;
+
+  // Fail-soft: se o clube falhar, a página ainda mostra pontos/recompensas.
+  const fetchClub = useCallback(async () => {
+    try {
+      const [st, lv] = await Promise.all([
+        fetchJson(`${RESTAURANT_API_URL}/api/club/status`),
+        fetchJson(`${RESTAURANT_API_URL}/api/club/levels?audience=restaurant`),
+      ]);
+      setClubStatus(st ?? null);
+      setClubLevels(Array.isArray(lv) ? lv : []);
+    } catch {
+      setClubStatus(null);
+    }
+  }, []);
 
   const fetchAll = useCallback(async () => {
     if (!restaurantId) return;
@@ -208,9 +343,9 @@ export default function RestaurantGamificationPage() {
   };
 
   useEffect(() => {
-    if (!profileLoading && restaurantId) fetchAll();
+    if (!profileLoading && restaurantId) { fetchAll(); fetchClub(); }
     else if (!profileLoading) setLoading(false);
-  }, [profileLoading, restaurantId, fetchAll]);
+  }, [profileLoading, restaurantId, fetchAll, fetchClub]);
 
   // ── derived ────────────────────────────────────────────────────────────────
 
@@ -230,7 +365,7 @@ export default function RestaurantGamificationPage() {
     return (
       <div className="p-4 sm:p-6">
         <div className="flex items-center gap-3 mb-8">
-          <h1 className="text-xl sm:text-3xl font-bold text-gray-800">Gamificação</h1>
+          <h1 className="text-xl sm:text-3xl font-bold text-gray-800">Clube Inksa</h1>
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -248,7 +383,7 @@ export default function RestaurantGamificationPage() {
   if (error) {
     return (
       <div className="p-4 sm:p-6">
-        <h1 className="text-xl sm:text-3xl font-bold text-gray-800 mb-6">Gamificação</h1>
+        <h1 className="text-xl sm:text-3xl font-bold text-gray-800 mb-6">Clube Inksa</h1>
         <div className="bg-red-50 border border-red-200 rounded-lg p-6">
           <div className="flex items-center gap-2 mb-2">
             <AlertCircle className="h-5 w-5 text-red-600 shrink-0" />
@@ -281,8 +416,8 @@ export default function RestaurantGamificationPage() {
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-xl sm:text-3xl font-bold text-gray-800">Gamificação</h1>
-          <p className="text-gray-600 text-sm sm:text-base">Acompanhe seus pontos, ranking e conquistas</p>
+          <h1 className="text-xl sm:text-3xl font-bold text-gray-800 flex items-center gap-2"><Medal className="h-7 w-7 text-amber-500" /> Clube Inksa</h1>
+          <p className="text-gray-600 text-sm sm:text-base">Quanto mais você vende, mais benefícios e recompensas</p>
         </div>
         <button
           onClick={fetchAll}
@@ -293,8 +428,12 @@ export default function RestaurantGamificationPage() {
         </button>
       </div>
 
-      {/* ── 1. Pontos, Nível e Ranking ──────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6">
+      {/* ── Hero: nível do Clube (por vendas) + pontos como moeda ───────── */}
+      {clubStatus && <ClubHeroCard status={clubStatus} points={stats} unit="venda" />}
+      <ClubBenefitsCard status={clubStatus} />
+
+      {/* ── 1. Pontos e Ranking ─────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6">
 
         {/* Pontos Totais */}
         <div className="bg-white rounded-lg shadow-md p-6">
@@ -320,28 +459,6 @@ export default function RestaurantGamificationPage() {
           )}
         </div>
 
-        {/* Nível Atual */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500">Nível Atual</p>
-              {stats ? (
-                <>
-                  <p className="text-3xl font-bold text-yellow-600 mt-1">
-                    {levelMeta?.name ?? `Nível ${stats.current_level}`}
-                  </p>
-                  <div className="mt-2">
-                    <LevelBadge level={stats.current_level} levelName={stats.level_name} />
-                  </div>
-                </>
-              ) : (
-                <p className="text-3xl font-bold text-gray-300 mt-1">—</p>
-              )}
-            </div>
-            <Trophy className="h-12 w-12 text-yellow-300" />
-          </div>
-        </div>
-
         {/* Posição no Ranking */}
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center justify-between">
@@ -358,6 +475,9 @@ export default function RestaurantGamificationPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Todos os níveis do Clube ──────────────────────────────────────── */}
+      <ClubLevelsCard levels={clubLevels} currentLevel={clubStatus?.current_level?.level} unit="venda" />
 
       {/* ── Como ganhar pontos ────────────────────────────────────────────── */}
       <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6">
