@@ -9,6 +9,10 @@ import { authService } from '../../services/authService.js';
 import { useProfile } from '../../context/ProfileContext';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useNewOrderAlarm } from '../../hooks/useNewOrderAlarm.js';
+import { useIdleLogout } from '../../hooks/useIdleLogout.js';
+
+// Desloga sozinho após 1h sem nenhuma interação (segurança de sessão esquecida).
+const IDLE_LOGOUT_MS = 60 * 60 * 1000;
 
 // Campos obrigatórios para o restaurante poder RECEBER pedidos.
 // Sem o endereço completo (com coordenadas), o cálculo de frete falha.
@@ -43,6 +47,15 @@ export function PortalLayout() {
 
   // Alarme de novo pedido em qualquer tela do painel (não só na tela Pedidos)
   useNewOrderAlarm(!loading);
+
+  // Logoff automático após 1h sem interação (toque/clique/tecla/rolagem).
+  useIdleLogout({
+    timeoutMs: IDLE_LOGOUT_MS,
+    onIdle: () => {
+      try { addToast('info', 'Sessão encerrada por inatividade.'); } catch {}
+      authService.logout(); // limpa sessão + redireciona pro login
+    },
+  });
 
   // Heartbeat: sinal de vida a cada 4 min enquanto o painel estiver aberto.
   // Sem heartbeat por 45 min (token expirado, app fechado), o backend fecha o
