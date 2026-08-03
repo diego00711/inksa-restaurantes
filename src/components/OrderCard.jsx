@@ -22,7 +22,7 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-export default function OrderCard({ order, onUpdateStatus, onViewDetails, onConfirmPickup, onAcceptOrder }) {
+export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus, onViewDetails, onConfirmPickup, onAcceptOrder }) {
   const [estimatedTime, setEstimatedTime] = useState(20);
   // Trava de clique único: sem isto, dois toques rápidos em Aceitar/Pronto/etc.
   // disparam a mesma ação 2x e o backend devolve erro (status já mudou),
@@ -47,16 +47,27 @@ export default function OrderCard({ order, onUpdateStatus, onViewDetails, onConf
       case 'Preparando':
         return { text: 'Pronto', nextStatus: 'ready' };
       case 'Pronto':
+        // ENTREGA PRÓPRIA: o restaurante despacha com a própria moto —
+        // "Saiu para Entrega" direto, sem esperar entregador Inksa.
+        if (isOwnDelivery) return { text: '🛵 Saiu para Entrega', nextStatus: 'delivering' };
         // ✅ não existe "ready_for_pickup"; usar accepted_by_delivery
         // o backend permite ready -> accepted_by_delivery via PUT /status
         return { text: 'Aguardar Retirada', nextStatus: 'accepted_by_delivery' };
+      case 'Saiu para Entrega':
+      case 'delivering':
+        // ENTREGA PRÓPRIA: o restaurante fecha a entrega ele mesmo (sem código
+        // de entregador). O backend só libera delivered pra delivery_type='own'.
+        if (isOwnDelivery) return { text: '✅ Confirmar Entrega', nextStatus: 'delivered' };
+        return null;
       default:
         return null;
     }
   };
 
-  // ✅ Mostrar o botão de confirmar retirada quando o pedido já foi aceito por um entregador
+  // Botão de confirmar retirada só no fluxo COM entregador Inksa. Na entrega
+  // própria não existe retirada por entregador — o restaurante leva ele mesmo.
   const shouldShowPickupButton = () => {
+    if (isOwnDelivery) return false;
     return order.status === 'Aguardando Retirada' || order.status === 'accepted_by_delivery';
   };
 

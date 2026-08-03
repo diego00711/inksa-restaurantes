@@ -7,6 +7,7 @@ import { PickupConfirmationModal } from '../components/PickupConfirmationModal';
 import { useToast } from '../context/ToastContext.jsx';
 import { useConfirm } from '../components/ConfirmProvider.jsx';
 import { useAuth } from '../context/AuthContext';
+import { useProfile } from '../context/ProfileContext';
 import { useNotificationSound } from '../hooks/useNotificationSound';
 import { supabase } from '../lib/supabase';
 import { SlidersHorizontal, Trash2, TrendingUp, ShoppingBag, DollarSign, Clock, AlertCircle, Star, X } from 'lucide-react';
@@ -117,6 +118,11 @@ export function OrdersPage() {
   const { addToast } = useToast();
   const confirm = useConfirm();
   const { user } = useAuth();
+  const { profile } = useProfile();
+  // Entrega própria: o restaurante despacha com a própria moto (sem entregador
+  // Inksa). O card mostra "Saiu para Entrega" e "Confirmar Entrega" em vez de
+  // pedir o código do entregador (que não existe nesse caso).
+  const isOwnDelivery = (profile?.delivery_type === 'own');
   const playSound = useNotificationSound();
 
   const knownOrderIds = useRef(null);
@@ -330,6 +336,7 @@ export function OrdersPage() {
               </div>
               <OrderCard
                 order={order}
+                isOwnDelivery={isOwnDelivery}
                 onUpdateStatus={handleUpdateStatus}
                 onAcceptOrder={handleAcceptOrder}
                 onViewDetails={handleViewOrderDetails}

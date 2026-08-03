@@ -1,4 +1,4 @@
-const CACHE_NAME = 'inksa-restaurantes-v13';
+const CACHE_NAME = 'inksa-restaurantes-v14';
 
 self.addEventListener('install', (event) => {
   // Nao pre-cacheia o index: ele sera cacheado (atualizado) a cada navegacao com rede
