@@ -48,9 +48,25 @@ export function PortalLayout() {
   // Alarme de novo pedido em qualquer tela do painel (não só na tela Pedidos)
   useNewOrderAlarm(!loading);
 
-  // Logoff automático após 1h sem interação (toque/clique/tecla/rolagem).
+  // Logoff automático por inatividade — tempo CONFIGURÁVEL no admin
+  // (platform_settings.idle_logout_minutes; 0 = desligado). Busca 1x; enquanto
+  // não responde, usa o padrão de 1h.
+  const [idleMs, setIdleMs] = useState(IDLE_LOGOUT_MS);
+  useEffect(() => {
+    let alive = true;
+    fetch(`${RESTAURANT_API_URL}/api/public/app-config`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (!alive) return;
+        const min = Number(d?.idle_logout_minutes);
+        if (Number.isFinite(min)) setIdleMs(min > 0 ? min * 60000 : 0);
+      })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
   useIdleLogout({
-    timeoutMs: IDLE_LOGOUT_MS,
+    timeoutMs: idleMs,
+    enabled: idleMs > 0,
     onIdle: () => {
       try { addToast('info', 'Sessão encerrada por inatividade.'); } catch {}
       authService.logout(); // limpa sessão + redireciona pro login
