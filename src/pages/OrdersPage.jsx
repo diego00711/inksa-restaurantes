@@ -19,11 +19,22 @@ import IncidentAlerts from '../components/IncidentAlerts.jsx';
 // ─── OrderTimer ───────────────────────────────────────────────────────────────
 function OrderTimer({ createdAt, acceptedAt }) {
   const [mins, setMins] = useState(0);
-  const base = acceptedAt || createdAt;
+  // Congela a base: assim que o pedido tiver um accepted_at, conta SEMPRE a
+  // partir dele — mesmo que uma atualização seguinte venha sem esse campo. Sem
+  // isso, o tempo "pulava" (ex.: 60min desde criado ↔ 20min desde aceito) quando
+  // o accepted_at oscilava entre as atualizações. Antes de aceitar, conta desde
+  // created_at.
+  const stickyAcceptedRef = useRef(acceptedAt || null);
+  if (acceptedAt) stickyAcceptedRef.current = acceptedAt;
+  const base = stickyAcceptedRef.current || createdAt;
 
   useEffect(() => {
     if (!base) return;
-    const tick = () => setMins(Math.max(0, Math.floor((Date.now() - new Date(base).getTime()) / 60000)));
+    const tick = () => {
+      const t = new Date(base).getTime();
+      if (Number.isNaN(t)) return; // data inválida: não mexe no valor exibido
+      setMins(Math.max(0, Math.floor((Date.now() - t) / 60000)));
+    };
     tick();
     const id = setInterval(tick, 30000);
     return () => clearInterval(id);
