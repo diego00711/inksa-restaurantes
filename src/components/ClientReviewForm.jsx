@@ -32,85 +32,37 @@ const StarRating = ({ rating, onRatingChange, size = "w-8 h-8", interactive = fa
   );
 };
 
-// Componente para badges de avaliação rápida
-const QuickRatingBadges = ({ selectedBadges, onBadgeToggle }) => {
-  const badges = [
-    { id: "pontual", label: "Pontual", emoji: "⏰" },
-    { id: "educado", label: "Educado", emoji: "😊" },
-    { id: "comunicativo", label: "Comunicativo", emoji: "💬" },
-    { id: "problematico", label: "Problemático", emoji: "⚠️" },
-    { id: "pagamento-rapido", label: "Pagamento rápido", emoji: "💳" },
-    { id: "indeciso", label: "Indeciso", emoji: "🤔" },
-  ];
-
-  return (
-    <div>
-      <p className="text-sm font-medium text-gray-700 mb-3">
-        Tags de avaliação (opcional):
-      </p>
-      <div className="flex flex-wrap gap-2">
-        {badges.map((badge) => (
-          <button
-            key={badge.id}
-            type="button"
-            onClick={() => onBadgeToggle(badge.id)}
-            className={`px-3 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-              selectedBadges.includes(badge.id)
-                ? "bg-blue-100 text-blue-700 border-2 border-blue-300"
-                : "bg-gray-100 text-gray-600 border-2 border-gray-200 hover:bg-gray-200"
-            }`}
-          >
-            <span className="mr-1">{badge.emoji}</span>
-            {badge.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-};
-
 export default function ClientReviewForm({ clientId, orderId, token, onSuccess }) {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
-  const [selectedBadges, setSelectedBadges] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
-
-  const handleBadgeToggle = (badgeId) => {
-    setSelectedBadges(prev => 
-      prev.includes(badgeId) 
-        ? prev.filter(id => id !== badgeId)
-        : [...prev, badgeId]
-    );
-  };
 
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    
+
     try {
       await postClientReview({
         clientId,
         orderId,
         rating,
         comment: comment.trim(),
-        badges: selectedBadges, // Você pode adicionar este campo ao seu serviço
         token,
       });
-      
+
       setSuccess(true);
-      
+
       // Limpar formulário após 1.5s
       setTimeout(() => {
         setComment("");
         setRating(5);
-        setSelectedBadges([]);
         setSuccess(false);
         if (onSuccess) onSuccess();
       }, 1500);
-      
+
     } catch (err) {
       setError(err.response?.data?.error || "Erro ao enviar avaliação");
     } finally {
@@ -175,14 +127,6 @@ export default function ClientReviewForm({ clientId, orderId, token, onSuccess }
             </p>
           </div>
         </div>
-      </div>
-
-      {/* Quick Rating Badges */}
-      <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
-        <QuickRatingBadges 
-          selectedBadges={selectedBadges}
-          onBadgeToggle={handleBadgeToggle}
-        />
       </div>
 
       {/* Comment Section */}

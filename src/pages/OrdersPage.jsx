@@ -14,6 +14,7 @@ import { SlidersHorizontal, Trash2, TrendingUp, ShoppingBag, DollarSign, Clock, 
 import SocialDayBanner from '../components/SocialDayBanner';
 import SponsoredStrip from '../components/SponsoredStrip';
 import ClientReviewForm from '../components/ClientReviewForm';
+import DeliveryReviewForm from '../components/DeliveryReviewForm';
 import IncidentAlerts from '../components/IncidentAlerts.jsx';
 
 // ─── OrderTimer ───────────────────────────────────────────────────────────────
@@ -156,9 +157,12 @@ export function OrdersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedOrderForPickup, setSelectedOrderForPickup] = useState(null);
   const [showPickupModal, setShowPickupModal] = useState(false);
-  // Avaliação do cliente após a retirada ("Avaliar / deixar pra depois")
+  // Avaliação após a retirada ("Avaliar / deixar pra depois"). O parceiro avalia
+  // o ENTREGADOR e o CLIENTE em sequência (reviewStep). Na entrega própria não há
+  // entregador Inksa, então começa direto no cliente.
   const [pendingReviewOrder, setPendingReviewOrder] = useState(null);
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewStep, setReviewStep] = useState('delivery'); // 'delivery' | 'client'
 
   // ── Fetch orders ────────────────────────────────────────────────────────────
   const fetchOrders = useCallback(async (currentFilters) => {
@@ -270,11 +274,14 @@ export function OrdersPage() {
   const handleClosePickupModal = () => { setSelectedOrderForPickup(null); setShowPickupModal(false); };
   const handlePickupSuccess = () => {
     // onSuccess roda antes do onClose, então o pedido ainda está aqui: guarda
-    // pra oferecer avaliar o cliente logo depois que o modal de retirada fechar.
+    // pra oferecer avaliar o entregador e o cliente logo depois que o modal de
+    // retirada fechar.
     const order = selectedOrderForPickup;
     fetchOrders(filters);
     if (order?.client_id) {
       setShowReviewForm(false);
+      // Se há entregador Inksa no pedido, começa por ele; senão vai pro cliente.
+      setReviewStep(order.delivery_id ? 'delivery' : 'client');
       setPendingReviewOrder(order);
     }
   };
@@ -502,18 +509,32 @@ export function OrdersPage() {
         />
       )}
 
-      {/* ── Avaliar cliente após a retirada ─────────────────────────────────────
-          Depois que o entregador retira o pedido, oferece ao restaurante avaliar
-          o cliente. "Deixar para depois" não perde nada: o pedido segue na
-          Central de Avaliações pra avaliar quando quiser. */}
-      {pendingReviewOrder && (
+      {/* ── Avaliar entregador + cliente após a retirada ────────────────────────
+          Depois que o entregador retira o pedido, oferece ao parceiro avaliar o
+          ENTREGADOR (que está ali na hora) e o CLIENTE, em sequência (reviewStep).
+          "Deixar para depois" não perde nada: o pedido segue na Central de
+          Avaliações. Na entrega própria não há entregador Inksa → só o cliente. */}
+      {pendingReviewOrder && (() => {
+        const hasDeliveryStep = !!pendingReviewOrder.delivery_id;
+        const closeReview = () => { setPendingReviewOrder(null); setShowReviewForm(false); setReviewStep('delivery'); };
+        const onDeliveryDone = () => {
+          addToast('success', 'Avaliação do entregador enviada! 🙌');
+          if (pendingReviewOrder.client_id) setReviewStep('client');
+          else closeReview();
+        };
+        const onClientDone = () => {
+          addToast('success', 'Avaliação enviada! Obrigado 🙌');
+          closeReview();
+        };
+        const onDeliveryStep = reviewStep === 'delivery' && hasDeliveryStep;
+        return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => { setPendingReviewOrder(null); setShowReviewForm(false); }} />
+          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={closeReview} />
           <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6 max-h-[90vh] overflow-y-auto">
             {!showReviewForm ? (
               <div className="text-center">
                 <div className="text-5xl mb-2">⭐</div>
-                <h3 className="text-xl font-bold text-gray-800">Avaliar o cliente?</h3>
+                <h3 className="text-xl font-bold text-gray-800">Avaliar {hasDeliveryStep ? 'entregador e cliente' : 'o cliente'}?</h3>
                 <p className="text-sm text-gray-500 mt-1 mb-5">
                   Pedido de <span className="font-semibold text-gray-700">{pendingReviewOrder.client_name || pendingReviewOrder.client_first_name || 'o cliente'}</span> saiu para entrega. Que tal deixar uma avaliação rápida?
                 </p>
@@ -526,7 +547,7 @@ export function OrdersPage() {
                     Avaliar agora
                   </button>
                   <button
-                    onClick={() => { setPendingReviewOrder(null); setShowReviewForm(false); }}
+                    onClick={closeReview}
                     className="w-full py-2.5 rounded-lg border border-gray-300 text-sm font-semibold text-gray-600 hover:bg-gray-50"
                   >
                     Deixar para depois
@@ -538,29 +559,37 @@ export function OrdersPage() {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                     <Star className="h-5 w-5 text-purple-600" />
-                    Avaliar cliente
+                    {onDeliveryStep ? 'Avaliar entregador' : 'Avaliar cliente'}
+                    {hasDeliveryStep && (
+                      <span className="text-xs font-medium text-gray-400">{onDeliveryStep ? '1/2' : '2/2'}</span>
+                    )}
                   </h3>
                   <button
-                    onClick={() => { setPendingReviewOrder(null); setShowReviewForm(false); }}
+                    onClick={closeReview}
                     className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                   >
                     <X className="w-5 h-5 text-gray-500" />
                   </button>
                 </div>
-                <ClientReviewForm
-                  clientId={pendingReviewOrder.client_id}
-                  orderId={pendingReviewOrder.id}
-                  onSuccess={() => {
-                    addToast('success', 'Avaliação enviada! Obrigado 🙌');
-                    setPendingReviewOrder(null);
-                    setShowReviewForm(false);
-                  }}
-                />
+                {onDeliveryStep ? (
+                  <DeliveryReviewForm
+                    deliverymanId={pendingReviewOrder.delivery_id}
+                    orderId={pendingReviewOrder.id}
+                    onSuccess={onDeliveryDone}
+                  />
+                ) : (
+                  <ClientReviewForm
+                    clientId={pendingReviewOrder.client_id}
+                    orderId={pendingReviewOrder.id}
+                    onSuccess={onClientDone}
+                  />
+                )}
               </>
             )}
           </div>
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

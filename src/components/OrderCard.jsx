@@ -74,6 +74,9 @@ export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus
   const mainAction = getNextAction();
   const orderItems = order.items?.items || [];
   const showPickupButton = shouldShowPickupButton();
+  // Depois que o pedido SAIU PARA ENTREGA (em rota), o restaurante não pode mais
+  // cancelar — o pedido já está com o entregador/cliente. Esconde o botão.
+  const isEnRoute = ['Saiu para Entrega', 'delivering', 'Entregando'].includes(order.status);
 
   return (
     <div className={`bg-white rounded-lg shadow-sm p-4 flex flex-col gap-3 hover:shadow-lg transition-shadow duration-200 ${order.status === 'Pendente' ? 'ring-2 ring-green-400 animate-pulse' : ''}`}>
@@ -224,7 +227,7 @@ export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus
                   {busy ? '...' : mainAction.text}
                 </button>
               )}
-              {order.status !== 'Concluído' && order.status !== 'Cancelado' && order.status !== 'Entregue' && (
+              {order.status !== 'Concluído' && order.status !== 'Cancelado' && order.status !== 'Entregue' && !isEnRoute && (
                 <button
                   onClick={() => run(onUpdateStatus, order.id, 'cancelled')}
                   disabled={busy}
