@@ -6,6 +6,7 @@ import {
 import { useProfile } from '../context/ProfileContext';
 import { RESTAURANT_API_URL, createAuthHeaders, processResponse } from '../services/api';
 import { apiFetch } from '../services/apiClient';
+import MyRedemptions from '../components/MyRedemptions';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -198,6 +199,8 @@ export default function RestaurantGamificationPage() {
   const [rewardsError, setRewardsError]     = useState(null);
   const [confirmReward, setConfirmReward]   = useState(null);
   const [redeeming, setRedeeming]           = useState(null);
+  // Muda a cada resgate concluído para a lista "Meus resgates" recarregar.
+  const [redemptionsKey, setRedemptionsKey] = useState(0);
   const [redeemMsg, setRedeemMsg]           = useState(null); // {type:'success'|'error', text}
 
   // Clube Inksa (nível por vendas/mês)
@@ -334,6 +337,7 @@ export default function RestaurantGamificationPage() {
       setRedeemMsg({ type: 'success', text: data?.message ?? `"${reward.name}" resgatado com sucesso!` });
       setTimeout(() => setRedeemMsg(null), 5000);
       fetchAll();
+      setRedemptionsKey(k => k + 1);
     } catch (err) {
       setRedeemMsg({ type: 'error', text: err.message || 'Erro ao resgatar recompensa.' });
       setTimeout(() => setRedeemMsg(null), 4000);
@@ -774,6 +778,9 @@ export default function RestaurantGamificationPage() {
           </div>
         )}
       </div>
+
+      {/* ── 4b. Meus resgates ───────────────────────────────────────────── */}
+      <MyRedemptions refreshKey={redemptionsKey} />
 
       {/* ── 5. Desafios Ativos ──────────────────────────────────────────── */}
       <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
