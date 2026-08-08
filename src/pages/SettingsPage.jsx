@@ -136,10 +136,21 @@ export function SettingsPage() {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setProfileData(prevData => ({
-      ...prevData,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+    setProfileData(prevData => {
+      const next = { ...prevData, [name]: type === 'checkbox' ? checked : value };
+      // Ao TROCAR DE SEGMENTO, descarta os tipos que não pertencem ao novo.
+      // Sem isso os tipos antigos ficavam grudados no cadastro (uma farmácia
+      // continuava marcada como "Hambúrguer", e esse tipo aparecia no filtro do
+      // cliente dentro do segmento errado).
+      if (name === 'segment') {
+        const permitidos = TYPES_BY_SEGMENT[value] || [];
+        const mantidos = (prevData.cuisine_type || '')
+          .split(',').map((s) => s.trim()).filter(Boolean)
+          .filter((t) => permitidos.includes(t));
+        next.cuisine_type = mantidos.join(', ');
+      }
+      return next;
+    });
   };
 
   // "Tipo" é multi-seleção guardada em cuisine_type como texto separado por
