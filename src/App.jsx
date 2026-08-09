@@ -25,6 +25,7 @@ const CategoryManagementPage = lazy(() => import('./pages/CategoryManagementPage
 const RestaurantGamificationPage = lazy(() => import('./pages/RestaurantGamificationPage'));
 const RestaurantEvaluationsCenter = lazy(() => import('./pages/RestaurantEvaluationsCenter'));
 const FinancePage = lazy(() => import('./pages/FinancePage'));
+const CouponsPage = lazy(() => import('./pages/CouponsPage'));
 const SuportePage = lazy(() => import('./pages/SuportePage'));
 
 const PageLoader = () => (
@@ -106,6 +107,7 @@ function AppRoutes() {
                 <Route path="categorias" element={<CategoryManagementPage />} />
                 <Route path="avaliacoes" element={<RestaurantEvaluationsCenter />} />
                 <Route path="financeiro" element={<FinancePage />} />
+                <Route path="cupons" element={<CouponsPage />} />
                 <Route path="suporte" element={<SuportePage />} />
                 {/* Clube Inksa unificado (absorveu a antiga Gamificação) */}
                 <Route path="clube" element={<RestaurantGamificationPage />} />
