@@ -416,6 +416,26 @@ export function SettingsPage() {
                     <label htmlFor="minimum_order" className="block text-sm font-medium text-gray-700">Pedido Mínimo (R$)</label>
                     <input type="number" name="minimum_order" id="minimum_order" step="0.01" value={profileData.minimum_order || 0} onChange={handleChange} disabled={!isEditing} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"/>
                   </div>
+                  {/* Trava de dinheiro: como a taxa é FIXA, sem um limite de
+                      distância um pedido lá longe sai do bolso da loja. */}
+                  <div className="md:col-span-3">
+                    <label htmlFor="own_delivery_radius_km" className="block text-sm font-medium text-gray-700">
+                      Até quantos km você entrega?
+                    </label>
+                    <input
+                      type="number" name="own_delivery_radius_km" id="own_delivery_radius_km"
+                      step="0.5" min="0" placeholder="Ex: 6"
+                      value={profileData.own_delivery_radius_km ?? ''}
+                      onChange={handleChange} disabled={!isEditing}
+                      className="mt-1 block w-full md:w-1/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm"
+                    />
+                    <p className="mt-1 text-xs text-gray-600">
+                      Sua taxa é <strong>fixa em qualquer distância</strong>. Quem estiver
+                      além desse limite não vê a sua loja e não consegue pedir — assim
+                      você não recebe um pedido longe demais pagando o mesmo frete.
+                      Deixe em branco para atender toda a área da Inksa.
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
