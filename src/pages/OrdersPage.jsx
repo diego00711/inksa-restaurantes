@@ -17,7 +17,7 @@ import SponsoredStrip from '../components/SponsoredStrip';
 import ClientReviewForm from '../components/ClientReviewForm';
 import DeliveryReviewForm from '../components/DeliveryReviewForm';
 import IncidentAlerts from '../components/IncidentAlerts.jsx';
-import { printOrder, getHiddenOrderIds, hideOrderLocally } from '../utils/orderPrint';
+import { printOrder } from '../utils/orderPrint';
 
 // ─── OrderTimer ───────────────────────────────────────────────────────────────
 function OrderTimer({ createdAt, acceptedAt }) {
@@ -137,7 +137,7 @@ function Col({
   showRemove = false, isNewCol = false,
   hasNewOrders, newOrderIds, isOwnDelivery,
   onUpdateStatus, onAcceptOrder, onViewDetails, onConfirmPickup, onConfirmDelivery,
-  onRemove, onPrint, onHide,
+  onRemove, onPrint,
 }) {
   return (
     <div className={`${bg} rounded-xl p-3 flex flex-col min-w-[240px] border border-white/80 shadow-sm`}>
@@ -162,7 +162,6 @@ function Col({
                 onConfirmPickup={onConfirmPickup}
                 onConfirmDelivery={onConfirmDelivery}
                 onPrint={onPrint}
-                onHide={onHide}
               />
               {showRemove && (
                 <button
@@ -199,7 +198,6 @@ export function OrdersPage() {
   const knownOrderIds = useRef(null);
   const [newOrderIds, setNewOrderIds] = useState(new Set());
   // Pedidos escondidos SÓ NESTE APARELHO (localStorage) — ver utils/orderPrint.
-  const [hiddenIds, setHiddenIds] = useState(() => getHiddenOrderIds());
 
   const [filters, setFilters] = useState({
     startDate: '',
@@ -366,19 +364,6 @@ export function OrdersPage() {
     if (!ok) addToast('error', 'Não foi possível abrir a impressão.');
   }, [profile?.restaurant_name, addToast]);
 
-  // Some com o pedido SÓ NESTE APARELHO — não apaga do banco. O admin, o
-  // cliente e o financeiro continuam enxergando tudo.
-  const handleHideOrder = useCallback(async (order) => {
-    const ok = await confirm({
-      title: 'Sumir com o pedido daqui?',
-      message: 'O pedido some só deste aparelho. Ele continua no sistema (admin, financeiro e cliente seguem vendo).',
-      confirmText: 'Sumir daqui',
-    });
-    if (!ok) return;
-    setHiddenIds(hideOrderLocally(order.id));
-    addToast('success', 'Pedido escondido deste aparelho.');
-  }, [confirm, addToast]);
-
   const handleInputChange = (e) => { setFilters(prev => ({ ...prev, [e.target.name]: e.target.value })); };
   const handleApplyFilters = async () => {
     setApplying(true);
@@ -415,8 +400,6 @@ export function OrdersPage() {
     const consultaHistorico = !!(appliedRange.startDate || appliedRange.endDate);
     const active = allOrders.filter(o =>
       (consultaHistorico || !o.archived_at) && !['Arquivado', 'archived'].includes(o.status)
-      // Escondidos neste aparelho somem do painel (mas seguem no sistema).
-      && !hiddenIds.has(String(o.id))
     );
     return {
       novos:              active.filter(o => ['pending', 'Pendente'].includes(o.status)),
@@ -426,7 +409,7 @@ export function OrdersPage() {
       saiuParaEntrega:    active.filter(o => ['delivering', 'Saiu para Entrega', 'Entregando'].includes(o.status)),
       entregues:          active.filter(o => ['delivered', 'Entregue'].includes(o.status)),
     };
-  }, [allOrders, appliedRange, hiddenIds]);
+  }, [allOrders, appliedRange]);
 
   const hasNewOrders = newOrderIds.size > 0;
 
@@ -441,7 +424,6 @@ export function OrdersPage() {
     onConfirmDelivery: handleOpenDeliveryModal,
     onRemove: handleRemoveOrder,
     onPrint: handlePrintOrder,
-    onHide: handleHideOrder,
   };
 
   // Alarme sonoro de novo pedido MOVIDO pro PortalLayout (hook useNewOrderAlarm):

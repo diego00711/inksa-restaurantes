@@ -1,7 +1,7 @@
 // src/components/OrderCard.jsx  ✅ PATCH
 
 import React, { useState } from 'react';
-import { Package, CheckCircle, Printer, EyeOff, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { Package, CheckCircle, Printer, ShieldCheck, ShieldAlert } from 'lucide-react';
 
 const StatusBadge = ({ status }) => {
   const statusColors = {
@@ -22,7 +22,7 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus, onViewDetails, onConfirmPickup, onConfirmDelivery, onAcceptOrder, onPrint, onHide }) {
+export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus, onViewDetails, onConfirmPickup, onConfirmDelivery, onAcceptOrder, onPrint }) {
   const [estimatedTime, setEstimatedTime] = useState(20);
   // Trava de clique único: sem isto, dois toques rápidos em Aceitar/Pronto/etc.
   // disparam a mesma ação 2x e o backend devolve erro (status já mudou),
@@ -262,28 +262,18 @@ export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus
             </div>
           )}
 
-          {/* Ações secundárias: imprimir a comanda e sumir com o pedido SÓ deste
-              aparelho (não apaga do sistema). */}
-          {(onPrint || onHide) && (
+          {/* Só imprimir. O "Sumir daqui" saiu: fazia a mesma coisa que o
+              Remover da coluna de concluídos e, no meio do fluxo, um toque sem
+              querer fazia o pedido ativo desaparecer da tela do parceiro. */}
+          {onPrint && (
             <div className="flex gap-2 pt-1 border-t border-gray-100 mt-1">
-              {onPrint && (
-                <button
-                  onClick={() => onPrint(order)}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors min-h-[40px] border border-gray-200"
-                  title="Imprimir comanda"
-                >
-                  <Printer size={13} /> Imprimir
-                </button>
-              )}
-              {onHide && (
-                <button
-                  onClick={() => onHide(order)}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-medium text-gray-500 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors min-h-[40px] border border-gray-200"
-                  title="Sumir com o pedido só deste aparelho (continua no sistema)"
-                >
-                  <EyeOff size={13} /> Sumir daqui
-                </button>
-              )}
+              <button
+                onClick={() => onPrint(order)}
+                className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors min-h-[40px] border border-gray-200"
+                title="Imprimir comanda"
+              >
+                <Printer size={13} /> Imprimir
+              </button>
             </div>
           )}
         </div>
