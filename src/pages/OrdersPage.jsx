@@ -16,6 +16,7 @@ import SponsoredStrip from '../components/SponsoredStrip';
 import ClientReviewForm from '../components/ClientReviewForm';
 import DeliveryReviewForm from '../components/DeliveryReviewForm';
 import IncidentAlerts from '../components/IncidentAlerts.jsx';
+import { printOrder, getHiddenOrderIds, hideOrderLocally } from '../utils/orderPrint';
 
 // ─── OrderTimer ───────────────────────────────────────────────────────────────
 function OrderTimer({ createdAt, acceptedAt }) {
@@ -124,6 +125,61 @@ function ColumnHeader({ emoji, title, count, color, textColor, hasNew }) {
   );
 }
 
+// ─── Column wrapper ───────────────────────────────────────────────────────────
+// DEFINIDO FORA da página de propósito. Antes vivia dentro de OrdersPage: a cada
+// render (o painel busca a cada 6s) o React via um TIPO de componente novo,
+// desmontava a coluna inteira e montava outra — o estado dos filhos ia junto.
+// Era por isso que o "tempo estimado de preparo" escolhido (ex.: 60min) voltava
+// sozinho pro padrão de 20min alguns segundos depois.
+function Col({
+  bg, emoji, title, count, textColor, badgeColor, orders,
+  showRemove = false, isNewCol = false,
+  hasNewOrders, newOrderIds, isOwnDelivery,
+  onUpdateStatus, onAcceptOrder, onViewDetails, onConfirmPickup,
+  onRemove, onPrint, onHide,
+}) {
+  return (
+    <div className={`${bg} rounded-xl p-3 flex flex-col min-w-[240px] border border-white/80 shadow-sm`}>
+      <ColumnHeader emoji={emoji} title={title} count={count} color={badgeColor} textColor={textColor} hasNew={isNewCol && hasNewOrders} />
+      <div className="space-y-3 overflow-y-auto max-h-[60vh] pr-0.5">
+        {orders.length > 0 ? (
+          orders.map(order => (
+            <div
+              key={order.id}
+              className={`${newOrderIds.has(order.id) ? 'animate-in slide-in-from-top-4 duration-300' : ''}`}
+            >
+              {/* Timer badge */}
+              <div className="flex justify-end mb-1">
+                <OrderTimer createdAt={order.created_at} acceptedAt={order.accepted_at} />
+              </div>
+              <OrderCard
+                order={order}
+                isOwnDelivery={isOwnDelivery}
+                onUpdateStatus={onUpdateStatus}
+                onAcceptOrder={onAcceptOrder}
+                onViewDetails={onViewDetails}
+                onConfirmPickup={onConfirmPickup}
+                onPrint={onPrint}
+                onHide={onHide}
+              />
+              {showRemove && (
+                <button
+                  onClick={() => onRemove(order.id)}
+                  className="mt-1.5 w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-medium rounded-lg transition-colors border border-red-100"
+                >
+                  <Trash2 size={11} /> Remover
+                </button>
+              )}
+            </div>
+          ))
+        ) : (
+          <p className="text-xs text-center text-gray-400 py-6">Nenhum pedido</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export function OrdersPage() {
   const [allOrders, setAllOrders] = useState([]);
@@ -140,6 +196,8 @@ export function OrdersPage() {
 
   const knownOrderIds = useRef(null);
   const [newOrderIds, setNewOrderIds] = useState(new Set());
+  // Pedidos escondidos SÓ NESTE APARELHO (localStorage) — ver utils/orderPrint.
+  const [hiddenIds, setHiddenIds] = useState(() => getHiddenOrderIds());
 
   const [filters, setFilters] = useState({
     startDate: '',
@@ -285,6 +343,25 @@ export function OrdersPage() {
       setPendingReviewOrder(order);
     }
   };
+  // Imprime a comanda do pedido (via de 80mm pelo navegador).
+  const handlePrintOrder = useCallback((order) => {
+    const ok = printOrder(order, profile?.restaurant_name || '');
+    if (!ok) addToast('error', 'Não foi possível abrir a impressão.');
+  }, [profile?.restaurant_name, addToast]);
+
+  // Some com o pedido SÓ NESTE APARELHO — não apaga do banco. O admin, o
+  // cliente e o financeiro continuam enxergando tudo.
+  const handleHideOrder = useCallback(async (order) => {
+    const ok = await confirm({
+      title: 'Sumir com o pedido daqui?',
+      message: 'O pedido some só deste aparelho. Ele continua no sistema (admin, financeiro e cliente seguem vendo).',
+      confirmText: 'Sumir daqui',
+    });
+    if (!ok) return;
+    setHiddenIds(hideOrderLocally(order.id));
+    addToast('success', 'Pedido escondido deste aparelho.');
+  }, [confirm, addToast]);
+
   const handleInputChange = (e) => { setFilters(prev => ({ ...prev, [e.target.name]: e.target.value })); };
   const handleApplyFilters = async () => {
     setApplying(true);
@@ -321,6 +398,8 @@ export function OrdersPage() {
     const consultaHistorico = !!(appliedRange.startDate || appliedRange.endDate);
     const active = allOrders.filter(o =>
       (consultaHistorico || !o.archived_at) && !['Arquivado', 'archived'].includes(o.status)
+      // Escondidos neste aparelho somem do painel (mas seguem no sistema).
+      && !hiddenIds.has(String(o.id))
     );
     return {
       novos:              active.filter(o => ['pending', 'Pendente'].includes(o.status)),
@@ -330,53 +409,27 @@ export function OrdersPage() {
       saiuParaEntrega:    active.filter(o => ['delivering', 'Saiu para Entrega', 'Entregando'].includes(o.status)),
       entregues:          active.filter(o => ['delivered', 'Entregue'].includes(o.status)),
     };
-  }, [allOrders]);
+  }, [allOrders, appliedRange, hiddenIds]);
 
   const hasNewOrders = newOrderIds.size > 0;
+
+  // Props comuns das colunas. Col vive FORA da página (ver comentário lá em
+  // cima), então tudo que ela usa chega por prop.
+  const colProps = {
+    hasNewOrders, newOrderIds, isOwnDelivery,
+    onUpdateStatus: handleUpdateStatus,
+    onAcceptOrder: handleAcceptOrder,
+    onViewDetails: handleViewOrderDetails,
+    onConfirmPickup: handleOpenPickupModal,
+    onRemove: handleRemoveOrder,
+    onPrint: handlePrintOrder,
+    onHide: handleHideOrder,
+  };
 
   // Alarme sonoro de novo pedido MOVIDO pro PortalLayout (hook useNewOrderAlarm):
   // agora toca em QUALQUER tela do painel enquanto houver pedido novo, não só
   // aqui na tela Pedidos. Aqui ficaria mudo assim que trocasse de aba.
 
-  // ── Column wrapper ──────────────────────────────────────────────────────────
-  const Col = ({ bg, emoji, title, count, textColor, badgeColor, orders, showRemove = false, isNewCol = false }) => (
-    <div className={`${bg} rounded-xl p-3 flex flex-col min-w-[240px] border border-white/80 shadow-sm`}>
-      <ColumnHeader emoji={emoji} title={title} count={count} color={badgeColor} textColor={textColor} hasNew={isNewCol && hasNewOrders} />
-      <div className="space-y-3 overflow-y-auto max-h-[60vh] pr-0.5">
-        {orders.length > 0 ? (
-          orders.map(order => (
-            <div
-              key={order.id}
-              className={`${newOrderIds.has(order.id) ? 'animate-in slide-in-from-top-4 duration-300' : ''}`}
-            >
-              {/* Timer badge */}
-              <div className="flex justify-end mb-1">
-                <OrderTimer createdAt={order.created_at} acceptedAt={order.accepted_at} />
-              </div>
-              <OrderCard
-                order={order}
-                isOwnDelivery={isOwnDelivery}
-                onUpdateStatus={handleUpdateStatus}
-                onAcceptOrder={handleAcceptOrder}
-                onViewDetails={handleViewOrderDetails}
-                onConfirmPickup={handleOpenPickupModal}
-              />
-              {showRemove && (
-                <button
-                  onClick={() => handleRemoveOrder(order.id)}
-                  className="mt-1.5 w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-medium rounded-lg transition-colors border border-red-100"
-                >
-                  <Trash2 size={11} /> Remover
-                </button>
-              )}
-            </div>
-          ))
-        ) : (
-          <p className="text-xs text-center text-gray-400 py-6">Nenhum pedido</p>
-        )}
-      </div>
-    </div>
-  );
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 min-h-full flex flex-col bg-gray-50">
@@ -462,32 +515,32 @@ export function OrdersPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-3 min-w-max 2xl:min-w-0">
-            <Col
+            <Col {...colProps}
               bg="bg-blue-50" emoji="📥" title="Novos" count={columns.novos.length}
               textColor="text-blue-700" badgeColor="bg-blue-200"
               orders={columns.novos} isNewCol
             />
-            <Col
+            <Col {...colProps}
               bg="bg-orange-50" emoji="👨‍🍳" title="Preparando" count={columns.emPreparo.length}
               textColor="text-orange-700" badgeColor="bg-orange-200"
               orders={columns.emPreparo}
             />
-            <Col
+            <Col {...colProps}
               bg="bg-yellow-50" emoji="📦" title="Prontos" count={columns.prontos.length}
               textColor="text-yellow-700" badgeColor="bg-yellow-200"
               orders={columns.prontos}
             />
-            <Col
+            <Col {...colProps}
               bg="bg-pink-50" emoji="⏳" title="Aguardando" count={columns.aguardandoRetirada.length}
               textColor="text-pink-700" badgeColor="bg-pink-200"
               orders={columns.aguardandoRetirada}
             />
-            <Col
+            <Col {...colProps}
               bg="bg-purple-50" emoji="🚗" title="Em Rota" count={columns.saiuParaEntrega.length}
               textColor="text-purple-700" badgeColor="bg-purple-200"
               orders={columns.saiuParaEntrega}
             />
-            <Col
+            <Col {...colProps}
               bg="bg-green-50" emoji="✅" title="Entregues" count={columns.entregues.length}
               textColor="text-green-700" badgeColor="bg-green-200"
               orders={columns.entregues} showRemove

@@ -1,7 +1,7 @@
 // src/components/OrderCard.jsx  ✅ PATCH
 
 import React, { useState } from 'react';
-import { Package, CheckCircle } from 'lucide-react';
+import { Package, CheckCircle, Printer, EyeOff } from 'lucide-react';
 
 const StatusBadge = ({ status }) => {
   const statusColors = {
@@ -22,7 +22,7 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus, onViewDetails, onConfirmPickup, onAcceptOrder }) {
+export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus, onViewDetails, onConfirmPickup, onAcceptOrder, onPrint, onHide }) {
   const [estimatedTime, setEstimatedTime] = useState(20);
   // Trava de clique único: sem isto, dois toques rápidos em Aceitar/Pronto/etc.
   // disparam a mesma ação 2x e o backend devolve erro (status já mudou),
@@ -234,6 +234,31 @@ export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus
                   className="px-3 py-2 text-xs font-medium text-white bg-red-600 rounded-md shadow-sm hover:bg-red-700 transition-colors min-h-[44px] disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   Cancelar
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Ações secundárias: imprimir a comanda e sumir com o pedido SÓ deste
+              aparelho (não apaga do sistema). */}
+          {(onPrint || onHide) && (
+            <div className="flex gap-2 pt-1 border-t border-gray-100 mt-1">
+              {onPrint && (
+                <button
+                  onClick={() => onPrint(order)}
+                  className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors min-h-[40px] border border-gray-200"
+                  title="Imprimir comanda"
+                >
+                  <Printer size={13} /> Imprimir
+                </button>
+              )}
+              {onHide && (
+                <button
+                  onClick={() => onHide(order)}
+                  className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-medium text-gray-500 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors min-h-[40px] border border-gray-200"
+                  title="Sumir com o pedido só deste aparelho (continua no sistema)"
+                >
+                  <EyeOff size={13} /> Sumir daqui
                 </button>
               )}
             </div>
