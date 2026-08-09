@@ -10,7 +10,7 @@ const fmt = (value) =>
 export default function FinancePage() {
   const { profile } = useProfile();
 
-  const [summary, setSummary] = useState({ balance: null, nextPayout: null, monthTotal: null, pendingCount: 0 });
+  const [summary, setSummary] = useState({ balance: null, nextPayout: null, monthTotal: null, pendingCount: 0, commissionDebt: 0 });
   const [payouts, setPayouts] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
 
@@ -29,6 +29,8 @@ export default function FinancePage() {
             nextPayout: data.next_payout_date ?? null,
             monthTotal: data.month_total ?? null,
             pendingCount: data.pendente_pedidos_count ?? 0,
+            // Só existe em loja de entrega própria que aceita dinheiro.
+            commissionDebt: Number(data.commission_debt) || 0,
           });
           setPayouts(Array.isArray(data.payouts) ? data.payouts : []);
         }
@@ -62,6 +64,27 @@ export default function FinancePage() {
         <h1 className="text-xl sm:text-3xl font-bold text-gray-800">Financeiro</h1>
         <p className="text-gray-500 text-sm sm:text-base mt-1">Acompanhe seus repasses e configure o recebimento</p>
       </div>
+
+      {/* Comissão a acertar — só aparece em loja de ENTREGA PRÓPRIA que aceitou
+          dinheiro. Nesses pedidos o motoboy da loja recolhe 100%, então a
+          comissão da Inksa fica devendo. Sem este aviso o parceiro veria "A
+          Receber" cheio e levaria um susto com o PIX menor. */}
+      {summary.commissionDebt > 0 && (
+        <div className="mb-6 flex gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <AlertTriangle className="text-amber-600 shrink-0 mt-0.5" size={20} />
+          <div className="text-sm text-amber-900">
+            <p className="font-bold">
+              Comissão a acertar: {fmt(summary.commissionDebt)}
+            </p>
+            <p className="mt-1">
+              Nos seus pedidos <strong>em dinheiro</strong> o seu entregador recebeu o valor
+              inteiro, então a comissão da Inksa ficou pendente. Ela é descontada
+              automaticamente do seu próximo repasse — você não precisa pagar nada
+              separado.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Summary Cards — contam a história do dinheiro: A Receber → quando cai → Recebido */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
