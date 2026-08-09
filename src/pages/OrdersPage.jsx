@@ -4,6 +4,7 @@ import { orderService } from '../services/orderService.js';
 import OrderCard from '../components/OrderCard';
 import { OrderDetailsModal } from '../components/OrderDetailsModal';
 import { PickupConfirmationModal } from '../components/PickupConfirmationModal';
+import { DeliveryConfirmationModal } from '../components/DeliveryConfirmationModal';
 import { useToast } from '../context/ToastContext.jsx';
 import { useConfirm } from '../components/ConfirmProvider.jsx';
 import { useAuth } from '../context/AuthContext';
@@ -135,7 +136,7 @@ function Col({
   bg, emoji, title, count, textColor, badgeColor, orders,
   showRemove = false, isNewCol = false,
   hasNewOrders, newOrderIds, isOwnDelivery,
-  onUpdateStatus, onAcceptOrder, onViewDetails, onConfirmPickup,
+  onUpdateStatus, onAcceptOrder, onViewDetails, onConfirmPickup, onConfirmDelivery,
   onRemove, onPrint, onHide,
 }) {
   return (
@@ -159,6 +160,7 @@ function Col({
                 onAcceptOrder={onAcceptOrder}
                 onViewDetails={onViewDetails}
                 onConfirmPickup={onConfirmPickup}
+                onConfirmDelivery={onConfirmDelivery}
                 onPrint={onPrint}
                 onHide={onHide}
               />
@@ -215,6 +217,7 @@ export function OrdersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedOrderForPickup, setSelectedOrderForPickup] = useState(null);
   const [showPickupModal, setShowPickupModal] = useState(false);
+  const [orderForDelivery, setOrderForDelivery] = useState(null);
   // Avaliação após a retirada ("Avaliar / deixar pra depois"). O parceiro avalia
   // o ENTREGADOR e o CLIENTE em sequência (reviewStep). Na entrega própria não há
   // entregador Inksa, então começa direto no cliente.
@@ -343,6 +346,20 @@ export function OrdersPage() {
       setPendingReviewOrder(order);
     }
   };
+  // Entrega própria: fechar o pedido pede o código do cliente (prova de que o
+  // motoboy da loja entregou mesmo). O modal cuida da chamada ao /complete.
+  const handleOpenDeliveryModal = (order) => { setOrderForDelivery(order); };
+  const handleDeliverySuccess = () => {
+    const order = orderForDelivery;
+    fetchOrders(filters);
+    // Mesmo gancho da retirada: com o pedido fechado, oferece avaliar o cliente.
+    if (order?.client_id) {
+      setShowReviewForm(false);
+      setReviewStep('client');
+      setPendingReviewOrder(order);
+    }
+  };
+
   // Imprime a comanda do pedido (via de 80mm pelo navegador).
   const handlePrintOrder = useCallback((order) => {
     const ok = printOrder(order, profile?.restaurant_name || '');
@@ -421,6 +438,7 @@ export function OrdersPage() {
     onAcceptOrder: handleAcceptOrder,
     onViewDetails: handleViewOrderDetails,
     onConfirmPickup: handleOpenPickupModal,
+    onConfirmDelivery: handleOpenDeliveryModal,
     onRemove: handleRemoveOrder,
     onPrint: handlePrintOrder,
     onHide: handleHideOrder,
@@ -559,6 +577,14 @@ export function OrdersPage() {
           isOpen={showPickupModal}
           onClose={handleClosePickupModal}
           onSuccess={handlePickupSuccess}
+        />
+      )}
+      {orderForDelivery && (
+        <DeliveryConfirmationModal
+          order={orderForDelivery}
+          isOpen={!!orderForDelivery}
+          onClose={() => setOrderForDelivery(null)}
+          onSuccess={handleDeliverySuccess}
         />
       )}
 

@@ -1,7 +1,7 @@
 // src/components/OrderCard.jsx  ✅ PATCH
 
 import React, { useState } from 'react';
-import { Package, CheckCircle, Printer, EyeOff } from 'lucide-react';
+import { Package, CheckCircle, Printer, EyeOff, ShieldCheck, ShieldAlert } from 'lucide-react';
 
 const StatusBadge = ({ status }) => {
   const statusColors = {
@@ -22,7 +22,7 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus, onViewDetails, onConfirmPickup, onAcceptOrder, onPrint, onHide }) {
+export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus, onViewDetails, onConfirmPickup, onConfirmDelivery, onAcceptOrder, onPrint, onHide }) {
   const [estimatedTime, setEstimatedTime] = useState(20);
   // Trava de clique único: sem isto, dois toques rápidos em Aceitar/Pronto/etc.
   // disparam a mesma ação 2x e o backend devolve erro (status já mudou),
@@ -55,9 +55,10 @@ export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus
         return { text: 'Aguardar Retirada', nextStatus: 'accepted_by_delivery' };
       case 'Saiu para Entrega':
       case 'delivering':
-        // ENTREGA PRÓPRIA: o restaurante fecha a entrega ele mesmo (sem código
-        // de entregador). O backend só libera delivered pra delivery_type='own'.
-        if (isOwnDelivery) return { text: '✅ Confirmar Entrega', nextStatus: 'delivered' };
+        // ENTREGA PRÓPRIA: o restaurante fecha a entrega, mas com o código que
+        // o CLIENTE mostra — é a prova de que o motoboy dele entregou mesmo.
+        // Por isso abre o modal em vez de mudar o status direto.
+        if (isOwnDelivery) return { text: '✅ Confirmar Entrega', confirmDelivery: true };
         return null;
       default:
         return null;
@@ -87,6 +88,24 @@ export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus
           </h3>
           <StatusBadge status={order.status} />
         </div>
+
+        {/* Prova de entrega. Fica visível justamente pra quem quis a trava: o
+            dono vê quais entregas o motoboy dele fechou sem o código. */}
+        {order.delivery_confirmed_by === 'code' && (
+          <p className="mb-2 inline-flex items-center gap-1 text-[11px] font-semibold text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5">
+            <ShieldCheck size={12} />
+            Cliente confirmou com o código
+          </p>
+        )}
+        {order.delivery_confirmed_by === 'partner_no_code' && (
+          <p
+            className="mb-2 inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5"
+            title={order.delivery_confirm_note || ''}
+          >
+            <ShieldAlert size={12} />
+            Fechado sem o código
+          </p>
+        )}
 
         <div className="text-xs text-gray-600 space-y-1">
           <p className="truncate">
@@ -220,7 +239,11 @@ export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus
             <div className="flex gap-2">
               {mainAction && (
                 <button
-                  onClick={() => run(onUpdateStatus, order.id, mainAction.nextStatus)}
+                  onClick={() =>
+                    mainAction.confirmDelivery
+                      ? run(onConfirmDelivery, order)
+                      : run(onUpdateStatus, order.id, mainAction.nextStatus)
+                  }
                   disabled={busy}
                   className="flex-1 px-3 py-2 text-xs font-medium text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-700 transition-colors min-h-[44px] disabled:opacity-60 disabled:cursor-not-allowed"
                 >
