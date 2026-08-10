@@ -402,6 +402,26 @@ export function SettingsPage() {
                   </label>
                 </div>
               </div>
+              {/* Limite de itens: vale nos DOIS tipos de entrega — quem carrega
+                  a compra é uma moto de qualquer jeito. Pensado pra mercado. */}
+              <div className="mb-6">
+                <label htmlFor="max_order_items" className="block text-sm font-medium text-gray-700">
+                  Máximo de itens por pedido
+                </label>
+                <input
+                  type="number" name="max_order_items" id="max_order_items"
+                  min="0" step="1" placeholder="Sem limite"
+                  value={profileData.max_order_items ?? ''}
+                  onChange={handleChange} disabled={!isEditing}
+                  className="mt-1 block w-full md:w-1/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm"
+                />
+                <p className="mt-1 text-xs text-gray-600">
+                  O cliente não consegue fechar um pedido acima desse número de unidades.
+                  Serve pra compra grande que não cabe na moto — útil em mercado,
+                  pet shop e conveniência. Deixe em branco se não precisa de limite.
+                </p>
+              </div>
+
               {profileData.delivery_type === 'own' && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4 border-l-4 border-indigo-200 bg-indigo-50 rounded-md">
                   <div>
