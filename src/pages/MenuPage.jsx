@@ -1,9 +1,10 @@
 // src/pages/MenuPage.jsx - VERSÃO FINAL E ROBUSTA
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { PlusCircle, Edit, Trash2, Image as ImageIcon } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Image as ImageIcon, FileSpreadsheet } from 'lucide-react';
 import { menuService } from '../services/menuService';
 import { MenuItemModal } from '../components/MenuItemModal';
+import ImportarCatalogo from '../components/ImportarCatalogo';
 import { useToast } from '../context/ToastContext.jsx';
 import { useConfirm } from '../components/ConfirmProvider.jsx';
 
@@ -12,7 +13,8 @@ export function MenuPage() {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState(null); 
+  const [editingItem, setEditingItem] = useState(null);
+  const [importAberto, setImportAberto] = useState(false);
   const { addToast } = useToast();
   const confirm = useConfirm();
 
@@ -73,6 +75,17 @@ export function MenuPage() {
     <div>
         <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
             <h1 className="text-xl sm:text-3xl font-bold text-gray-800">Gestão de Cardápio</h1>
+            <div className="flex flex-wrap gap-2">
+            {/* Catálogo grande (mercado, farmácia, pet) não se cadastra item a
+                item — o dono desiste antes do fim. */}
+            <button
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors min-h-[44px]"
+            onClick={() => setImportAberto(true)}
+            >
+            <FileSpreadsheet size={20} />
+            <span className="hidden sm:inline">Importar planilha</span>
+            <span className="sm:hidden">Planilha</span>
+            </button>
             <button
             className="flex items-center gap-2 px-4 py-2 bg-primary text-white font-semibold rounded-lg shadow hover:bg-orange-600 transition-colors min-h-[44px]"
             onClick={() => { setEditingItem(null); setIsModalOpen(true); }}
@@ -81,7 +94,14 @@ export function MenuPage() {
             <span className="hidden sm:inline">Adicionar Novo Item</span>
             <span className="sm:hidden">Adicionar</span>
             </button>
+            </div>
         </div>
+
+        <ImportarCatalogo
+            aberto={importAberto}
+            onFechar={() => setImportAberto(false)}
+            onConcluido={fetchMenuItems}
+        />
 
         <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
             <table className="w-full text-left min-w-[560px]">
