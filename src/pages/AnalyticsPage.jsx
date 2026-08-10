@@ -11,7 +11,11 @@ import {
   Clock,
   Users,
   RefreshCw,
-  Calendar
+  Calendar,
+  Package,
+  Lightbulb,
+  Repeat,
+  AlertTriangle
 } from 'lucide-react';
 import { analyticsService } from '../services/analyticsService';
 import { useToast } from '../context/ToastContext.jsx';
@@ -113,6 +117,62 @@ export function AnalyticsPage() {
   }).format(analyticsData.total_vendas || 0);
 
   const metricas = analyticsData.metricas_extras || {};
+  const insights = analyticsData.insights || {};
+  const topItens = insights.top_itens || [];
+  const porHora = insights.vendas_por_hora || [];
+  const porDiaSemana = insights.vendas_por_dia_semana || [];
+
+  const brl = (v) => new Intl.NumberFormat('pt-BR', {
+    style: 'currency', currency: 'BRL'
+  }).format(v || 0);
+
+  const maxItemQtd = Math.max(1, ...topItens.map((i) => i.quantidade || 0));
+  const maiorHora = porHora.reduce((a, b) => (b.total > a.total ? b : a), { hora: null, total: 0 });
+  const maiorDia = porDiaSemana.reduce((a, b) => (b.total > a.total ? b : a), { dia: null, total: 0 });
+
+  // Dicas geradas a partir dos NÚMEROS da loja. As anteriores eram texto fixo,
+  // iguais pra todo mundo e pra sempre — o parceiro aprendia a ignorar o card.
+  const dicas = [];
+  if ((analyticsData.pedidos_concluidos || 0) >= 3) {
+    if (insights.taxa_cancelamento > 10) {
+      dicas.push({ tom: 'red', icone: AlertTriangle,
+        titulo: `${insights.taxa_cancelamento}% dos pedidos foram cancelados`,
+        texto: 'Confira itens em falta no cardápio e o horário de funcionamento.' });
+    }
+    if (metricas.avaliacao_media != null && metricas.avaliacao_media < 4) {
+      dicas.push({ tom: 'red', icone: Star,
+        titulo: `Sua nota está em ${metricas.avaliacao_media}`,
+        texto: 'Abaixo de 4,0 a loja aparece pior na busca do cliente.' });
+    }
+    if (metricas.tempo_medio_preparo != null && metricas.tempo_medio_preparo > 40) {
+      dicas.push({ tom: 'amber', icone: Clock,
+        titulo: `Preparo médio de ${metricas.tempo_medio_preparo} min`,
+        texto: 'Acima de 40 min o cliente costuma não pedir de novo. Reveja o tempo do cardápio.' });
+    }
+    if (insights.taxa_recorrencia < 25 && (metricas.clientes_unicos || 0) >= 5) {
+      dicas.push({ tom: 'blue', icone: Repeat,
+        titulo: `Só ${insights.taxa_recorrencia}% dos clientes voltaram`,
+        texto: 'Crie um cupom seu na aba Cupons pra trazer de volta quem pediu uma vez só.' });
+    }
+    if (maiorHora.hora != null && maiorHora.total > 0) {
+      dicas.push({ tom: 'green', icone: Clock,
+        titulo: `Seu pico é às ${maiorHora.hora}h`,
+        texto: 'Reforce a cozinha nesse horário — é quando o atraso custa mais caro.' });
+    }
+    if (insights.ticket_medio > 0) {
+      dicas.push({ tom: 'green', icone: TrendingUp,
+        titulo: `Ticket médio de ${brl(insights.ticket_medio)}`,
+        texto: 'Combo e bebida sugerida no pedido são o jeito mais barato de subir esse número.' });
+    }
+  }
+  // Classes escritas por extenso: o Tailwind varre o código-fonte, então
+  // string montada em runtime (`bg-${tom}-50`) não gera CSS.
+  const TONS = {
+    red:   { caixa: 'bg-red-50',   titulo: 'text-red-800',   texto: 'text-red-600' },
+    amber: { caixa: 'bg-amber-50', titulo: 'text-amber-800', texto: 'text-amber-600' },
+    blue:  { caixa: 'bg-blue-50',  titulo: 'text-blue-800',  texto: 'text-blue-600' },
+    green: { caixa: 'bg-green-50', titulo: 'text-green-800', texto: 'text-green-600' },
+  };
 
   // Função para formatar mudanças percentuais
   const formatChange = (value, suffix = '%') => {
@@ -267,32 +327,130 @@ export function AnalyticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <div className="bg-white rounded-lg shadow-md p-6">
           <h3 className="text-xl font-bold text-gray-800 mb-4">Resumo de Performance</h3>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center py-2">
-              <span className="text-gray-600">Pedidos Cancelados</span>
-              <span className="font-semibold text-red-600">{metricas.pedidos_cancelados || 0}</span>
+          <div className="divide-y divide-gray-100">
+            <div className="flex justify-between items-center py-3">
+              <span className="text-gray-600">Ticket médio</span>
+              <span className="font-semibold text-gray-800">{brl(insights.ticket_medio)}</span>
+            </div>
+            <div className="flex justify-between items-center py-3">
+              <span className="text-gray-600">Pedidos cancelados</span>
+              <span className="font-semibold text-red-600">
+                {metricas.pedidos_cancelados || 0}
+                <span className="text-sm font-normal text-gray-400 ml-1">
+                  ({insights.taxa_cancelamento ?? 0}%)
+                </span>
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-3">
+              <div>
+                <span className="text-gray-600">Clientes que voltaram</span>
+                <p className="text-xs text-gray-400">Pediram 2 ou mais vezes no período</p>
+              </div>
+              <span className="font-semibold text-indigo-600">
+                {insights.clientes_recorrentes || 0}
+                <span className="text-sm font-normal text-gray-400 ml-1">
+                  ({insights.taxa_recorrencia ?? 0}%)
+                </span>
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-3">
+              <span className="text-gray-600">Melhor dia da semana</span>
+              <span className="font-semibold text-gray-800">
+                {maiorDia.total > 0 ? `${maiorDia.dia} · ${brl(maiorDia.total)}` : '—'}
+              </span>
             </div>
           </div>
         </div>
 
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-xl font-bold text-gray-800 mb-4">Dicas de Melhoria</h3>
-          <div className="space-y-3">
-            <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
-              <TrendingUp className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="font-medium text-blue-800">Otimize o tempo de preparo</p>
-                <p className="text-sm text-blue-600">Mantenha o tempo abaixo de 30 minutos para melhor experiência</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
-              <Star className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="font-medium text-green-800">Foque na qualidade</p>
-                <p className="text-sm text-green-600">Avaliações altas geram mais pedidos</p>
-              </div>
-            </div>
+          <div className="flex items-center gap-2 mb-4">
+            <Package className="h-5 w-5 text-purple-500" />
+            <h3 className="text-xl font-bold text-gray-800">Mais vendidos</h3>
           </div>
+          {topItens.length > 0 ? (
+            <div className="space-y-3">
+              {topItens.map((item, i) => (
+                <div key={`${item.nome}-${i}`}>
+                  <div className="flex justify-between text-sm mb-1 gap-3">
+                    <span className="text-gray-700 truncate">{i + 1}. {item.nome}</span>
+                    <span className="font-semibold text-gray-600 flex-shrink-0">{item.quantidade}x</span>
+                  </div>
+                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-purple-400 rounded-full"
+                      style={{ width: `${(item.quantidade / maxItemQtd) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-400 text-sm py-6 text-center">
+              Nenhum item vendido no período.
+            </p>
+          )}
+        </div>
+
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="flex items-center gap-2 mb-1">
+            <Clock className="h-5 w-5 text-blue-500" />
+            <h3 className="text-xl font-bold text-gray-800">Horários de pico</h3>
+          </div>
+          <p className="text-sm text-gray-500 mb-4">
+            {maiorHora.total > 0
+              ? `Você vende mais entre ${maiorHora.hora}h e ${maiorHora.hora + 1}h`
+              : 'Sem vendas no período'}
+          </p>
+          <div className="flex items-end gap-[2px] h-28">
+            {porHora.map((h) => (
+              <div
+                key={h.hora}
+                title={`${h.hora}h — ${brl(h.total)}`}
+                className="flex-1 bg-gray-100 rounded-t flex items-end"
+                style={{ height: '100%' }}
+              >
+                <div
+                  className={`w-full rounded-t ${h.hora === maiorHora.hora && h.total > 0 ? 'bg-orange-500' : 'bg-blue-300'}`}
+                  style={{ height: `${maiorHora.total > 0 ? (h.total / maiorHora.total) * 100 : 0}%` }}
+                />
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-between text-[10px] text-gray-400 mt-1">
+            <span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>23h</span>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Lightbulb className="h-5 w-5 text-amber-500" />
+            <h3 className="text-xl font-bold text-gray-800">Dicas de Melhoria</h3>
+          </div>
+          {dicas.length > 0 ? (
+            <div className="space-y-3">
+              {dicas.slice(0, 4).map((d, i) => {
+                const t = TONS[d.tom];
+                const Icone = d.icone;
+                return (
+                  <div key={i} className={`flex items-start gap-3 p-3 rounded-lg ${t.caixa}`}>
+                    <Icone className={`h-5 w-5 mt-0.5 flex-shrink-0 ${t.texto}`} />
+                    <div>
+                      <p className={`font-medium ${t.titulo}`}>{d.titulo}</p>
+                      <p className={`text-sm ${t.texto}`}>{d.texto}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Lightbulb className="mx-auto h-10 w-10 text-gray-300 mb-3" />
+              <p className="text-gray-500">Ainda não há pedidos suficientes</p>
+              <p className="text-sm text-gray-400 mt-1">
+                As dicas aparecem a partir de 3 pedidos entregues no período.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
