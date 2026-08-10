@@ -53,7 +53,7 @@ self.addEventListener('push', (event) => {
   let data = {};
   try { data = event.data.json(); } catch { data = { title: 'Inksa', body: event.data.text() }; }
   event.waitUntil(
-    self.registration.showNotification(data.title || 'Inksa Restaurante', {
+    self.registration.showNotification(data.title || 'Inksa Parceiro', {
       body: data.body || 'Nova notificação',
       icon: '/icons/icon-192x192.png',
       vibrate: [100, 50, 100],

@@ -1,6 +1,6 @@
 {
   "appId": "com.inksa.restaurante",
-  "appName": "Inksa Restaurante",
+  "appName": "Inksa Parceiro",
   "webDir": "dist",
   "server": {
     "url": "https://restaurante.inksadelivery.com.br",

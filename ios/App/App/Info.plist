@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>pt-BR</string>
 	<key>CFBundleDisplayName</key>
-	<string>Inksa Restaurante</string>
+	<string>Inksa Parceiro</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -52,10 +52,10 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>O Inksa Restaurante usa a câmera para você tirar fotos dos pratos do cardápio e da logo do estabelecimento.</string>
+	<string>O Inksa Parceiro usa a câmera para você tirar fotos dos pratos do cardápio e da logo do estabelecimento.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>O Inksa Restaurante acessa suas fotos para você anexar imagens dos pratos do cardápio.</string>
+	<string>O Inksa Parceiro acessa suas fotos para você anexar imagens dos pratos do cardápio.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>O Inksa Restaurante salva relatórios e comprovantes no rolo da câmera.</string>
+	<string>O Inksa Parceiro salva relatórios e comprovantes no rolo da câmera.</string>
 </dict>
 </plist>

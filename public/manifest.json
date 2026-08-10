@@ -1,7 +1,7 @@
 {
-  "name": "Inksa Restaurante",
+  "name": "Inksa Parceiro",
   "short_name": "Inksa",
-  "description": "Painel de gestão para restaurantes parceiros Inksa",
+  "description": "Painel de gestão para parceiros Inksa",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
