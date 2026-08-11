@@ -20,7 +20,7 @@ import IncidentAlerts from '../components/IncidentAlerts.jsx';
 import { printOrder } from '../utils/orderPrint';
 
 // ─── OrderTimer ───────────────────────────────────────────────────────────────
-function OrderTimer({ createdAt, acceptedAt }) {
+function OrderTimer({ createdAt, acceptedAt, finishedAt, parado = false }) {
   const [mins, setMins] = useState(0);
   // Congela a base: assim que o pedido tiver um accepted_at, conta SEMPRE a
   // partir dele — mesmo que uma atualização seguinte venha sem esse campo. Sem
@@ -32,27 +32,39 @@ function OrderTimer({ createdAt, acceptedAt }) {
   const base = stickyAcceptedRef.current || createdAt;
 
   useEffect(() => {
-    if (!base) return;
+    if (!base) return undefined;
+    // Pedido FECHADO tem cronômetro CONGELADO: passa a mostrar quanto tempo a
+    // entrega levou, não quanto tempo faz que ela terminou. Contar pra sempre
+    // gerava "1547min" num pedido já entregue — número que assusta e não
+    // informa nada. Sem finished_at, congela no valor do último cálculo.
+    const fim = parado ? new Date(finishedAt || Date.now()).getTime() : null;
     const tick = () => {
       const t = new Date(base).getTime();
       if (Number.isNaN(t)) return; // data inválida: não mexe no valor exibido
-      setMins(Math.max(0, Math.floor((Date.now() - t) / 60000)));
+      const ate = (fim && !Number.isNaN(fim)) ? fim : Date.now();
+      setMins(Math.max(0, Math.floor((ate - t) / 60000)));
     };
     tick();
+    if (parado) return undefined; // congelado: nada de intervalo
     const id = setInterval(tick, 30000);
     return () => clearInterval(id);
-  }, [base]);
+  }, [base, parado, finishedAt]);
 
-  const cls = mins > 25
+  // Fechado é neutro (cinza): vermelho ali só passaria a impressão de que ainda
+  // tem alguma coisa atrasada pra resolver.
+  const cls = parado
+    ? 'text-gray-500 bg-gray-50 border-gray-200'
+    : mins > 25
     ? 'text-red-600 bg-red-50 border-red-200'
     : mins > 12
     ? 'text-amber-600 bg-amber-50 border-amber-200'
     : 'text-green-600 bg-green-50 border-green-200';
 
   return (
-    <span className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full border ${cls}`}>
+    <span className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full border ${cls}`}
+          title={parado ? 'Tempo total desta entrega' : 'Tempo desde o aceite'}>
       <Clock className="w-3 h-3" />
-      {mins}min
+      {parado ? `levou ${mins}min` : `${mins}min`}
     </span>
   );
 }
@@ -151,7 +163,13 @@ function Col({
             >
               {/* Timer badge */}
               <div className="flex justify-end mb-1">
-                <OrderTimer createdAt={order.created_at} acceptedAt={order.accepted_at} />
+                <OrderTimer
+                  createdAt={order.created_at}
+                  acceptedAt={order.accepted_at}
+                  finishedAt={order.delivered_at || order.updated_at}
+                  parado={['delivered', 'completed', 'cancelled', 'canceled', 'delivery_failed']
+                    .includes(order.status)}
+                />
               </div>
               <OrderCard
                 order={order}

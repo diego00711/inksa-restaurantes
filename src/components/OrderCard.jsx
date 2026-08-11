@@ -239,11 +239,26 @@ export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus
             <div className="flex gap-2">
               {mainAction && (
                 <button
-                  onClick={() =>
-                    mainAction.confirmDelivery
+                  onClick={() => {
+                    // ENTREGA PRÓPRIA: avisa ANTES de despachar que o
+                    // fechamento exige o código do cliente. Sem isso o dono
+                    // manda a moto, o motoboy entrega, e só na volta é que
+                    // descobre que precisava ter pedido um código de 4 letras
+                    // ao cliente — que já foi embora.
+                    if (isOwnDelivery && mainAction.nextStatus === 'delivering') {
+                      const ok = window.confirm(
+                        'Antes de sair para entrega:\n\n' +
+                        'Para FINALIZAR este pedido você vai precisar do CÓDIGO ' +
+                        'DE ENTREGA que o cliente tem no app dele.\n\n' +
+                        'Avise quem for entregar para pedir o código na porta.\n\n' +
+                        'Pode despachar?'
+                      );
+                      if (!ok) return;
+                    }
+                    return mainAction.confirmDelivery
                       ? run(onConfirmDelivery, order)
-                      : run(onUpdateStatus, order.id, mainAction.nextStatus)
-                  }
+                      : run(onUpdateStatus, order.id, mainAction.nextStatus);
+                  }}
                   disabled={busy}
                   className="flex-1 px-3 py-2 text-xs font-medium text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-700 transition-colors min-h-[44px] disabled:opacity-60 disabled:cursor-not-allowed"
                 >
