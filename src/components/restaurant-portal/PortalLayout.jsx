@@ -45,6 +45,19 @@ export function PortalLayout() {
   const missingFields = loading ? [] : getMissingFields(profile);
   const cadastroIncompleto = missingFields.length > 0;
 
+  // Selo Parceiro Fundador: enquanto a janela dele estiver valendo, o parceiro
+  // vê POR QUANTO TEMPO ainda paga metade. Benefício que ninguém lembra que
+  // tem não gera lealdade nenhuma — e a data visível cria o senso de urgência
+  // pra ele aproveitar (e pra sentir falta quando acabar).
+  const fundadorAte = profile?.fundador && profile?.fundador_ate
+    ? new Date(`${String(profile.fundador_ate).slice(0, 10)}T12:00:00`)
+    : null;
+  const fundadorAtivo = fundadorAte instanceof Date && !Number.isNaN(fundadorAte)
+    && fundadorAte >= new Date(new Date().toDateString());
+  const diasRestantes = fundadorAtivo
+    ? Math.ceil((fundadorAte - new Date(new Date().toDateString())) / 86400000)
+    : 0;
+
   // Alarme de novo pedido em qualquer tela do painel (não só na tela Pedidos)
   useNewOrderAlarm(!loading);
 
@@ -279,6 +292,35 @@ export function PortalLayout() {
               </div>
             </div>
           )}
+          {/* Parceiro Fundador — some sozinho quando a janela vence */}
+          {fundadorAtivo && (
+            <div className="mb-4 rounded-xl border border-orange-300 bg-gradient-to-r from-orange-50 to-amber-50 p-4">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl leading-none shrink-0">🏆</span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-orange-900">
+                    Você é um Parceiro Fundador da Inksa
+                  </p>
+                  <p className="text-sm text-orange-800 mt-0.5">
+                    Sua comissão está pela <strong>metade</strong> até{' '}
+                    <strong>
+                      {fundadorAte.toLocaleDateString('pt-BR', {
+                        day: '2-digit', month: 'long', year: 'numeric',
+                      })}
+                    </strong>
+                    {diasRestantes <= 45 && (
+                      <> — faltam <strong>{diasRestantes} dias</strong></>
+                    )}
+                    .
+                  </p>
+                  <p className="text-xs text-orange-700 mt-1">
+                    Benefício de quem entrou no começo. Obrigado por acreditar na gente.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <Outlet />
         </main>
       </div>
