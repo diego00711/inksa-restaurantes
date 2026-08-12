@@ -11,6 +11,7 @@ import GlobalError from './components/GlobalError';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 import WakingUpScreen from './components/WakingUpScreen';
 import SupportButton from './components/SupportButton';
+import { configurarAcoesDePush } from './services/notificationService';
 
 // --- Lazy-loaded pages ---
 const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
@@ -59,6 +60,10 @@ function AppRoutes() {
   useEffect(() => {
     if (!isAuthenticated) setShowTour(false);
   }, [isAuthenticated]);
+
+  // Toque na notificação leva pros Pedidos (só no app instalado). No
+  // navegador quem faz isso é o notificationclick do service worker.
+  useEffect(() => { configurarAcoesDePush(navigate); }, [navigate]);
 
   useEffect(() => {
     const handleUnauthorized = () => {
