@@ -21,6 +21,7 @@ const formVazio = () => ({
   discount_value: '',
   min_order_value: '',
   max_uses: '',
+  uma_vez_por_cliente: false,
   valid_until: '',
   description: '',
 });
@@ -92,6 +93,7 @@ export default function CouponsPage() {
       discount_value: c.discount_type === 'free_delivery' ? '' : String(c.discount_value ?? ''),
       min_order_value: c.min_order_value ? String(c.min_order_value) : '',
       max_uses: c.max_uses ? String(c.max_uses) : '',
+      uma_vez_por_cliente: Number(c.max_uses_per_client) === 1,
       valid_until: c.valid_until ? String(c.valid_until).slice(0, 10) : '',
       description: c.description || '',
     });
@@ -121,6 +123,9 @@ export default function CouponsPage() {
       discount_value: ehFrete ? 0 : Number(form.discount_value),
       min_order_value: form.min_order_value ? Number(form.min_order_value) : 0,
       max_uses: form.max_uses ? Number(form.max_uses) : null,
+      // null (e não 0) quando desmarcado: no banco NULL = sem limite por
+      // pessoa, que é como os cupons antigos se comportam.
+      max_uses_per_client: form.uma_vez_por_cliente ? 1 : null,
       valid_until: form.valid_until || null,
       description: form.description.trim() || null,
     };
@@ -272,6 +277,12 @@ export default function CouponsPage() {
                     {c.max_uses ? ` de ${c.max_uses}` : ' (ilimitado)'}
                   </dd>
                 </div>
+                {Number(c.max_uses_per_client) === 1 && (
+                  <div className="flex justify-between">
+                    <dt>Por cliente</dt>
+                    <dd className="text-gray-700">1 vez só</dd>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <dt>Válido até</dt>
                   <dd className="text-gray-700">{dataBR(c.valid_until)}</dd>
@@ -407,8 +418,29 @@ export default function CouponsPage() {
                     placeholder="Ilimitado"
                     className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-orange-500 focus:outline-none"
                   />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Total, somando todos os clientes.
+                  </p>
                 </div>
               </div>
+
+              <label className="flex items-start gap-3 rounded-lg border border-gray-200 p-3 cursor-pointer hover:bg-orange-50/50">
+                <input
+                  type="checkbox"
+                  checked={form.uma_vez_por_cliente}
+                  onChange={(e) => setForm({ ...form, uma_vez_por_cliente: e.target.checked })}
+                  className="mt-0.5 h-4 w-4 accent-orange-500"
+                />
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium text-gray-800">
+                    Só 1 uso por cliente
+                  </span>
+                  <span className="block text-xs text-gray-500">
+                    Sem isso, a mesma pessoa pode usar o cupom quantas vezes
+                    quiser — e sozinha consumir todo o limite acima.
+                  </span>
+                </span>
+              </label>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
