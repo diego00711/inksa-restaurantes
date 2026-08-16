@@ -1,9 +1,34 @@
 // src/context/AuthContext.jsx - VERSÃO CORRIGIDA COM LOGOUT ASSÍNCRONO
 
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import { obterTokenFCM, saveFcmToken } from '../services/notificationService';
+import { RESTAURANT_API_URL } from '../services/api';
 
 // 1. Cria o Contexto
 const AuthContext = createContext(null);
+
+/**
+ * Registra o aparelho pra receber push. Idempotente.
+ *
+ * Roda na RETOMADA de sessão, não só no login. O parceiro deixa o painel
+ * logado o dia inteiro e não desloga por semanas — com o registro só dentro
+ * do LoginPage, quem já estava logado nunca era perguntado.
+ */
+async function registrarPush(authToken) {
+    try {
+        const { token, erro } = await obterTokenFCM();
+        if (!token) {
+            console.warn('Push: token não gerado —', erro);
+            return;
+        }
+        const r = await saveFcmToken(token, RESTAURANT_API_URL, {
+            Authorization: `Bearer ${authToken}`,
+        });
+        if (!r?.ok) console.warn('Push: servidor não salvou o token —', r?.motivo);
+    } catch (e) {
+        console.warn('Push: falha ao registrar (não bloqueia o app):', e);
+    }
+}
 
 // 2. Cria o Provedor do Contexto
 export function AuthProvider({ children }) {
@@ -20,6 +45,7 @@ export function AuthProvider({ children }) {
             if (storedToken && storedUser) {
                 setToken(storedToken);
                 setUser(JSON.parse(storedUser));
+                registrarPush(storedToken);
             }
         } catch (error) {
             console.error("Falha ao carregar dados do localStorage", error);
