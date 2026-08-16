@@ -22,6 +22,11 @@ import { printOrder } from '../utils/orderPrint';
 // ─── OrderTimer ───────────────────────────────────────────────────────────────
 function OrderTimer({ createdAt, acceptedAt, finishedAt, parado = false }) {
   const [mins, setMins] = useState(0);
+  // Pedido fechado SEM carimbo de quando fechou: não dá pra saber quanto
+  // levou, e inventar é pior que calar. Antes o código caía em Date.now(),
+  // que "congelava" na hora em que a PÁGINA abriu — então o mesmo pedido
+  // mostrava 1min hoje e 1400min amanhã, sem nada ter mudado nele.
+  const semCarimbo = parado && Number.isNaN(new Date(finishedAt ?? NaN).getTime());
   // Congela a base: assim que o pedido tiver um accepted_at, conta SEMPRE a
   // partir dele — mesmo que uma atualização seguinte venha sem esse campo. Sem
   // isso, o tempo "pulava" (ex.: 60min desde criado ↔ 20min desde aceito) quando
@@ -36,11 +41,12 @@ function OrderTimer({ createdAt, acceptedAt, finishedAt, parado = false }) {
     // Pedido FECHADO tem cronômetro CONGELADO: passa a mostrar quanto tempo a
     // entrega levou, não quanto tempo faz que ela terminou. Contar pra sempre
     // gerava "1547min" num pedido já entregue — número que assusta e não
-    // informa nada. Sem finished_at, congela no valor do último cálculo.
-    const fim = parado ? new Date(finishedAt || Date.now()).getTime() : null;
+    // informa nada. Sem carimbo de fechamento, não mostra nada (ver acima).
+    const fim = parado ? new Date(finishedAt ?? NaN).getTime() : null;
     const tick = () => {
       const t = new Date(base).getTime();
       if (Number.isNaN(t)) return; // data inválida: não mexe no valor exibido
+      if (parado && Number.isNaN(fim)) return; // sem carimbo: não exibe nada
       const ate = (fim && !Number.isNaN(fim)) ? fim : Date.now();
       setMins(Math.max(0, Math.floor((ate - t) / 60000)));
     };
@@ -49,6 +55,8 @@ function OrderTimer({ createdAt, acceptedAt, finishedAt, parado = false }) {
     const id = setInterval(tick, 30000);
     return () => clearInterval(id);
   }, [base, parado, finishedAt]);
+
+  if (semCarimbo) return null;
 
   // Fechado é neutro (cinza): vermelho ali só passaria a impressão de que ainda
   // tem alguma coisa atrasada pra resolver.
@@ -166,8 +174,21 @@ function Col({
                 <OrderTimer
                   createdAt={order.created_at}
                   acceptedAt={order.accepted_at}
-                  finishedAt={order.delivered_at || order.updated_at}
-                  parado={['delivered', 'completed', 'cancelled', 'canceled', 'delivery_failed']
+                  // `updated_at` é o único carimbo de quando o pedido fechou:
+                  // não existe coluna delivered_at, e completed_at existe mas
+                  // ninguém escreve nela. Estava `order.delivered_at ||
+                  // order.updated_at`, e o primeiro era sempre undefined —
+                  // parecia que havia uma data melhor sendo usada.
+                  finishedAt={order.updated_at}
+                  // AS DUAS FORMAS, PT E EN. O orderService TRADUZ o status
+                  // antes da tela ver ('delivered' vira 'Entregue'), então uma
+                  // lista só em inglês nunca casa — era por isso que o
+                  // cronômetro não congelava e um pedido entregue ontem
+                  // aparecia com centenas de minutos. Todo o resto deste
+                  // arquivo já lista os dois; só aqui tinha ficado de fora.
+                  parado={['delivered', 'Entregue',
+                           'cancelled', 'canceled', 'Cancelado',
+                           'completed', 'delivery_failed']
                     .includes(order.status)}
                 />
               </div>
