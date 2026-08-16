@@ -4,7 +4,13 @@ import React, { useState, useEffect } from 'react';
 import { menuService } from '../services/menuService';
 import { categoryService } from '../services/categoryService';
 import { useToast } from '../context/ToastContext.jsx';
+import { useProfile } from '../context/ProfileContext';
 import { XCircle } from 'lucide-react';
+
+// Espelha _SEGMENTOS_COM_PESO do backend (src/routes/menu.py). Aqui o efeito é
+// só avisar antes; quem realmente barra é o servidor — o app pode estar numa
+// versão antiga, e regra que só existe na tela não é regra.
+const SEGMENTOS_COM_PESO = ['pet', 'mercado', 'agropecuaria', 'bebidas'];
 
 export function MenuItemModal({ onClose, onItemAdded, onItemUpdated, itemToEdit }) {
 	const [formData, setFormData] = useState({ name: '', description: '', price: '', category: '', is_available: true, image_url: '', peso_kg: '' });
@@ -14,6 +20,10 @@ export function MenuItemModal({ onClose, onItemAdded, onItemUpdated, itemToEdit 
 	const [categories, setCategories] = useState([]);
 	const [isUploadingImage, setIsUploadingImage] = useState(false);
 	const { addToast } = useToast();
+	const { profile } = useProfile();
+	const pesoObrigatorio = SEGMENTOS_COM_PESO.includes(
+		String(profile?.segment || '').trim().toLowerCase()
+	);
 
 	useEffect(() => {
 		const fetchCategories = async () => {
@@ -136,13 +146,17 @@ export function MenuItemModal({ onClose, onItemAdded, onItemUpdated, itemToEdit 
                             30 kg não vai de moto. Deixar em branco só faz
                             sentido em item leve — comida, bebida, lanche. */}
                         <div className="flex-1">
-                            <label htmlFor="peso_kg" className="block text-sm font-medium text-gray-700">Peso em kg</label>
+                            <label htmlFor="peso_kg" className="block text-sm font-medium text-gray-700">
+                                Peso em kg {pesoObrigatorio && <span className="text-red-500">*</span>}
+                            </label>
                             <input type="number" name="peso_kg" id="peso_kg" step="0.1" min="0" placeholder="ex: 15"
                                 value={formData.peso_kg} onChange={handleChange}
+                                required={pesoObrigatorio}
                                 className="mt-1 w-full px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"/>
                             <p className="mt-1 text-xs text-gray-500">
-                                Preencha em itens pesados (ração, gás, bebida em fardo). Isso define se o
-                                pedido pode ir de moto ou precisa de carro. Item leve pode ficar em branco.
+                                {pesoObrigatorio
+                                    ? 'Obrigatório no seu segmento. É o peso que define o frete e se o pedido cabe numa moto ou precisa de carro — sem ele, um pedido pesado sai barato demais e vai parar numa moto.'
+                                    : 'Preencha em itens pesados (ração, gás, bebida em fardo). Isso define se o pedido pode ir de moto ou precisa de carro. Item leve pode ficar em branco.'}
                             </p>
                         </div>
                         <div className="flex-1">
