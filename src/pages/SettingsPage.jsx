@@ -2,24 +2,29 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { authService } from '../services/authService';
+import { RESTAURANT_API_URL } from '../services/api';
 import { Save, Loader } from 'lucide-react';
 import { useToast } from '../context/ToastContext.jsx';
 import { useProfile } from '../context/ProfileContext';
 import OpeningHoursEditor from '../components/OpeningHoursEditor';
 
-// Uma consulta ao Nominatim (OpenStreetMap). Retorna {lat,lng} ou null.
-async function geocodeOnce(query) {
+// Uma consulta de geocodificação. Passa pelo NOSSO backend
+// (/api/public/geocode) em vez de bater direto no Nominatim: lá tem cache e
+// o User-Agent que a política deles exige — e que o navegador não deixa
+// definir. No dia em que virar provedor pago, a chave fica no backend e
+// nenhum app precisa de versão nova. Retorna {lat,lng} ou null.
+async function geocodeOnce({ street, neighborhood, city, state }) {
   try {
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&countrycodes=br`,
-      { headers: { 'Accept-Language': 'pt-BR' } }
-    );
-    const arr = await res.json();
-    if (Array.isArray(arr) && arr[0]) {
-      const lat = Number(arr[0].lat);
-      const lng = Number(arr[0].lon);
-      if (Number.isFinite(lat) && Number.isFinite(lng)) return { lat, lng };
-    }
+    const p = new URLSearchParams({
+      street: street || '', neighborhood: neighborhood || '',
+      city: city || '', state: state || '',
+    });
+    const res = await fetch(`${RESTAURANT_API_URL}/api/public/geocode?${p}`);
+    if (!res.ok) return null;
+    const j = await res.json();
+    const lat = Number(j?.data?.lat);
+    const lng = Number(j?.data?.lng);
+    if (Number.isFinite(lat) && Number.isFinite(lng)) return { lat, lng };
   } catch {
     /* falha de rede/limite — o chamador tenta a próxima variante */
   }
@@ -40,17 +45,17 @@ async function geocodeProfileAddress(p) {
   if (!cidade || !uf) return null; // sem cidade/UF não há como localizar
 
   const variants = [
-    [rua, bairro, cidade, uf, 'Brasil'],
-    [rua, cidade, uf, 'Brasil'],
-    [bairro, cidade, uf, 'Brasil'],
-    [cidade, uf, 'Brasil'],
+    { street: rua, neighborhood: bairro, city: cidade, state: uf },
+    { street: rua, city: cidade, state: uf },
+    { neighborhood: bairro, city: cidade, state: uf },
+    { city: cidade, state: uf },
   ];
   const seen = new Set();
-  for (const parts of variants) {
-    const q = parts.filter(Boolean).join(', ');
-    if (!q || seen.has(q)) continue;
-    seen.add(q);
-    const hit = await geocodeOnce(q);
+  for (const v of variants) {
+    const chave = [v.street, v.neighborhood, v.city, v.state].filter(Boolean).join(', ');
+    if (!chave || seen.has(chave)) continue;
+    seen.add(chave);
+    const hit = await geocodeOnce(v);
     if (hit) return hit;
   }
   return null;
