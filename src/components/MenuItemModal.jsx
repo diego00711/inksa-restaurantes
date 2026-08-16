@@ -7,7 +7,7 @@ import { useToast } from '../context/ToastContext.jsx';
 import { XCircle } from 'lucide-react';
 
 export function MenuItemModal({ onClose, onItemAdded, onItemUpdated, itemToEdit }) {
-	const [formData, setFormData] = useState({ name: '', description: '', price: '', category: '', is_available: true, image_url: '' });
+	const [formData, setFormData] = useState({ name: '', description: '', price: '', category: '', is_available: true, image_url: '', peso_kg: '' });
 	const [selectedFile, setSelectedFile] = useState(null);
 	const [imagePreview, setImagePreview] = useState(null);
 	const [isLoading, setIsLoading] = useState(false);
@@ -36,10 +36,11 @@ export function MenuItemModal({ onClose, onItemAdded, onItemUpdated, itemToEdit 
 				category: itemToEdit.category || '',
 				is_available: itemToEdit.is_available !== undefined ? itemToEdit.is_available : true,
 				image_url: itemToEdit.image_url || '',
+				peso_kg: itemToEdit.peso_kg != null ? String(itemToEdit.peso_kg) : '',
 			});
 			setImagePreview(itemToEdit.image_url || null);
 		} else {
-			setFormData({ name: '', description: '', price: '', category: '', is_available: true, image_url: '' });
+			setFormData({ name: '', description: '', price: '', category: '', is_available: true, image_url: '', peso_kg: '' });
 			setImagePreview(null);
 			setSelectedFile(null);
 		}
@@ -130,6 +131,19 @@ export function MenuItemModal({ onClose, onItemAdded, onItemUpdated, itemToEdit 
                         <div className="flex-1">
                             <label htmlFor="price" className="block text-sm font-medium text-gray-700">Preço (ex: 45.50)</label>
                             <input type="number" name="price" id="price" step="0.01" value={formData.price} onChange={handleChange} required className="mt-1 w-full px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"/>
+                        </div>
+                        {/* Peso decide QUEM pode entregar: um saco de ração de
+                            30 kg não vai de moto. Deixar em branco só faz
+                            sentido em item leve — comida, bebida, lanche. */}
+                        <div className="flex-1">
+                            <label htmlFor="peso_kg" className="block text-sm font-medium text-gray-700">Peso em kg</label>
+                            <input type="number" name="peso_kg" id="peso_kg" step="0.1" min="0" placeholder="ex: 15"
+                                value={formData.peso_kg} onChange={handleChange}
+                                className="mt-1 w-full px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"/>
+                            <p className="mt-1 text-xs text-gray-500">
+                                Preencha em itens pesados (ração, gás, bebida em fardo). Isso define se o
+                                pedido pode ir de moto ou precisa de carro. Item leve pode ficar em branco.
+                            </p>
                         </div>
                         <div className="flex-1">
                             <label htmlFor="category" className="block text-sm font-medium text-gray-700">Categoria</label>
