@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Package, CheckCircle, Printer, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { parseItensDoPedido } from '../utils/orderItems';
 
 const StatusBadge = ({ status }) => {
   const statusColors = {
@@ -73,7 +74,10 @@ export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus
   };
 
   const mainAction = getNextAction();
-  const orderItems = order.items?.items || [];
+  // Era `order.items?.items` — esperava objeto aninhado, mas o pedido chega
+  // como array. O restaurante via o pedido SEM NENHUM ITEM: só valor e nome do
+  // cliente, sem saber o que preparar. Agora usa o parser único.
+  const orderItems = parseItensDoPedido(order.items);
   const showPickupButton = shouldShowPickupButton();
   // Depois que o pedido SAIU PARA ENTREGA (em rota), o restaurante não pode mais
   // cancelar — o pedido já está com o entregador/cliente. Esconde o botão.
@@ -119,7 +123,7 @@ export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus
               <ul className="list-none space-y-0.5">
                 {orderItems.slice(0, 3).map((item, index) => (
                   <li key={index} className="text-xs truncate pl-2">
-                    • {item.quantity}x {item.name}
+                    • {item.quantidade}x {item.nome}
                   </li>
                 ))}
                 {orderItems.length > 3 && (

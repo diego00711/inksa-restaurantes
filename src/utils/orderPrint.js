@@ -1,3 +1,4 @@
+import { parseItensDoPedido } from './orderItems';
 // Impressão do pedido (comanda) e "sumir do aparelho".
 //
 // IMPRIMIR: monta uma via simples de 80mm e manda pra impressora pelo próprio
@@ -40,19 +41,14 @@ function escapeHtml(s) {
   ));
 }
 
-// orders.items chega como array, string JSON ou objeto aninhado {items:[]} —
-// e cada item ora usa name/price, ora title/unit_price. Tolera os três formatos.
+// A leitura dos itens mora em utils/orderItems.js — havia quatro cópias deste
+// parser no app e uma delas estava errada, deixando o card do pedido sem itens.
+// Aqui a taxa de entrega ENTRA: recibo tem que fechar com o que foi cobrado.
 function parseItems(raw) {
-  let data = raw;
-  if (typeof data === 'string') {
-    try { data = JSON.parse(data); } catch { return []; }
-  }
-  if (data && !Array.isArray(data) && Array.isArray(data.items)) data = data.items;
-  if (!Array.isArray(data)) return [];
-  return data.map((it) => ({
-    quantidade: Number(it.quantity ?? it.qty ?? 1),
-    nome: it.name ?? it.title ?? 'Item',
-    preco: Number(it.price ?? it.unit_price ?? 0),
+  return parseItensDoPedido(raw, { incluirTaxa: true }).map((it) => ({
+    quantidade: it.quantidade,
+    nome: it.nome,
+    preco: it.preco,
   }));
 }
 

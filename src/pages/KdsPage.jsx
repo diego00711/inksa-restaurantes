@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNotificationSound } from '../hooks/useNotificationSound';
 import { supabase } from '../lib/supabase';
 import { Clock, ChefHat, CheckCircle2, Maximize2, Bell } from 'lucide-react';
+import { parseItensDoPedido } from '../utils/orderItems';
 
 const NEW = ['pending', 'Pendente'];
 const PREP = ['accepted', 'Aceito', 'preparing', 'Preparando'];
@@ -16,17 +17,11 @@ const READY = ['ready', 'Pronto'];
 
 // Normaliza a lista de itens vinda em formatos variados
 function parseItems(order) {
-  let items = order.items ?? order.itens ?? [];
-  if (typeof items === 'string') {
-    try { items = JSON.parse(items); } catch { items = []; }
-  }
-  if (!Array.isArray(items)) return [];
-  return items
-    .map((it) => ({
-      qty: Number(it.quantity ?? it.qty ?? 1),
-      name: it.name ?? it.title ?? it.product_name ?? 'Item',
-    }))
-    .filter((it) => it.name && it.name !== 'Taxa de Entrega');
+  // Cozinha não prepara frete: a taxa fica de fora (incluirTaxa: false).
+  return parseItensDoPedido(order.items ?? order.itens).map((it) => ({
+    qty: it.quantidade,
+    name: it.nome,
+  }));
 }
 
 function minutesSince(ts) {
