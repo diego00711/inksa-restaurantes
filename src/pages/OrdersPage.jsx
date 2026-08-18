@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { orderService } from '../services/orderService.js';
 import OrderCard from '../components/OrderCard';
+import AvisoCardapioVazio from '../components/AvisoCardapioVazio';
 import { OrderDetailsModal } from '../components/OrderDetailsModal';
 import { PickupConfirmationModal } from '../components/PickupConfirmationModal';
 import { DeliveryConfirmationModal } from '../components/DeliveryConfirmationModal';
@@ -476,6 +477,10 @@ export function OrdersPage() {
       <SocialDayBanner />
       {/* Faixa de anúncio/aviso do parceiro (só aparece se houver banner audience=parceiro) */}
       <SponsoredStrip />
+      {/* Loja escondida da vitrine por falta de cardápio. Fica ANTES do painel
+          porque é a informação mais importante da tela pra quem está nessa
+          situação: não adianta olhar pedidos se nenhum cliente te vê. */}
+      <AvisoCardapioVazio />
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex flex-wrap justify-between items-center gap-3 mb-5">
         <div className="flex items-center gap-3">
