@@ -6,6 +6,13 @@ import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import { BrowserRouter } from 'react-router-dom'
 import { ConfirmProvider } from './components/ConfirmProvider.jsx'
+import { iniciarAutoAtualizacao } from './utils/autoAtualiza'
+
+
+// Pega a versao nova sem o usuario ter que fechar e abrir o app.
+// So recarrega ao voltar pro app depois de um tempo fora, e nunca nas
+// telas abaixo, onde recarregar apagaria o que a pessoa esta fazendo.
+iniciarAutoAtualizacao({ rotasSensiveis: ['cardapio', 'categorias', 'cupons', 'configuracoes', 'register', 'reset-password'] });
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
