@@ -5,6 +5,7 @@ import { X, Printer } from 'lucide-react';
 import { orderService } from '../services/orderService';
 import { useToast } from '../context/ToastContext.jsx';
 import { ehAplicativo, ENDERECO_WEB } from '../utils/orderPrint';
+import { detalharOpcoes, precoBase } from '../utils/orderItems';
 
 // O checkout do cliente grava a taxa de entrega como um ITEM do pedido, além de
 // ter a linha "Taxa de Entrega" própria (delivery_fee) — mostrar os dois é
@@ -255,25 +256,35 @@ export function OrderDetailsModal({ order, onClose }) {
                   const visibleItems = (fullOrderDetails.items || []).filter(i => !isDeliveryFeeItem(i));
                   return visibleItems.length > 0 ? (
                     visibleItems.map((item, index) => (
-                      <li key={index} className="flex justify-between items-start text-gray-700 py-2 border-b border-gray-100">
-                        <span className="flex-1">
-                          {/* itens gravados pelo app cliente usam title/unit_price;
-                              mantém name/price como fallback pra formatos antigos */}
-                          <span className="font-medium">{item.quantity || 1}x</span> {item.title || item.name || 'Item sem nome'}
-                          {/* As escolhas do cliente. Estavam só na comanda
-                              impressa — mas é AQUI que o parceiro olha antes de
-                              aceitar, então faltava no lugar mais usado. */}
-                          {item.opcoes?.length > 0 && (
-                            <span className="mt-0.5 block text-sm text-gray-500">
-                              {item.opcoes
-                                .map((o) => `${Number(o.qtd) > 1 ? `${o.qtd}x ` : ''}${o.nome || ''}`)
-                                .filter((s) => s.trim())
-                                .join(' · ')}
-                            </span>
-                          )}
-                        </span>
-                        <span className="font-medium">{formatCurrency(item.unit_price ?? item.price)}</span>
-                      </li>
+                      (() => {
+                        // Mesma conta da comanda: vem de utils/orderItems, e
+                        // não repetida aqui. Duas contas de dinheiro em dois
+                        // arquivos divergem — é só questão de qual muda antes.
+                        const escolhas = detalharOpcoes(item);
+                        const base = escolhas.length ? precoBase(item) : (item.unit_price ?? item.price);
+                        const qtd = item.quantity || 1;
+                        return (
+                          <li key={index} className="text-gray-700 py-2 border-b border-gray-100">
+                            <div className="flex justify-between items-start">
+                              {/* itens gravados pelo app cliente usam title/unit_price;
+                                  mantém name/price como fallback pra formatos antigos */}
+                              <span className="flex-1">
+                                <span className="font-medium">{qtd}x</span> {item.title || item.name || 'Item sem nome'}
+                              </span>
+                              <span className="font-medium">{formatCurrency(base)}</span>
+                            </div>
+                            {/* Cada escolha na sua linha, com o que somou. Sem
+                                isso o parceiro vê 52,50 e não sabe quanto foi
+                                da pizza e quanto foi do adicional. */}
+                            {escolhas.map((o, k) => (
+                              <div key={k} className="flex justify-between items-start pl-4 text-sm text-gray-500">
+                                <span>+ {o.qtd > 1 ? `${o.qtd}x ` : ''}{o.nome}</span>
+                                <span>{o.valor > 0 ? formatCurrency(o.valor) : ''}</span>
+                              </div>
+                            ))}
+                          </li>
+                        );
+                      })()
                     ))
                   ) : (
                     <li className="text-gray-500 py-4 text-center">Nenhum item listado neste pedido.</li>

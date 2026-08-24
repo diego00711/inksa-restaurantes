@@ -53,6 +53,7 @@ function parseItems(raw) {
     // barbecue e a comanda mostra só "Frango frito", a cozinha faz errado — e
     // o app leva a culpa por um pedido que registrou certo.
     opcoes: it.opcoes || [],
+    preco_base: it.preco_base,
   }));
 }
 
@@ -82,10 +83,18 @@ export function printOrder(order, restaurantName = '') {
   .sub { text-align: center; font-size: 11px; margin-bottom: 8px; }
   hr { border: 0; border-top: 1px dashed #000; margin: 8px 0; }
   .linha { display: flex; justify-content: space-between; gap: 8px; }
+  /* O valor nunca quebra. Com nome de item comprido, o "R$" ficava numa linha
+     e os centavos na outra — numa comanda impressa isso parece defeito de
+     impressora, e o cliente vem perguntar. */
+  .linha > span:last-child { white-space: nowrap; }
   .item { margin-bottom: 3px; }
   /* Negrito e recuado: numa bobina de 80mm em cozinha corrida, a escolha do
      cliente precisa saltar da linha do item, não se esconder nela. */
-  .opcoes { margin: -1px 0 5px 12px; font-size: 11px; font-weight: bold; }
+  /* Recuada e em negrito: numa bobina de 80mm em cozinha corrida, a escolha
+     do cliente precisa saltar da linha do item. O padding-left desloca só o
+     nome — o valor continua alinhado à direita com os outros, senão a coluna
+     de preços fica torta. */
+  .opcoes { margin: -1px 0 4px 0; padding-left: 12px; font-size: 11px; font-weight: bold; }
   .total { font-size: 14px; font-weight: bold; }
   .obs { border: 1px dashed #000; padding: 4px; margin-top: 6px; }
   .rodape { text-align: center; margin-top: 10px; font-size: 11px; }
@@ -98,12 +107,17 @@ export function printOrder(order, restaurantName = '') {
   ${enderecoTxt ? `<div><strong>Entrega:</strong> ${escapeHtml(enderecoTxt)}</div>` : ''}
   <hr>
   ${itens.length
+    // Item na linha de cima com o preço DELE; cada escolha na sua própria
+    // linha, com o que ela somou. Sem isso o parceiro vê 52,50 e não sabe
+    // quanto foi da pizza e quanto foi do adicional.
     ? itens.map((i) => (
         `<div class="item linha"><span>${i.quantidade}x ${escapeHtml(i.nome)}</span>` +
-        `<span>${brl(i.preco * i.quantidade)}</span></div>` +
-        (i.opcoes?.length
-          ? `<div class="opcoes">↳ ${escapeHtml(i.opcoes.join(' · '))}</div>`
-          : '')
+        `<span>${brl((i.opcoes?.length ? i.preco_base : i.preco) * i.quantidade)}</span></div>` +
+        (i.opcoes || []).map((o) => (
+          `<div class="opcoes linha"><span>+ ${escapeHtml(
+            o.qtd > 1 ? `${o.qtd}x ${o.nome}` : o.nome)}</span>` +
+          `<span>${o.valor > 0 ? brl(o.valor * i.quantidade) : ''}</span></div>`
+        )).join('')
       )).join('')
     : '<div class="item">(sem itens detalhados)</div>'}
   <hr>
