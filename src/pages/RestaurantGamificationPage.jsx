@@ -71,18 +71,28 @@ const CLUB_GRADIENT = {
   diamante: 'from-cyan-400 to-cyan-600',
 };
 
+// O parceiro sobe de nível por FATURAMENTO do mês, não por quantidade de
+// pedidos — porque o benefício dele é desconto na comissão, e o que esse
+// desconto custa acompanha o quanto ele vende. Então tudo nesta tela é dinheiro.
+// A API manda `unit: 'brl'` justamente pra tela não precisar adivinhar.
+const brl = (v) => Number(v || 0).toLocaleString('pt-BR', {
+  style: 'currency', currency: 'BRL', maximumFractionDigits: 0,
+});
+const ehDinheiro = (u) => (u || 'brl') === 'brl';
+const medida = (v, u) => (ehDinheiro(u) ? brl(v) : `${v} venda${v !== 1 ? 's' : ''}`);
+
 // Hero: identidade do restaurante (nível do mês por VENDAS) + pontos como MOEDA.
 // Um nível só — o do Clube. Pontos viram saldo pra Loja de Recompensas abaixo.
-function ClubHeroCard({ status, points, unit = 'venda' }) {
+function ClubHeroCard({ status, points }) {
   const cur = status?.current_level;
   const next = status?.next_level;
-  const orders = status?.orders_this_month ?? 0;
+  const vendido = status?.orders_this_month ?? 0;
+  const unit = cur?.unit || next?.unit;
   const grad = CLUB_GRADIENT[cur?.level] || CLUB_GRADIENT.bronze;
   const label = cur?.label || cur?.name || 'Bronze';
   const totalPoints = Number(points?.total_points ?? points?.points ?? 0);
-  const pctBar = next?.min_orders ? Math.min(100, Math.round((orders / next.min_orders) * 100)) : 100;
-  const toNext = next ? Math.max(0, (next.min_orders || 0) - orders) : 0;
-  const plural = (n) => (n !== 1 ? 's' : '');
+  const pctBar = next?.min_orders ? Math.min(100, Math.round((vendido / next.min_orders) * 100)) : 100;
+  const toNext = next ? Math.max(0, (next.min_orders || 0) - vendido) : 0;
   return (
     <div className={`rounded-2xl bg-gradient-to-br ${grad} p-5 sm:p-6 text-white shadow-xl mb-6`}>
       <div className="flex items-start justify-between mb-1">
@@ -92,14 +102,16 @@ function ClubHeroCard({ status, points, unit = 'venda' }) {
         </div>
         <div className="bg-white/20 rounded-full p-3"><Crown className="w-8 h-8 text-white" /></div>
       </div>
-      <p className="text-white/90 text-sm mb-4">{orders} {unit}{plural(orders)} este mês</p>
+      <p className="text-white/90 text-sm mb-4">
+        {ehDinheiro(unit) ? `${brl(vendido)} vendidos este mês` : medida(vendido, unit)}
+      </p>
       {next ? (
         <>
           <div className="bg-black/20 rounded-full h-2.5 overflow-hidden">
             <div className="bg-white h-2.5 rounded-full transition-all duration-700 ease-out" style={{ width: `${pctBar}%` }} />
           </div>
           <p className="text-white/80 text-xs mt-2">
-            Faltam <span className="font-bold text-white">{toNext} {unit}{plural(toNext)}</span> para {next.label || next.name} {next.emoji}
+            Faltam <span className="font-bold text-white">{medida(toNext, unit)}</span> para {next.label || next.name} {next.emoji}
           </p>
         </>
       ) : (
@@ -146,7 +158,7 @@ function ClubBenefitsCard({ status }) {
   );
 }
 
-function ClubLevelsCard({ levels, currentLevel, unit = 'venda' }) {
+function ClubLevelsCard({ levels, currentLevel }) {
   if (!levels?.length) return null;
   return (
     <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6">
@@ -167,7 +179,13 @@ function ClubLevelsCard({ levels, currentLevel, unit = 'venda' }) {
                     {isCurrent && <span className="ml-2 text-xs font-semibold bg-orange-500 text-white px-1.5 py-0.5 rounded-full">Você está aqui</span>}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {lvl.max_orders ? `${lvl.min_orders}–${lvl.max_orders}` : `${lvl.min_orders}+`} {unit}s/mês
+                    {ehDinheiro(lvl.unit)
+                      ? (lvl.max_orders
+                          ? `${brl(lvl.min_orders)} a ${brl(lvl.max_orders)} vendidos no mês`
+                          : `${brl(lvl.min_orders)} ou mais vendidos no mês`)
+                      : (lvl.max_orders
+                          ? `${lvl.min_orders}–${lvl.max_orders} vendas/mês`
+                          : `${lvl.min_orders}+ vendas/mês`)}
                   </p>
                 </div>
               </div>
@@ -433,7 +451,7 @@ export default function RestaurantGamificationPage() {
       </div>
 
       {/* ── Hero: nível do Clube (por vendas) + pontos como moeda ───────── */}
-      {clubStatus && <ClubHeroCard status={clubStatus} points={stats} unit="venda" />}
+      {clubStatus && <ClubHeroCard status={clubStatus} points={stats} />}
       <ClubBenefitsCard status={clubStatus} />
 
       {/* ── 1. Pontos e Ranking ─────────────────────────────────────────── */}
@@ -481,7 +499,7 @@ export default function RestaurantGamificationPage() {
       </div>
 
       {/* ── Todos os níveis do Clube ──────────────────────────────────────── */}
-      <ClubLevelsCard levels={clubLevels} currentLevel={clubStatus?.current_level?.level} unit="venda" />
+      <ClubLevelsCard levels={clubLevels} currentLevel={clubStatus?.current_level?.level} />
 
       {/* ── Como ganhar pontos ────────────────────────────────────────────── */}
       <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6">
