@@ -13,14 +13,37 @@
 // (obrigatório) e "adicionais" (opcional, vários). São os dois casos reais, e
 // os números certos saem disso sem ninguém precisar entender a regra.
 import React, { useEffect, useState } from 'react';
-import { X, Plus, Trash2, Loader2, GripVertical, ImagePlus } from 'lucide-react';
+import { X, Plus, Trash2, Loader2, GripVertical, ImagePlus, Eye, EyeOff, AlertTriangle } from 'lucide-react';
 import { RESTAURANT_API_URL, createAuthHeaders } from '../services/api';
 import { useToast } from '../context/ToastContext.jsx';
 
+const opcaoVazia = () => ({ nome: '', preco_extra: '', imagem_url: '', disponivel: true });
+
 const grupoVazio = () => ({
   nome: '', tipo: 'uma', limite: '',
-  opcoes: [{ nome: '', preco_extra: '', imagem_url: '' }],
+  opcoes: [opcaoVazia()],
 });
+
+/**
+ * Grupos obrigatórios que ficariam sem NENHUMA opção disponível.
+ *
+ * Isso é uma armadilha silenciosa: o cliente abre o item, o grupo aparece
+ * vazio, e o botão de adicionar nunca destrava — porque ele é obrigado a
+ * escolher algo que não existe. O item some da loja sem sair do cardápio, e
+ * ninguém descobre até alguém reclamar que "não dá pra pedir".
+ *
+ * Quando acaba TUDO de um grupo obrigatório, o certo é marcar o item inteiro
+ * como indisponível no cardápio, não esvaziar a escolha.
+ */
+function gruposImpossiveis(grupos) {
+  return (grupos || [])
+    .filter((g) => g.tipo !== 'adicionais' && g.nome.trim())
+    .filter((g) => {
+      const nomeadas = g.opcoes.filter((o) => o.nome.trim());
+      return nomeadas.length > 0 && !nomeadas.some((o) => o.disponivel !== false);
+    })
+    .map((g) => g.nome.trim());
+}
 
 /**
  * Sobe a foto da opção reusando o upload que já serve os itens do cardápio.
@@ -63,6 +86,9 @@ export default function OpcoesDoItem({ item, onFechar }) {
           nome: o.nome,
           preco_extra: Number(o.preco_extra) ? String(Number(o.preco_extra).toFixed(2)) : '',
           imagem_url: o.imagem_url || '',
+          // !== false e não Boolean(): opção antiga, gravada antes deste campo
+          // existir na tela, tem que abrir como disponível — nunca em falta.
+          disponivel: o.disponivel !== false,
         })),
       }))))
       .catch(() => setGrupos([]));
@@ -74,6 +100,16 @@ export default function OpcoesDoItem({ item, onFechar }) {
   )));
 
   const salvar = async () => {
+    // Barra antes de gravar: salvar isso deixaria o item impossível de pedir e
+    // ela não teria como perceber olhando a tela dela.
+    const impossiveis = gruposImpossiveis(grupos);
+    if (impossiveis.length) {
+      addToast('error',
+        `Em "${impossiveis[0]}" tudo está em falta, e é uma escolha obrigatória — `
+        + 'ninguém consegue pedir o item assim. Deixe ao menos uma disponível, '
+        + 'ou marque o item inteiro como indisponível no cardápio.');
+      return;
+    }
     setSalvando(true);
     try {
       const corpo = {
@@ -99,7 +135,7 @@ export default function OpcoesDoItem({ item, onFechar }) {
               opcoes: opcoes.map((o) => ({
                 nome: o.nome.trim(),
                 preco_extra: Number(String(o.preco_extra).replace(',', '.')) || 0,
-                disponivel: true,
+                disponivel: o.disponivel !== false,
                 imagem_url: (o.imagem_url || '').trim() || null,
               })),
             };
@@ -187,7 +223,9 @@ export default function OpcoesDoItem({ item, onFechar }) {
                   — e o parceiro confere sem precisar entender a regra. */}
               <p className="mt-2 pl-6 text-xs text-gray-500">
                 {(() => {
-                  const n = g.opcoes.filter((o) => o.nome.trim()).length;
+                  // Conta só as DISPONÍVEIS: a frase promete o que o cliente
+                  // vai ver, e ele não vê o que está em falta.
+                  const n = g.opcoes.filter((o) => o.nome.trim() && o.disponivel !== false).length;
                   const lim = parseInt(g.limite, 10);
                   const teto = Number.isFinite(lim) && lim > 0 ? Math.min(lim, n || 1) : (n || 1);
                   if (g.tipo === 'uma') {
@@ -200,9 +238,25 @@ export default function OpcoesDoItem({ item, onFechar }) {
                 })()}
               </p>
 
+              {/* Avisa na hora, não só ao salvar: ela precisa ver o estrago
+                  enquanto ainda está olhando o grupo que causou. */}
+              {gruposImpossiveis([g]).length > 0 && (
+                <p className="mt-2 ml-6 flex items-start gap-1.5 rounded-lg bg-amber-50 p-2 text-xs font-medium text-amber-800">
+                  <AlertTriangle size={14} className="mt-px shrink-0" />
+                  <span>
+                    Tudo em falta numa escolha obrigatória — assim ninguém
+                    consegue pedir este item. Deixe ao menos uma disponível, ou
+                    marque o item inteiro como indisponível no cardápio.
+                  </span>
+                </p>
+              )}
+
               <div className="mt-3 space-y-2 pl-6">
                 {g.opcoes.map((o, j) => (
-                  <div key={j} className="flex items-center gap-2">
+                  // Em falta continua VISÍVEL e editável aqui, só apagada. Se
+                  // sumisse da tela dela junto com o cliente, religar no dia
+                  // seguinte viraria recadastrar.
+                  <div key={j} className={`flex items-center gap-2 ${o.disponivel === false ? 'opacity-60' : ''}`}>
                     {/* Foto opcional. Um quadradinho clicável em vez de campo
                         de arquivo: ocupa o espaço de um ícone e já mostra o
                         que subiu, sem precisar de linha extra por opção. */}
@@ -235,8 +289,27 @@ export default function OpcoesDoItem({ item, onFechar }) {
                       value={o.nome}
                       onChange={(e) => mexerOpcao(i, j, { nome: e.target.value })}
                       placeholder="Opção (ex.: Pequeno, Morango)"
-                      className="min-h-[38px] flex-1 rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-orange-500"
+                      className={`min-h-[38px] min-w-0 flex-1 rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-orange-500 ${
+                        o.disponivel === false ? 'line-through decoration-gray-400' : ''}`}
                     />
+                    {/* Acabou o molho de alho no sábado: um toque tira do app do
+                        cliente e outro devolve. Sem isto, a única saída era
+                        apagar a opção e recadastrar depois. */}
+                    <button
+                      onClick={() => mexerOpcao(i, j, { disponivel: o.disponivel === false })}
+                      title={o.disponivel === false
+                        ? 'Em falta — não aparece pro cliente. Clique pra voltar a vender.'
+                        : 'Disponível. Clique pra marcar em falta.'}
+                      aria-pressed={o.disponivel === false}
+                      className={`flex shrink-0 items-center gap-1 rounded-lg px-2 py-2 text-xs font-semibold ${
+                        o.disponivel === false
+                          ? 'bg-amber-50 text-amber-700 hover:bg-amber-100'
+                          : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'}`}
+                    >
+                      {o.disponivel === false
+                        ? <><EyeOff size={14} /> em falta</>
+                        : <Eye size={14} />}
+                    </button>
                     <div className="flex items-center gap-1">
                       <span className="text-xs text-gray-400">+R$</span>
                       <input
@@ -256,12 +329,13 @@ export default function OpcoesDoItem({ item, onFechar }) {
                 ))}
                 <div className="flex flex-wrap items-center gap-3">
                   <button
-                    onClick={() => mexer(i, { opcoes: [...g.opcoes, { nome: '', preco_extra: '', imagem_url: '' }] })}
+                    onClick={() => mexer(i, { opcoes: [...g.opcoes, opcaoVazia()] })}
                     className="inline-flex items-center gap-1 text-sm font-semibold text-orange-600 hover:underline"
                   ><Plus size={14} /> opção</button>
                   <span className="text-xs text-gray-400">
                     O quadradinho é a foto — opcional. Sem ela aparece só o nome.
-                    Deixe o valor em branco se a opção for de graça.
+                    Deixe o valor em branco se a opção for de graça. O olhinho
+                    marca em falta: some do app do cliente sem perder o cadastro.
                   </span>
                 </div>
               </div>
