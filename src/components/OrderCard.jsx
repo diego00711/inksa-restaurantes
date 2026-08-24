@@ -25,6 +25,12 @@ const StatusBadge = ({ status }) => {
 
 export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus, onViewDetails, onConfirmPickup, onConfirmDelivery, onAcceptOrder, onPrint }) {
   const [estimatedTime, setEstimatedTime] = useState(20);
+  // Campo livre para quem passa de uma hora. Nasceu do mercado: os botões
+  // fixos param em 60 min, e separar uma compra grande leva mais que isso.
+  // Sem isto o dono escolhia 60 sabendo que era mentira — e quem paga o preço
+  // da estimativa errada é o cliente, que fica olhando o relógio.
+  const [outroAberto, setOutroAberto] = useState(false);
+  const [outroTexto, setOutroTexto] = useState('');
   // Trava de clique único: sem isto, dois toques rápidos em Aceitar/Pronto/etc.
   // disparam a mesma ação 2x e o backend devolve erro (status já mudou),
   // confundindo o dono. Enquanto uma ação está em voo, todos os botões travam.
@@ -199,9 +205,9 @@ export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus
                 {[10, 20, 30, 45, 60].map((t) => (
                   <button
                     key={t}
-                    onClick={() => setEstimatedTime(t)}
+                    onClick={() => { setEstimatedTime(t); setOutroAberto(false); }}
                     className={`flex-1 min-w-[2.5rem] py-1.5 text-xs font-bold rounded-lg transition-all ${
-                      estimatedTime === t
+                      estimatedTime === t && !outroAberto
                         ? 'bg-orange-500 text-white shadow'
                         : 'bg-gray-100 text-gray-600 hover:bg-orange-100'
                     }`}
@@ -209,7 +215,49 @@ export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus
                     {t}min
                   </button>
                 ))}
+                <button
+                  onClick={() => setOutroAberto(true)}
+                  className={`flex-1 min-w-[2.5rem] py-1.5 text-xs font-bold rounded-lg transition-all ${
+                    outroAberto
+                      ? 'bg-orange-500 text-white shadow'
+                      : 'bg-gray-100 text-gray-600 hover:bg-orange-100'
+                  }`}
+                >
+                  outro
+                </button>
               </div>
+
+              {outroAberto && (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={5}
+                    max={240}
+                    autoFocus
+                    value={outroTexto}
+                    onChange={(e) => {
+                      setOutroTexto(e.target.value);
+                      // Teto de 4h: acima disso não é preparo, é outro combinado
+                      // — e um zero a mais digitado viraria "600 min" na tela do
+                      // cliente. Piso de 5 pra não prometer o impossível.
+                      const n = parseInt(e.target.value, 10);
+                      if (!Number.isNaN(n)) setEstimatedTime(Math.max(5, Math.min(n, 240)));
+                    }}
+                    placeholder="90"
+                    className="w-24 rounded-lg border border-orange-300 px-2 py-1.5 text-sm font-bold text-gray-800 outline-none focus:border-orange-500"
+                  />
+                  <span className="text-xs text-gray-500">
+                    minutos {outroTexto && `(vale ${estimatedTime})`}
+                  </span>
+                </div>
+              )}
+              {estimatedTime > 60 && (
+                <p className="rounded-lg bg-amber-50 px-2.5 py-1.5 text-[11px] leading-snug text-amber-800">
+                  Mais de 1 hora: o cliente vê esse tempo e o entregador pode
+                  aceitar antes. Combine a retirada com ele pelo chat.
+                </p>
+              )}
               <button
                 onClick={() => onAcceptOrder ? run(onAcceptOrder, order.id, estimatedTime) : run(onUpdateStatus, order.id, 'accepted')}
                 disabled={busy}
