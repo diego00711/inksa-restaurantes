@@ -18,7 +18,7 @@ import { RESTAURANT_API_URL, createAuthHeaders } from '../services/api';
 import { useToast } from '../context/ToastContext.jsx';
 
 const grupoVazio = () => ({
-  nome: '', tipo: 'uma', opcoes: [{ nome: '', preco_extra: '' }],
+  nome: '', tipo: 'uma', limite: '', opcoes: [{ nome: '', preco_extra: '' }],
 });
 
 export default function OpcoesDoItem({ item, onFechar }) {
@@ -32,6 +32,9 @@ export default function OpcoesDoItem({ item, onFechar }) {
       .then((d) => setGrupos((d.grupos || []).map((g) => ({
         nome: g.nome,
         tipo: g.min_escolhas > 0 && g.max_escolhas === 1 ? 'uma' : 'adicionais',
+        // Limite só aparece preenchido se for menor que o total — "até 3 de 8"
+        // é regra; "até 8 de 8" é o mesmo que sem limite.
+        limite: g.max_escolhas < (g.opcoes || []).length ? String(g.max_escolhas) : '',
         opcoes: (g.opcoes || []).map((o) => ({
           nome: o.nome,
           preco_extra: Number(o.preco_extra) ? String(Number(o.preco_extra).toFixed(2)) : '',
@@ -53,12 +56,19 @@ export default function OpcoesDoItem({ item, onFechar }) {
           .filter((g) => g.nome.trim() && g.opcoes.some((o) => o.nome.trim()))
           .map((g) => {
             const opcoes = g.opcoes.filter((o) => o.nome.trim());
+            // Limite dos adicionais: é o "escolha até 3 acompanhamentos" da
+            // açaiteria. Em branco = pode marcar todos. O servidor corta pelo
+            // número de opções, então valor maior que isso não vira problema.
+            const lim = parseInt(g.limite, 10);
+            const teto = Number.isFinite(lim) && lim > 0
+              ? Math.min(lim, opcoes.length)
+              : opcoes.length;
             return {
               nome: g.nome.trim(),
               // "Escolher uma" = obrigatório e só uma. "Adicionais" = opcional,
-              // pode marcar quantos quiser.
+              // até o teto definido (ou todos).
               min_escolhas: g.tipo === 'uma' ? 1 : 0,
-              max_escolhas: g.tipo === 'uma' ? 1 : opcoes.length,
+              max_escolhas: g.tipo === 'uma' ? 1 : teto,
               opcoes: opcoes.map((o) => ({
                 nome: o.nome.trim(),
                 preco_extra: Number(String(o.preco_extra).replace(',', '.')) || 0,
@@ -123,6 +133,19 @@ export default function OpcoesDoItem({ item, onFechar }) {
                   <option value="uma">Escolher uma (obrigatório)</option>
                   <option value="adicionais">Adicionais (opcional)</option>
                 </select>
+                {g.tipo === 'adicionais' && (
+                  <label className="flex items-center gap-1 text-xs text-gray-500">
+                    até
+                    <input
+                      value={g.limite}
+                      onChange={(e) => mexer(i, { limite: e.target.value.replace(/\D/g, '') })}
+                      placeholder="todos"
+                      inputMode="numeric"
+                      title="Quantos o cliente pode marcar. Em branco, pode marcar todos."
+                      className="min-h-[40px] w-16 rounded-lg border border-gray-300 px-2 text-center text-sm outline-none focus:border-orange-500"
+                    />
+                  </label>
+                )}
                 <button
                   onClick={() => setGrupos((gs) => gs.filter((_, k) => k !== i))}
                   className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600"
