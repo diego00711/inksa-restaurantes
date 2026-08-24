@@ -611,7 +611,11 @@ export function OrdersPage() {
 
       {/* ── Modals ─────────────────────────────────────────────────────────── */}
       {isModalOpen && selectedOrder && (
-        <OrderDetailsModal order={selectedOrder} onClose={handleCloseModal} />
+        <OrderDetailsModal
+          order={selectedOrder}
+          restaurantName={profile?.restaurant_name || ''}
+          onClose={handleCloseModal}
+        />
       )}
       {showPickupModal && selectedOrderForPickup && (
         <PickupConfirmationModal
