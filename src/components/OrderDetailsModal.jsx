@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Printer } from 'lucide-react';
 import { orderService } from '../services/orderService';
 import { useToast } from '../context/ToastContext.jsx';
+import { ehAplicativo, ENDERECO_WEB } from '../utils/orderPrint';
 
 // O checkout do cliente grava a taxa de entrega como um ITEM do pedido, além de
 // ter a linha "Taxa de Entrega" própria (delivery_fee) — mostrar os dois é
@@ -160,7 +161,23 @@ export function OrderDetailsModal({ order, onClose }) {
     // fallback: se onafterprint não disparar (varia por navegador), limpa depois
     setTimeout(removeIframe, 60000);
     // pequeno atraso pro layout aplicar antes de abrir a caixa de impressão
-    setTimeout(() => { win.focus(); win.print(); }, 200);
+    setTimeout(() => {
+      win.focus();
+      try {
+        win.print();
+      } catch {
+        removeIframe();
+      }
+      // Mesma armadilha da tela de pedidos: dentro do aplicativo a WebView do
+      // Android não implementa print() e a chamada não faz nada nem avisa.
+      // Este arquivo tem a SEGUNDA implementação de impressão do app (a outra
+      // vive em utils/orderPrint.js) — consertar só uma deixaria o botão morto
+      // aqui dentro.
+      if (ehAplicativo()) {
+        addToast('info',
+          `Se a impressão não abrir, imprima pelo navegador: ${ENDERECO_WEB}`);
+      }
+    }, 200);
   };
 
   const modalBackdropStyle = {

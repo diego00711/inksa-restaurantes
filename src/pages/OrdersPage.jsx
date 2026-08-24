@@ -18,7 +18,7 @@ import SponsoredStrip from '../components/SponsoredStrip';
 import ClientReviewForm from '../components/ClientReviewForm';
 import DeliveryReviewForm from '../components/DeliveryReviewForm';
 import IncidentAlerts from '../components/IncidentAlerts.jsx';
-import { printOrder } from '../utils/orderPrint';
+import { printOrder, ehAplicativo, ENDERECO_WEB } from '../utils/orderPrint';
 
 // ─── OrderTimer ───────────────────────────────────────────────────────────────
 function OrderTimer({ createdAt, acceptedAt, finishedAt, parado = false }) {
@@ -405,7 +405,19 @@ export function OrdersPage() {
   // Imprime a comanda do pedido (via de 80mm pelo navegador).
   const handlePrintOrder = useCallback((order) => {
     const ok = printOrder(order, profile?.restaurant_name || '');
-    if (!ok) addToast('error', 'Não foi possível abrir a impressão.');
+    if (!ok) {
+      addToast('error', 'Não foi possível abrir a impressão.');
+      return;
+    }
+    // No aplicativo a impressão pode não abrir NADA: a WebView do Android não
+    // implementa print(), e a chamada falha em silêncio. Como não dá pra
+    // detectar isso depois, o aviso sai junto — melhor um aviso a mais no
+    // navegador (onde funciona) do que a parceira apertando um botão morto e
+    // concluindo que o sistema não presta.
+    if (ehAplicativo()) {
+      addToast('info',
+        `Se a impressão não abrir, imprima pelo navegador: ${ENDERECO_WEB}`);
+    }
   }, [profile?.restaurant_name, addToast]);
 
   const handleInputChange = (e) => { setFilters(prev => ({ ...prev, [e.target.name]: e.target.value })); };

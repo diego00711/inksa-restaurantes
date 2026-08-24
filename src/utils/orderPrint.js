@@ -111,8 +111,42 @@ export function printOrder(order, restaurantName = '') {
   if (!doc) { document.body.removeChild(frame); return false; }
   doc.open(); doc.write(html); doc.close();
   frame.contentWindow.focus();
-  frame.contentWindow.print();
+  try {
+    frame.contentWindow.print();
+  } catch {
+    // A WebView do Android nem sempre implementa print(). Quem avisa o
+    // usuário é a tela, com ehAplicativo() — aqui só não deixa estourar.
+    document.body.removeChild(frame);
+    return false;
+  }
   // Só remove depois da caixa de impressão fechar (senão cancela o job).
   setTimeout(() => { try { document.body.removeChild(frame); } catch { /* já removido */ } }, 60000);
   return true;
 }
+
+/**
+ * Está rodando DENTRO do aplicativo instalado (WebView), e não no navegador?
+ *
+ * Importa por um motivo só: a WebView do Android não implementa a impressão.
+ * O Chrome implementa; ela não. Então o botão apertava e não acontecia
+ * absolutamente nada — sem erro, sem aviso, sem impressão. A parceira conclui
+ * que o sistema é quebrado, e ela está certa.
+ *
+ * Não dá pra detectar a falha depois de chamar print(): quando ela não existe,
+ * a chamada simplesmente não faz nada e não avisa. Por isso a tela pergunta
+ * ANTES e explica o caminho que funciona.
+ *
+ * Dois sinais porque nenhum é garantido sozinho: a ponte do Capacitor (que só
+ * existe no app) e o marcador "wv" que o Android põe no user-agent da WebView.
+ */
+export function ehAplicativo() {
+  try {
+    if (window.Capacitor?.isNativePlatform?.()) return true;
+    return / wv\)|; wv;/i.test(navigator.userAgent || '');
+  } catch {
+    return false;
+  }
+}
+
+/** Endereço pra abrir no navegador quando a impressão não rola no app. */
+export const ENDERECO_WEB = 'restaurante.inksadelivery.com.br';
