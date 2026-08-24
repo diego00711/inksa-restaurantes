@@ -255,11 +255,22 @@ export function OrderDetailsModal({ order, onClose }) {
                   const visibleItems = (fullOrderDetails.items || []).filter(i => !isDeliveryFeeItem(i));
                   return visibleItems.length > 0 ? (
                     visibleItems.map((item, index) => (
-                      <li key={index} className="flex justify-between items-center text-gray-700 py-2 border-b border-gray-100">
+                      <li key={index} className="flex justify-between items-start text-gray-700 py-2 border-b border-gray-100">
                         <span className="flex-1">
                           {/* itens gravados pelo app cliente usam title/unit_price;
                               mantém name/price como fallback pra formatos antigos */}
                           <span className="font-medium">{item.quantity || 1}x</span> {item.title || item.name || 'Item sem nome'}
+                          {/* As escolhas do cliente. Estavam só na comanda
+                              impressa — mas é AQUI que o parceiro olha antes de
+                              aceitar, então faltava no lugar mais usado. */}
+                          {item.opcoes?.length > 0 && (
+                            <span className="mt-0.5 block text-sm text-gray-500">
+                              {item.opcoes
+                                .map((o) => `${Number(o.qtd) > 1 ? `${o.qtd}x ` : ''}${o.nome || ''}`)
+                                .filter((s) => s.trim())
+                                .join(' · ')}
+                            </span>
+                          )}
                         </span>
                         <span className="font-medium">{formatCurrency(item.unit_price ?? item.price)}</span>
                       </li>

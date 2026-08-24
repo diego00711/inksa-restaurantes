@@ -54,7 +54,13 @@ export function parseItensDoPedido(raw, { incluirTaxa = false } = {}) {
       // está embutido em `preco`, e repetir valor aqui é convite pra duas
       // contas divergirem.
       opcoes: Array.isArray(it?.opcoes)
-        ? it.opcoes.map((o) => (typeof o === 'string' ? o : (o?.nome || ''))).filter(Boolean)
+        ? it.opcoes
+            .map((o) => {
+              if (typeof o === 'string') return o;
+              const n = Number(o?.qtd) > 1 ? `${o.qtd}x ` : '';
+              return o?.nome ? `${n}${o.nome}` : '';
+            })
+            .filter(Boolean)
         : [],
     }));
 }
