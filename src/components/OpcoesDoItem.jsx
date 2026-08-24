@@ -53,7 +53,9 @@ export default function OpcoesDoItem({ item, onFechar }) {
       .then((r) => (r.ok ? r.json() : { grupos: [] }))
       .then((d) => setGrupos((d.grupos || []).map((g) => ({
         nome: g.nome,
-        tipo: g.min_escolhas > 0 && g.max_escolhas === 1 ? 'uma' : 'adicionais',
+        tipo: g.min_escolhas > 0
+          ? (g.max_escolhas === 1 ? 'uma' : 'varias')
+          : 'adicionais',
         // Limite só aparece preenchido se for menor que o total — "até 3 de 8"
         // é regra; "até 8 de 8" é o mesmo que sem limite.
         limite: g.max_escolhas < (g.opcoes || []).length ? String(g.max_escolhas) : '',
@@ -88,9 +90,11 @@ export default function OpcoesDoItem({ item, onFechar }) {
               : opcoes.length;
             return {
               nome: g.nome.trim(),
-              // "Escolher uma" = obrigatório e só uma. "Adicionais" = opcional,
-              // até o teto definido (ou todos).
-              min_escolhas: g.tipo === 'uma' ? 1 : 0,
+              // Três casos reais, e cada um vira um par min/max:
+              //   uma     -> exatamente 1, obrigatório   (tamanho, corte)
+              //   varias  -> de 1 até N, obrigatório     (2 sabores de pizza)
+              //   adicionais -> de 0 até N, opcional     (bacon, morango)
+              min_escolhas: g.tipo === 'adicionais' ? 0 : 1,
               max_escolhas: g.tipo === 'uma' ? 1 : teto,
               opcoes: opcoes.map((o) => ({
                 nome: o.nome.trim(),
@@ -154,19 +158,19 @@ export default function OpcoesDoItem({ item, onFechar }) {
                   onChange={(e) => mexer(i, { tipo: e.target.value })}
                   className="min-h-[40px] rounded-lg border border-gray-300 px-2 text-sm"
                 >
-                  <option value="uma">Escolher uma (obrigatório)</option>
-                  <option value="adicionais">Adicionais (opcional)</option>
+                  <option value="uma">Precisa escolher 1</option>
+                  <option value="varias">Precisa escolher, pode mais de 1</option>
+                  <option value="adicionais">Pode escolher, ou não</option>
                 </select>
-                {g.tipo === 'adicionais' && (
+                {g.tipo !== 'uma' && (
                   <label className="flex items-center gap-1 text-xs text-gray-500">
-                    até
+                    no máximo
                     <input
                       value={g.limite}
                       onChange={(e) => mexer(i, { limite: e.target.value.replace(/\D/g, '') })}
-                      placeholder="todos"
+                      placeholder="—"
                       inputMode="numeric"
-                      title="Quantos o cliente pode marcar. Em branco, pode marcar todos."
-                      className="min-h-[40px] w-16 rounded-lg border border-gray-300 px-2 text-center text-sm outline-none focus:border-orange-500"
+                      className="min-h-[40px] w-14 rounded-lg border border-gray-300 px-2 text-center text-sm outline-none focus:border-orange-500"
                     />
                   </label>
                 )}
@@ -176,6 +180,25 @@ export default function OpcoesDoItem({ item, onFechar }) {
                   aria-label="Remover grupo"
                 ><Trash2 size={16} /></button>
               </div>
+
+              {/* Frase do resultado, não do campo.
+                  O "até / todos" confundia porque explicava o mecanismo. Aqui
+                  a tela diz, em português, exatamente o que o cliente vai ver
+                  — e o parceiro confere sem precisar entender a regra. */}
+              <p className="mt-2 pl-6 text-xs text-gray-500">
+                {(() => {
+                  const n = g.opcoes.filter((o) => o.nome.trim()).length;
+                  const lim = parseInt(g.limite, 10);
+                  const teto = Number.isFinite(lim) && lim > 0 ? Math.min(lim, n || 1) : (n || 1);
+                  if (g.tipo === 'uma') {
+                    return 'O cliente escolhe 1 destas, obrigatoriamente.';
+                  }
+                  if (g.tipo === 'varias') {
+                    return `O cliente escolhe de 1 até ${teto}, obrigatoriamente.`;
+                  }
+                  return `O cliente pode escolher até ${teto} — ou nenhuma.`;
+                })()}
+              </p>
 
               <div className="mt-3 space-y-2 pl-6">
                 {g.opcoes.map((o, j) => (
@@ -231,10 +254,16 @@ export default function OpcoesDoItem({ item, onFechar }) {
                     ><Trash2 size={14} /></button>
                   </div>
                 ))}
-                <button
-                  onClick={() => mexer(i, { opcoes: [...g.opcoes, { nome: '', preco_extra: '', imagem_url: '' }] })}
-                  className="inline-flex items-center gap-1 text-sm font-semibold text-orange-600 hover:underline"
-                ><Plus size={14} /> opção</button>
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    onClick={() => mexer(i, { opcoes: [...g.opcoes, { nome: '', preco_extra: '', imagem_url: '' }] })}
+                    className="inline-flex items-center gap-1 text-sm font-semibold text-orange-600 hover:underline"
+                  ><Plus size={14} /> opção</button>
+                  <span className="text-xs text-gray-400">
+                    O quadradinho é a foto — opcional. Sem ela aparece só o nome.
+                    Deixe o valor em branco se a opção for de graça.
+                  </span>
+                </div>
               </div>
             </div>
           ))}
