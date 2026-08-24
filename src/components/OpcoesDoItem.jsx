@@ -13,13 +13,35 @@
 // (obrigatório) e "adicionais" (opcional, vários). São os dois casos reais, e
 // os números certos saem disso sem ninguém precisar entender a regra.
 import React, { useEffect, useState } from 'react';
-import { X, Plus, Trash2, Loader2, GripVertical } from 'lucide-react';
+import { X, Plus, Trash2, Loader2, GripVertical, ImagePlus } from 'lucide-react';
 import { RESTAURANT_API_URL, createAuthHeaders } from '../services/api';
 import { useToast } from '../context/ToastContext.jsx';
 
 const grupoVazio = () => ({
-  nome: '', tipo: 'uma', limite: '', opcoes: [{ nome: '', preco_extra: '' }],
+  nome: '', tipo: 'uma', limite: '',
+  opcoes: [{ nome: '', preco_extra: '', imagem_url: '' }],
 });
+
+/**
+ * Sobe a foto da opção reusando o upload que já serve os itens do cardápio.
+ *
+ * Foto na opção vende: em adicional de açaí, morango e banana se escolhem pelo
+ * olho, não pela leitura. Continua OPCIONAL — quem vende "P, M, G" não tem
+ * foto de tamanho pra pôr, e obrigar imagem faria o parceiro desistir do
+ * recurso na primeira tela.
+ */
+async function subirFoto(arquivo) {
+  const fd = new FormData();
+  fd.append('file', arquivo);
+  const r = await fetch(`${RESTAURANT_API_URL}/api/menu/upload-image`, {
+    method: 'POST', headers: createAuthHeaders(), body: fd,
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j?.error || 'Não consegui subir a imagem.');
+  // O endpoint devolve { data: { image_url } }; os outros formatos são rede de
+  // segurança caso a resposta mude.
+  return j.data?.image_url || j.image_url || j.url || '';
+}
 
 export default function OpcoesDoItem({ item, onFechar }) {
   const { addToast } = useToast();
@@ -38,6 +60,7 @@ export default function OpcoesDoItem({ item, onFechar }) {
         opcoes: (g.opcoes || []).map((o) => ({
           nome: o.nome,
           preco_extra: Number(o.preco_extra) ? String(Number(o.preco_extra).toFixed(2)) : '',
+          imagem_url: o.imagem_url || '',
         })),
       }))))
       .catch(() => setGrupos([]));
@@ -73,6 +96,7 @@ export default function OpcoesDoItem({ item, onFechar }) {
                 nome: o.nome.trim(),
                 preco_extra: Number(String(o.preco_extra).replace(',', '.')) || 0,
                 disponivel: true,
+                imagem_url: (o.imagem_url || '').trim() || null,
               })),
             };
           }),
@@ -100,8 +124,8 @@ export default function OpcoesDoItem({ item, onFechar }) {
           <div>
             <h3 className="text-lg font-bold text-gray-900">Opções de {item.name}</h3>
             <p className="mt-0.5 text-sm text-gray-500">
-              Corte, molho, adicionais. O cliente escolhe na hora de pedir, e a
-              escolha sai impressa na comanda.
+              Tamanho, sabor, adicionais &mdash; o que o cliente escolhe na hora de
+              pedir. A escolha sai impressa na comanda.
             </p>
           </div>
           <button onClick={onFechar} className="rounded p-1 text-gray-400 hover:bg-gray-100"
@@ -122,7 +146,7 @@ export default function OpcoesDoItem({ item, onFechar }) {
                 <input
                   value={g.nome}
                   onChange={(e) => mexer(i, { nome: e.target.value })}
-                  placeholder="Nome do grupo (ex.: Corte do frango)"
+                  placeholder="Nome do grupo (ex.: Tamanho, Sabor, Adicionais)"
                   className="min-h-[40px] flex-1 min-w-[12rem] rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-orange-500"
                 />
                 <select
@@ -156,10 +180,38 @@ export default function OpcoesDoItem({ item, onFechar }) {
               <div className="mt-3 space-y-2 pl-6">
                 {g.opcoes.map((o, j) => (
                   <div key={j} className="flex items-center gap-2">
+                    {/* Foto opcional. Um quadradinho clicável em vez de campo
+                        de arquivo: ocupa o espaço de um ícone e já mostra o
+                        que subiu, sem precisar de linha extra por opção. */}
+                    <label
+                      title="Foto da opção (opcional)"
+                      className="relative h-10 w-10 shrink-0 cursor-pointer overflow-hidden rounded-lg border border-dashed border-gray-300 bg-gray-50 hover:border-orange-400"
+                    >
+                      {o.imagem_url
+                        ? <img src={o.imagem_url} alt="" className="h-full w-full object-cover" />
+                        : <ImagePlus size={15} className="absolute inset-0 m-auto text-gray-400" />}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const arq = e.target.files?.[0];
+                          if (!arq) return;
+                          try {
+                            const url = await subirFoto(arq);
+                            mexerOpcao(i, j, { imagem_url: url });
+                          } catch (err) {
+                            addToast('error', err.message || 'Não consegui subir a imagem.');
+                          } finally {
+                            e.target.value = '';
+                          }
+                        }}
+                      />
+                    </label>
                     <input
                       value={o.nome}
                       onChange={(e) => mexerOpcao(i, j, { nome: e.target.value })}
-                      placeholder="Opção (ex.: Coxa)"
+                      placeholder="Opção (ex.: Pequeno, Morango)"
                       className="min-h-[38px] flex-1 rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-orange-500"
                     />
                     <div className="flex items-center gap-1">
@@ -180,7 +232,7 @@ export default function OpcoesDoItem({ item, onFechar }) {
                   </div>
                 ))}
                 <button
-                  onClick={() => mexer(i, { opcoes: [...g.opcoes, { nome: '', preco_extra: '' }] })}
+                  onClick={() => mexer(i, { opcoes: [...g.opcoes, { nome: '', preco_extra: '', imagem_url: '' }] })}
                   className="inline-flex items-center gap-1 text-sm font-semibold text-orange-600 hover:underline"
                 ><Plus size={14} /> opção</button>
               </div>

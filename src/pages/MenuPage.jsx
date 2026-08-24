@@ -138,6 +138,18 @@ export function MenuPage() {
                         <td className="p-4">
                         <div className="font-medium text-gray-800 break-words">{item.name}</div>
                         <div className="text-sm text-gray-500 break-words">{item.description}</div>
+                        {/* O que este item já pergunta ao cliente. Sem isto,
+                            descobrir quais itens têm opção exigiria abrir um
+                            por um — e num cardápio de 40 linhas ninguém abre. */}
+                        {item.grupos_opcoes?.length > 0 && (
+                          <div className="mt-1 flex flex-wrap gap-1">
+                            {item.grupos_opcoes.map((g) => (
+                              <span key={g} className="rounded bg-orange-50 px-1.5 py-0.5 text-[11px] font-medium text-orange-700 ring-1 ring-orange-100">
+                                {g}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                         </td>
                         <td className="p-4 text-gray-600">{item.category}</td>
                         <td className="p-4 font-medium text-gray-800">R$ {parseFloat(item.price || 0).toFixed(2)}</td>
@@ -149,8 +161,11 @@ export function MenuPage() {
                         <td className="p-4">
                         <div className="flex gap-2">
                             <button
-                              title="Opções: corte, molho, adicionais"
-                              className="text-orange-600 hover:text-orange-800 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                              title="Opções do item (tamanho, sabor, adicionais)"
+                              className={`p-2 min-h-[44px] min-w-[44px] flex items-center justify-center ${
+                                item.grupos_opcoes?.length
+                                  ? 'text-orange-600 hover:text-orange-800'
+                                  : 'text-gray-400 hover:text-orange-600'}`}
                               onClick={() => setItemOpcoes(item)}
                             ><SlidersHorizontal size={18} /></button>
                             <button className="text-blue-600 hover:text-blue-800 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center" onClick={() => openEditModal(item)}><Edit size={18} /></button>
