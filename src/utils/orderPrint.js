@@ -49,6 +49,10 @@ function parseItems(raw) {
     quantidade: it.quantidade,
     nome: it.nome,
     preco: it.preco,
+    // As escolhas TÊM que sair impressas. Se o cliente pede coxa com molho
+    // barbecue e a comanda mostra só "Frango frito", a cozinha faz errado — e
+    // o app leva a culpa por um pedido que registrou certo.
+    opcoes: it.opcoes || [],
   }));
 }
 
@@ -79,6 +83,9 @@ export function printOrder(order, restaurantName = '') {
   hr { border: 0; border-top: 1px dashed #000; margin: 8px 0; }
   .linha { display: flex; justify-content: space-between; gap: 8px; }
   .item { margin-bottom: 3px; }
+  /* Negrito e recuado: numa bobina de 80mm em cozinha corrida, a escolha do
+     cliente precisa saltar da linha do item, não se esconder nela. */
+  .opcoes { margin: -1px 0 5px 12px; font-size: 11px; font-weight: bold; }
   .total { font-size: 14px; font-weight: bold; }
   .obs { border: 1px dashed #000; padding: 4px; margin-top: 6px; }
   .rodape { text-align: center; margin-top: 10px; font-size: 11px; }
@@ -91,7 +98,13 @@ export function printOrder(order, restaurantName = '') {
   ${enderecoTxt ? `<div><strong>Entrega:</strong> ${escapeHtml(enderecoTxt)}</div>` : ''}
   <hr>
   ${itens.length
-    ? itens.map((i) => `<div class="item linha"><span>${i.quantidade}x ${escapeHtml(i.nome)}</span><span>${brl(i.preco * i.quantidade)}</span></div>`).join('')
+    ? itens.map((i) => (
+        `<div class="item linha"><span>${i.quantidade}x ${escapeHtml(i.nome)}</span>` +
+        `<span>${brl(i.preco * i.quantidade)}</span></div>` +
+        (i.opcoes?.length
+          ? `<div class="opcoes">↳ ${escapeHtml(i.opcoes.join(' · '))}</div>`
+          : '')
+      )).join('')
     : '<div class="item">(sem itens detalhados)</div>'}
   <hr>
   ${subtotal ? `<div class="linha"><span>Subtotal</span><span>${brl(subtotal)}</span></div>` : ''}

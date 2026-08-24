@@ -1,7 +1,8 @@
 // src/pages/MenuPage.jsx - VERSÃO FINAL E ROBUSTA
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { PlusCircle, Edit, Trash2, Image as ImageIcon, FileSpreadsheet } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Image as ImageIcon, FileSpreadsheet, SlidersHorizontal } from 'lucide-react';
+import OpcoesDoItem from '../components/OpcoesDoItem';
 import { menuService } from '../services/menuService';
 import { MenuItemModal } from '../components/MenuItemModal';
 import ImportarCatalogo from '../components/ImportarCatalogo';
@@ -15,6 +16,8 @@ export function MenuPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [importAberto, setImportAberto] = useState(false);
+  // Item cujas opções (corte, molho, adicionais) estão sendo editadas.
+  const [itemOpcoes, setItemOpcoes] = useState(null);
   const { addToast } = useToast();
   const confirm = useConfirm();
 
@@ -145,6 +148,11 @@ export function MenuPage() {
                         </td>
                         <td className="p-4">
                         <div className="flex gap-2">
+                            <button
+                              title="Opções: corte, molho, adicionais"
+                              className="text-orange-600 hover:text-orange-800 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                              onClick={() => setItemOpcoes(item)}
+                            ><SlidersHorizontal size={18} /></button>
                             <button className="text-blue-600 hover:text-blue-800 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center" onClick={() => openEditModal(item)}><Edit size={18} /></button>
                             <button onClick={() => handleDeleteItem(item.id)} className="text-red-600 hover:text-red-800 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"><Trash2 size={18} /></button>
                         </div>
@@ -163,8 +171,12 @@ export function MenuPage() {
             onClose={handleCloseModal} 
             onItemAdded={handleItemAdded}
             onItemUpdated={handleItemUpdated} 
-            itemToEdit={editingItem} 
+            itemToEdit={editingItem}
             />
+        )}
+
+        {itemOpcoes && (
+            <OpcoesDoItem item={itemOpcoes} onFechar={() => setItemOpcoes(null)} />
         )}
     </div>
   );

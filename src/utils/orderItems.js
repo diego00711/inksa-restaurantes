@@ -50,5 +50,11 @@ export function parseItensDoPedido(raw, { incluirTaxa = false } = {}) {
       nome: it?.title ?? it?.name ?? it?.product_name ?? 'Item',
       preco: Number(it?.unit_price ?? it?.price ?? 0) || 0,
       menu_item_id: it?.menu_item_id ?? null,
+      // Escolhas do cliente (corte, molho, adicional). Só os NOMES: preço já
+      // está embutido em `preco`, e repetir valor aqui é convite pra duas
+      // contas divergirem.
+      opcoes: Array.isArray(it?.opcoes)
+        ? it.opcoes.map((o) => (typeof o === 'string' ? o : (o?.nome || ''))).filter(Boolean)
+        : [],
     }));
 }
