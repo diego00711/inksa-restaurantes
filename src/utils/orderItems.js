@@ -78,6 +78,10 @@ export function parseItensDoPedido(raw, { incluirTaxa = false } = {}) {
       nome: it?.title ?? it?.name ?? it?.product_name ?? 'Item',
       preco: Number(it?.unit_price ?? it?.price ?? 0) || 0,
       menu_item_id: it?.menu_item_id ?? null,
+      // Quem pediu incluirTaxa precisa saber QUAL item é a taxa — senão teria
+      // que reimplementar a regra do lado de fora, e aí ela passa a existir em
+      // dois lugares. A regra mora em ehTaxaDeEntrega, ponto.
+      ehTaxa: ehTaxaDeEntrega(it),
       // Escolhas do cliente (corte, molho, adicional). Só os NOMES: preço já
       // está embutido em `preco`, e repetir valor aqui é convite pra duas
       // contas divergirem.

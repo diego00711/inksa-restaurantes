@@ -43,9 +43,19 @@ function escapeHtml(s) {
 
 // A leitura dos itens mora em utils/orderItems.js — havia quatro cópias deste
 // parser no app e uma delas estava errada, deixando o card do pedido sem itens.
-// Aqui a taxa de entrega ENTRA: recibo tem que fechar com o que foi cobrado.
+//
+// A taxa de entrega é lida (incluirTaxa) mas NÃO vai pra lista de itens: ela
+// tem linha própria no rodapé. O checkout grava o frete como um item além de
+// gravá-lo em delivery_fee, então imprimir os dois fazia o papel mostrar
+// "1x Taxa de Entrega R$ 8,30" e logo abaixo "Entrega R$ 8,30" — o total
+// fechava, mas quem lê vê o frete cobrado duas vezes e vem perguntar.
+//
+// Ler a taxa mesmo assim serve de rede: se delivery_fee vier vazio num pedido
+// (formatos antigos), o valor do item vira a linha de Entrega e o recibo
+// continua fechando. Era esse o motivo do incluirTaxa desde o começo.
 function parseItems(raw) {
-  return parseItensDoPedido(raw, { incluirTaxa: true }).map((it) => ({
+  const todos = parseItensDoPedido(raw, { incluirTaxa: true });
+  const itens = todos.filter((it) => !it.ehTaxa).map((it) => ({
     quantidade: it.quantidade,
     nome: it.nome,
     preco: it.preco,
@@ -55,14 +65,22 @@ function parseItems(raw) {
     opcoes: it.opcoes || [],
     preco_base: it.preco_base,
   }));
+  const taxaNosItens = todos
+    .filter((it) => it.ehTaxa)
+    .reduce((s, it) => s + it.preco * it.quantidade, 0);
+  return { itens, taxaNosItens };
 }
 
 const METODOS = { cash: 'Dinheiro', pix: 'PIX', credit: 'Cartão de crédito', debit: 'Cartão de débito' };
 
 export function printOrder(order, restaurantName = '') {
-  const itens = parseItems(order?.items);
-  const subtotal = Number(order?.total_amount_items ?? 0);
-  const frete = Number(order?.delivery_fee ?? 0);
+  const { itens, taxaNosItens } = parseItems(order?.items);
+  // Subtotal e frete caem pro que dá pra calcular quando o campo não vem. Um
+  // recibo cujas linhas não somam o TOTAL vira discussão no balcão, e a loja
+  // não tem como provar nada — então é melhor derivar do que deixar em branco.
+  const somaDosItens = itens.reduce((s, i) => s + i.preco * i.quantidade, 0);
+  const subtotal = Number(order?.total_amount_items ?? 0) || somaDosItens;
+  const frete = Number(order?.delivery_fee ?? 0) || taxaNosItens;
   const total = Number(order?.total_amount ?? 0);
   const cliente = order?.client_name || order?.client_first_name || 'Cliente';
   const quando = order?.created_at ? new Date(order.created_at).toLocaleString('pt-BR') : '';
