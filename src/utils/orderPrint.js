@@ -78,11 +78,22 @@ export function printOrder(order, restaurantName = '') {
 <style>
   @page { size: 80mm auto; margin: 4mm; }
   * { box-sizing: border-box; }
-  body { font-family: ui-monospace, "Courier New", monospace; font-size: 12px; color: #000; margin: 0; }
+  /* Texto QUEBRA, sempre. Numa bobina de 80mm o papel não tem "resto" à
+     direita: o que passar da margem simplesmente não é impresso. E o campo
+     mais perigoso é a observação do cliente, que é texto livre — basta ele
+     digitar sem espaço (ou colar um link) que vira uma palavra só, larga
+     demais, e a instrução some do papel bem na hora que a cozinha precisa
+     dela. overflow-wrap:anywhere autoriza cortar no meio da palavra quando
+     não há outro lugar pra quebrar. */
+  body { font-family: ui-monospace, "Courier New", monospace; font-size: 12px; color: #000; margin: 0;
+         overflow-wrap: anywhere; word-break: break-word; }
   h1 { font-size: 15px; text-align: center; margin: 0 0 2px; }
   .sub { text-align: center; font-size: 11px; margin-bottom: 8px; }
   hr { border: 0; border-top: 1px dashed #000; margin: 8px 0; }
   .linha { display: flex; justify-content: space-between; gap: 8px; }
+  /* Coluna da esquerda pode encolher. Sem o min-width:0, um nome de item
+     comprido empurra o valor pra fora do papel em vez de quebrar. */
+  .linha > span:first-child { min-width: 0; }
   /* O valor nunca quebra. Com nome de item comprido, o "R$" ficava numa linha
      e os centavos na outra — numa comanda impressa isso parece defeito de
      impressora, e o cliente vem perguntar. */
