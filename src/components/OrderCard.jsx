@@ -90,7 +90,7 @@ export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus
   const isEnRoute = ['Saiu para Entrega', 'delivering', 'Entregando'].includes(order.status);
 
   return (
-    <div className={`bg-white rounded-lg shadow-sm p-4 flex flex-col gap-3 hover:shadow-lg transition-shadow duration-200 ${order.status === 'Pendente' ? 'ring-2 ring-green-400 animate-pulse' : ''}`}>
+    <div className={`bg-white rounded-lg shadow-sm p-4 flex flex-col gap-3 hover:shadow-lg transition-shadow duration-200 ${order.status === 'Pendente' ? 'ring-2 ring-green-400 pedido-chamando' : ''}`}>
       <div className="cursor-pointer" onClick={() => onViewDetails(order)}>
         <div className="flex items-center justify-between gap-2 mb-2">
           <h3 className="text-sm font-bold text-gray-800 truncate">

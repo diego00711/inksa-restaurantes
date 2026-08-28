@@ -137,3 +137,42 @@ body {
   color: var(--color-danger);
   border-color: var(--color-danger);
 }
+/* ══════════════════════════════════════════════════════════════════════════
+   PEDIDO PENDENTE — chama atenção sem piscar o conteúdo
+   ══════════════════════════════════════════════════════════════════════════
+   O card usava `animate-pulse` do Tailwind enquanto o status fosse Pendente.
+   Dois problemas, e o Diego pegou os dois num teste real ("o card para o
+   parceiro aceitar fica piscando, meio complicado"):
+
+   1. `animate-pulse` oscila a OPACIDADE DO ELEMENTO INTEIRO. Endereço, valor
+      e o próprio botão "Aceitar pedido" ficavam sumindo e voltando enquanto
+      ele tentava ler e clicar. Animar o container que contém a ação é ruim
+      justamente porque a ação é o que precisa estar nítido.
+
+   2. Não era um aviso de alguns segundos: o pedido fica Pendente ATÉ o
+      parceiro aceitar. Então piscava indefinidamente — inclusive nos minutos
+      em que ele está lendo o pedido pra decidir.
+
+   Aqui a animação sai do conteúdo e vai pro `box-shadow`, que é decoração
+   pura: um anel verde que expande e some, tipo radar. O olho continua sendo
+   puxado pro card novo, e o texto fica 100% legível o tempo todo.
+
+   O anel estático (ring-2) continua no card — ele é quem marca "este é novo"
+   pra quem chegar depois de a animação já ter rodado. */
+@keyframes inksa-pedido-chamando {
+  0%   { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.55); }
+  70%  { box-shadow: 0 0 0 14px rgba(34, 197, 94, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+.pedido-chamando {
+  animation: inksa-pedido-chamando 1.9s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Quem pediu menos movimento no sistema não recebe animação nenhuma — mas
+   continua vendo que o pedido é novo, por um anel mais forte e parado. */
+@media (prefers-reduced-motion: reduce) {
+  .pedido-chamando {
+    animation: none;
+    box-shadow: 0 0 0 5px rgba(34, 197, 94, 0.35);
+  }
+}
