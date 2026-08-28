@@ -68,6 +68,11 @@ const SEGMENTS = [
   { value: 'farmacia', label: 'Farmácia' },
   { value: 'mercado', label: 'Supermercado / Mercado' },
   { value: 'padaria', label: 'Padaria' },
+  // Cafeteria entrou porque duas lojas seguidas nao encaixavam em nada:
+  // a Me Mimei (confeitaria) e as cafeterias da cidade. Quem nao acha o
+  // proprio ramo marca 'Restaurante' — e aí some do filtro de quem
+  // procura exatamente aquilo.
+  { value: 'cafeteria', label: 'Cafeteria / Doceria' },
   { value: 'pet', label: 'Pet' },
   { value: 'conveniencia', label: 'Conveniência' },
   { value: 'bebidas', label: 'Bebidas / Adega' },
@@ -79,6 +84,7 @@ const TYPES_BY_SEGMENT = {
   farmacia: ['Medicamentos', 'Manipulação', 'Dermocosméticos', 'Higiene', 'Conveniência'],
   mercado: ['Hortifruti', 'Mercearia', 'Açougue', 'Bebidas', 'Limpeza', 'Padaria'],
   padaria: ['Pães', 'Confeitaria', 'Salgados', 'Café', 'Frios'],
+  cafeteria: ['Café', 'Cappuccino', 'Bolos', 'Doces', 'Salgados', 'Brunch', 'Chá'],
   pet: ['Ração', 'Acessórios', 'Higiene', 'Farmácia pet'],
   conveniencia: ['Bebidas', 'Snacks', 'Tabacaria', 'Mercearia'],
   bebidas: ['Cervejas', 'Vinhos', 'Destilados', 'Não alcoólicas'],
