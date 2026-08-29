@@ -1,5 +1,5 @@
 // src/components/DeliveryConfirmationModal.jsx
-// Entrega própria: o restaurante fecha o pedido com o código de 4 letras que o
+// Entrega própria: o restaurante fecha o pedido com o código de 6 números que o
 // CLIENTE mostra no app dele. Antes o restaurante marcava "entregue" direto —
 // o motoboy dizia que entregou e não sobrava prova nenhuma pra conferir.
 
@@ -47,8 +47,8 @@ export function DeliveryConfirmationModal({ order, isOpen, onClose, onSuccess })
       }
       corpo.no_code_reason = motivo;
     } else {
-      if (codigo.trim().length !== 4) {
-        setErro('O código do cliente tem 4 caracteres.');
+      if (codigo.trim().length !== 6) {
+        setErro('O código do cliente tem 6 números.');
         return;
       }
       corpo.delivery_code = codigo.toUpperCase().trim();
