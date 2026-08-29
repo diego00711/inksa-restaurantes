@@ -8,6 +8,8 @@ import { MenuItemModal } from '../components/MenuItemModal';
 import ImportarCatalogo from '../components/ImportarCatalogo';
 import { useToast } from '../context/ToastContext.jsx';
 import { useConfirm } from '../components/ConfirmProvider.jsx';
+import AvisoNovidade from '../components/AvisoNovidade.jsx';
+import { emPromocao, descontoPct } from '../utils/promo';
 
 export function MenuPage() {
   const [menuItems, setMenuItems] = useState([]);
@@ -100,6 +102,22 @@ export function MenuPage() {
             </div>
         </div>
 
+        <AvisoNovidade id="promo-item-2026-08" titulo="Novo: preço promocional por item">
+            <p>
+                Agora cada item do seu cardápio pode ter um <strong>preço promocional</strong>.
+                Abra o item em Editar e preencha o campo "Preço promocional".
+            </p>
+            <p>
+                O cliente vê o valor promocional em destaque e o preço normal riscado do lado,
+                com o selo de desconto. <strong>A comissão da Inksa incide sobre o valor
+                promocional</strong> — você não paga comissão sobre um preço que ninguém pagou.
+            </p>
+            <p>
+                Para encerrar a promoção, apague o campo. Enquanto ela estiver valendo, o item
+                aparece marcado aqui na lista.
+            </p>
+        </AvisoNovidade>
+
         <ImportarCatalogo
             aberto={importAberto}
             onFechar={() => setImportAberto(false)}
@@ -152,7 +170,28 @@ export function MenuPage() {
                         )}
                         </td>
                         <td className="p-4 text-gray-600">{item.category}</td>
-                        <td className="p-4 font-medium text-gray-800">R$ {parseFloat(item.price || 0).toFixed(2)}</td>
+                        {/* PROMOÇÃO VISÍVEL NA LISTA — de propósito.
+                            Promoção que só aparece dentro do formulário é
+                            promoção esquecida ligada: o parceiro cria 30% off
+                            numa sexta e descobre em março. Aqui ele vê todas
+                            de uma vez ao abrir o cardápio. */}
+                        <td className="p-4 font-medium text-gray-800">
+                            {emPromocao(item) ? (
+                                <div className="flex flex-col gap-0.5">
+                                    <div className="flex items-baseline gap-1.5">
+                                        <span className="text-green-700">R$ {parseFloat(item.promo_price).toFixed(2)}</span>
+                                        <span className="text-xs text-gray-400 line-through font-normal">
+                                            R$ {parseFloat(item.price || 0).toFixed(2)}
+                                        </span>
+                                    </div>
+                                    <span className="self-start rounded bg-green-100 px-1.5 py-0.5 text-[11px] font-bold text-green-700">
+                                        {descontoPct(item)}% OFF
+                                    </span>
+                                </div>
+                            ) : (
+                                <>R$ {parseFloat(item.price || 0).toFixed(2)}</>
+                            )}
+                        </td>
                         <td className="p-4">
                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${item.is_available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                             {item.is_available ? 'Disponível' : 'Indisponível'}

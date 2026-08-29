@@ -13,7 +13,7 @@ import { XCircle } from 'lucide-react';
 const SEGMENTOS_COM_PESO = ['pet', 'mercado', 'agropecuaria', 'bebidas'];
 
 export function MenuItemModal({ onClose, onItemAdded, onItemUpdated, itemToEdit }) {
-	const [formData, setFormData] = useState({ name: '', description: '', price: '', category: '', is_available: true, image_url: '', peso_kg: '' });
+	const [formData, setFormData] = useState({ name: '', description: '', price: '', category: '', is_available: true, image_url: '', peso_kg: '', promo_price: '' });
 	const [selectedFile, setSelectedFile] = useState(null);
 	const [imagePreview, setImagePreview] = useState(null);
 	const [isLoading, setIsLoading] = useState(false);
@@ -47,10 +47,13 @@ export function MenuItemModal({ onClose, onItemAdded, onItemUpdated, itemToEdit 
 				is_available: itemToEdit.is_available !== undefined ? itemToEdit.is_available : true,
 				image_url: itemToEdit.image_url || '',
 				peso_kg: itemToEdit.peso_kg != null ? String(itemToEdit.peso_kg) : '',
+				// Campo vazio = sem promoção. É assim que o parceiro desliga:
+				// apagando o valor. Não existe botão separado de desativar.
+				promo_price: itemToEdit.promo_price != null ? String(itemToEdit.promo_price) : '',
 			});
 			setImagePreview(itemToEdit.image_url || null);
 		} else {
-			setFormData({ name: '', description: '', price: '', category: '', is_available: true, image_url: '', peso_kg: '' });
+			setFormData({ name: '', description: '', price: '', category: '', is_available: true, image_url: '', peso_kg: '', promo_price: '' });
 			setImagePreview(null);
 			setSelectedFile(null);
 		}
@@ -141,6 +144,49 @@ export function MenuItemModal({ onClose, onItemAdded, onItemUpdated, itemToEdit 
                         <div className="flex-1">
                             <label htmlFor="price" className="block text-sm font-medium text-gray-700">Preço (ex: 45.50)</label>
                             <input type="number" name="price" id="price" step="0.01" value={formData.price} onChange={handleChange} required className="mt-1 w-full px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"/>
+                            <p className="mt-1 text-xs text-gray-500">
+                                O preço normal do item, sem desconto.
+                            </p>
+                        </div>
+                        {/* PROMOÇÃO — o preço de venda enquanto ela durar. O
+                            cliente vê este valor em destaque e o preço normal
+                            riscado do lado. A comissão da Inksa incide sobre o
+                            valor promocional, ou seja, sobre o que realmente
+                            entrou; a loja não paga comissão sobre um preço que
+                            ninguém pagou. */}
+                        <div className="flex-1">
+                            <label htmlFor="promo_price" className="block text-sm font-medium text-gray-700">
+                                Preço promocional
+                            </label>
+                            <input type="number" name="promo_price" id="promo_price" step="0.01" min="0"
+                                placeholder="deixe vazio se não houver"
+                                value={formData.promo_price} onChange={handleChange}
+                                className="mt-1 w-full px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"/>
+                            {(() => {
+                                const base = parseFloat(formData.price) || 0;
+                                const promo = parseFloat(formData.promo_price) || 0;
+                                if (!promo) {
+                                    return (
+                                        <p className="mt-1 text-xs text-gray-500">
+                                            Vazio = sem promoção. Para encerrar uma promoção, apague este campo.
+                                        </p>
+                                    );
+                                }
+                                if (promo >= base) {
+                                    return (
+                                        <p className="mt-1 text-xs text-red-600 font-medium">
+                                            Precisa ser menor que o preço normal. Para baixar o preço de vez,
+                                            altere o preço normal em vez de criar promoção.
+                                        </p>
+                                    );
+                                }
+                                return (
+                                    <p className="mt-1 text-xs text-green-700 font-medium">
+                                        {Math.round(((base - promo) / base) * 100)}% de desconto — o cliente vê
+                                        R$ {promo.toFixed(2)} e R$ {base.toFixed(2)} riscado.
+                                    </p>
+                                );
+                            })()}
                         </div>
                         {/* Peso decide QUEM pode entregar: um saco de ração de
                             30 kg não vai de moto. Deixar em branco só faz
