@@ -1,6 +1,7 @@
 // src/components/MenuItemModal.jsx (VERSÃO FINAL E DEFINITIVA)
 
 import React, { useState, useEffect } from 'react';
+import CampoPeso from './CampoPeso';
 import { menuService } from '../services/menuService';
 import { categoryService } from '../services/categoryService';
 import { useToast } from '../context/ToastContext.jsx';
@@ -14,6 +15,10 @@ const SEGMENTOS_COM_PESO = ['pet', 'mercado', 'agropecuaria', 'bebidas'];
 
 export function MenuItemModal({ onClose, onItemAdded, onItemUpdated, itemToEdit }) {
 	const [formData, setFormData] = useState({ name: '', description: '', price: '', category: '', is_available: true, image_url: '', peso_kg: '', promo_price: '' });
+	// Unidade SÓ da digitação — o banco guarda sempre kg. Começa em 'kg'
+	// porque todo item já cadastrado foi digitado assim: abrir em 'g'
+	// multiplicaria por mil o que a pessoa vê.
+	const [pesoUnidade, setPesoUnidade] = useState('kg');
 	const [selectedFile, setSelectedFile] = useState(null);
 	const [imagePreview, setImagePreview] = useState(null);
 	const [isLoading, setIsLoading] = useState(false);
@@ -104,7 +109,13 @@ export function MenuItemModal({ onClose, onItemAdded, onItemUpdated, itemToEdit 
 				setIsUploadingImage(false);
 			}
 
-			const itemDataToSend = { ...formData, price: parseFloat(formData.price) || 0, image_url: finalImageUrl };
+			// O banco guarda SEMPRE em kg. A unidade é só da digitação.
+			const _peso = parseFloat(String(formData.peso_kg ?? '').replace(',', '.'));
+			const pesoEmKg = Number.isFinite(_peso) && _peso > 0
+				? (pesoUnidade === 'g' ? _peso / 1000 : _peso)
+				: '';
+			const itemDataToSend = { ...formData, price: parseFloat(formData.price) || 0,
+				peso_kg: pesoEmKg, image_url: finalImageUrl };
 
 			if (itemToEdit) {
 				const response = await menuService.updateMenuItem(itemToEdit.id, itemDataToSend);
@@ -188,23 +199,20 @@ export function MenuItemModal({ onClose, onItemAdded, onItemUpdated, itemToEdit 
                                 );
                             })()}
                         </div>
-                        {/* Peso decide QUEM pode entregar: um saco de ração de
-                            30 kg não vai de moto. Deixar em branco só faz
-                            sentido em item leve — comida, bebida, lanche. */}
-                        <div className="flex-1">
-                            <label htmlFor="peso_kg" className="block text-sm font-medium text-gray-700">
-                                Peso em kg {pesoObrigatorio && <span className="text-red-500">*</span>}
-                            </label>
-                            <input type="number" name="peso_kg" id="peso_kg" step="0.1" min="0" placeholder="ex: 15"
-                                value={formData.peso_kg} onChange={handleChange}
-                                required={pesoObrigatorio}
-                                className="mt-1 w-full px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"/>
-                            <p className="mt-1 text-xs text-gray-500">
-                                {pesoObrigatorio
-                                    ? 'Obrigatório no seu segmento. É o peso que define o frete e se o pedido cabe numa moto ou precisa de carro — sem ele, um pedido pesado sai barato demais e vai parar numa moto.'
-                                    : 'Preencha em itens pesados (ração, gás, bebida em fardo). Isso define se o pedido pode ir de moto ou precisa de carro. Item leve pode ficar em branco.'}
-                            </p>
-                        </div>
+                        {/* Peso decide QUEM pode entregar e QUANTO custa o
+                            frete. O campo virou componente próprio porque
+                            "300" numa lata (grama digitada em campo de quilo)
+                            passou sem aviso e triplicou o frete de um cliente.
+                            Ver components/CampoPeso.jsx. */}
+                        <CampoPeso
+                            valorKg={formData.peso_kg}
+                            unidade={pesoUnidade}
+                            obrigatorio={pesoObrigatorio}
+                            onChange={({ valor, unidade }) => {
+                                setPesoUnidade(unidade);
+                                setFormData((f) => ({ ...f, peso_kg: valor }));
+                            }}
+                        />
                         <div className="flex-1">
                             <label htmlFor="category" className="block text-sm font-medium text-gray-700">Categoria</label>
                             <select name="category" id="category" value={formData.category} onChange={handleChange} required className="mt-1 w-full px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
