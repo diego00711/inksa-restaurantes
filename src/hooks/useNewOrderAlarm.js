@@ -25,10 +25,30 @@ export function useNewOrderAlarm(enabled = true) {
       }
     };
     check();
-    const id = setInterval(() => {
-      if (document.visibilityState === 'visible') check();
-    }, 15000);
-    return () => { alive = false; clearInterval(id); };
+    // ⚠️ SEM A TRAVA DE ABA VISÍVEL.
+    //
+    // Estava `if (document.visibilityState === 'visible') check()`. Com a aba
+    // escondida — que é EXATAMENTE quando o alarme importa, porque a pessoa
+    // está olhando outra coisa — o app nem perguntava se tinha pedido novo.
+    // Não é que o som falhava: ele nunca chegava a existir, porque nada tinha
+    // descoberto o pedido.
+    //
+    // Descoberto em 29/08/2026, quando o Diego deixou o WhatsApp por cima da
+    // aba do parceiro justamente pra testar o som.
+    //
+    // Sobre o custo: navegador atrasa temporizador de aba escondida. O primeiro
+    // ciclo pode demorar mais que 15s — mas assim que o alarme toca, a aba vira
+    // "audível" e o navegador para de atrasar. Alarme atrasado é ruim; alarme
+    // que nunca dispara é inútil.
+    const id = setInterval(check, 15000);
+    // Voltou pra aba: confere na hora, sem esperar o próximo ciclo.
+    const aoVoltar = () => { if (document.visibilityState === 'visible') check(); };
+    document.addEventListener('visibilitychange', aoVoltar);
+    return () => {
+      alive = false;
+      clearInterval(id);
+      document.removeEventListener('visibilitychange', aoVoltar);
+    };
   }, [enabled]);
 
   // Repete o som a cada 5s enquanto houver pedido novo (até o restaurante aceitar)
