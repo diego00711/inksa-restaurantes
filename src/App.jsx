@@ -11,7 +11,7 @@ import GlobalError from './components/GlobalError';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 import WakingUpScreen from './components/WakingUpScreen';
 import SupportButton from './components/SupportButton';
-import { configurarAcoesDePush } from './services/notificationService';
+import { configurarAcoesDePush, criarCanalUrgente } from './services/notificationService';
 
 // --- Lazy-loaded pages ---
 const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
@@ -64,6 +64,12 @@ function AppRoutes() {
 
   // Toque na notificação leva pros Pedidos (só no app instalado). No
   // navegador quem faz isso é o notificationclick do service worker.
+  // Canal de alta importância do Android. Roda uma vez, na abertura: sem ele
+  // o push de "novo pedido"/"nova entrega" cai no canal padrão e chega MUDO
+  // com o app em segundo plano — foi o que a Yo!Frango relatou, com o iFood
+  // aberto por cima. Criar canal é idempotente, então repetir não custa nada.
+  useEffect(() => { criarCanalUrgente(); }, []);
+
   useEffect(() => { configurarAcoesDePush(navigate); }, [navigate]);
 
   useEffect(() => {
