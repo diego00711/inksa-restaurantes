@@ -34,8 +34,9 @@ function IncidentCard({ inc, onChanged }) {
   };
 
   const confirmReturn = async () => {
-    const c = code.trim().toUpperCase();
-    if (c.length < 3) { addToast('error', 'Digite o código de devolução que o entregador está mostrando.'); return; }
+    // Código de devolução virou NUMÉRICO de 6 dígitos (generate_verification_code).
+    const c = code.replace(/\D/g, '');
+    if (c.length !== 6) { addToast('error', 'O código de devolução tem 6 números.'); return; }
     setBusy(true);
     try {
       await orderService.confirmIncidentReturn(inc.order_id, c);
@@ -84,9 +85,11 @@ function IncidentCard({ inc, onChanged }) {
           <div className="flex gap-2">
             <input
               value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
-              placeholder="Ex.: AB12"
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              placeholder="Ex.: 480315"
               maxLength={6}
+              inputMode="numeric"
+              pattern="[0-9]*"
               className="flex-1 border border-gray-300 rounded-lg px-3 py-2.5 text-center text-base font-mono font-bold tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
             <button
