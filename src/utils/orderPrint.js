@@ -108,6 +108,15 @@ export function printOrder(order, restaurantName = '') {
          overflow-wrap: anywhere; word-break: break-word; }
   h1 { font-size: 15px; text-align: center; margin: 0 0 2px; }
   .sub { text-align: center; font-size: 11px; margin-bottom: 8px; }
+  /* O NÚMERO DO PEDIDO É O MAIOR ELEMENTO DA COMANDA, e isso é de propósito.
+     Ele estava em 11px ao lado da data. Numa pilha de bobinas em cima do
+     balcão, com o entregador esperando e dizendo "pedido mil e dois", 11px no
+     meio de outros 11px não identifica nada — a pessoa tem que pegar papel por
+     papel e chegar perto. Em 26px, ela acha de longe, com a mão. É a única
+     informação da comanda que serve pra ESCOLHER entre comandas; todo o resto
+     só é lido depois que a certa já está na mão. */
+  .pedido { text-align: center; font-size: 26px; font-weight: bold; line-height: 1.1;
+            letter-spacing: 1px; margin: 2px 0 4px; }
   hr { border: 0; border-top: 1px dashed #000; margin: 8px 0; }
   .linha { display: flex; justify-content: space-between; gap: 8px; }
   /* Coluna da esquerda pode encolher. Sem o min-width:0, um nome de item
@@ -131,7 +140,8 @@ export function printOrder(order, restaurantName = '') {
 </style></head>
 <body>
   <h1>${escapeHtml(restaurantName || 'Inksa Delivery')}</h1>
-  <div class="sub">Pedido ${escapeHtml(numeroPedido(order))}<br>${escapeHtml(quando)}</div>
+  <div class="pedido">PEDIDO ${escapeHtml(numeroPedido(order))}</div>
+  <div class="sub">${escapeHtml(quando)}</div>
   <hr>
   <div><strong>Cliente:</strong> ${escapeHtml(cliente)}</div>
   ${enderecoTxt ? `<div><strong>Entrega:</strong> ${escapeHtml(enderecoTxt)}</div>` : ''}
