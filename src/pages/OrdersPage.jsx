@@ -175,12 +175,19 @@ function Col({
                 <OrderTimer
                   createdAt={order.created_at}
                   acceptedAt={order.accepted_at}
-                  // `updated_at` é o único carimbo de quando o pedido fechou:
-                  // não existe coluna delivered_at, e completed_at existe mas
-                  // ninguém escreve nela. Estava `order.delivered_at ||
-                  // order.updated_at`, e o primeiro era sempre undefined —
-                  // parecia que havia uma data melhor sendo usada.
-                  finishedAt={order.updated_at}
+                  // `completed_at` agora É escrito, no momento em que a
+                  // entrega fecha (orders.py). Antes ninguém escrevia nele e
+                  // isto aqui usava `updated_at` — que muda toda vez que
+                  // QUALQUER rotina toca a linha (gerador de repasses,
+                  // arquivamento, job de madrugada). O #1000 levou 9 minutos e
+                  // a tela dizia "levou 240min", crescendo a cada rotina.
+                  // Parecia cronômetro que não parava; era carimbo errado
+                  // sendo empurrado pra frente.
+                  //
+                  // A reserva no updated_at fica pros pedidos anteriores a
+                  // 29/08 que ainda não tenham o carimbo — errado, mas menos
+                  // errado que não mostrar nada.
+                  finishedAt={order.completed_at || order.updated_at}
                   // AS DUAS FORMAS, PT E EN. O orderService TRADUZ o status
                   // antes da tela ver ('delivered' vira 'Entregue'), então uma
                   // lista só em inglês nunca casa — era por isso que o
