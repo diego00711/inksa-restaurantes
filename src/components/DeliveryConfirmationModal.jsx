@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import { X, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import api from '../services/api';
+import { numeroPedido } from '../utils/pedidoNumero';
 
 // Motivos prontos: escrever à mão no celular, no meio do expediente, ninguém
 // faz — e aí a saída vira sempre a mesma frase vazia.
@@ -84,7 +85,7 @@ export function DeliveryConfirmationModal({ order, isOpen, onClose, onSuccess })
 
         <form onSubmit={confirmar} className="p-4 space-y-4">
           <p className="text-sm text-gray-600">
-            Pedido <span className="font-mono font-semibold">#{String(order.id || '').substring(0, 8)}</span>
+            Pedido <span className="font-mono font-semibold">{numeroPedido(order)}</span>
             {' — '}peça ao cliente o <strong>código de entrega</strong> que aparece no app dele.
           </p>
 
