@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { X, Package, AlertCircle } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import api from '../services/api';
+import { numeroPedido } from '../utils/pedidoNumero';
 
 export function PickupConfirmationModal({ order, isOpen, onClose, onSuccess }) {
   const [pickupCode, setPickupCode] = useState('');
@@ -33,8 +34,8 @@ export function PickupConfirmationModal({ order, isOpen, onClose, onSuccess }) {
       return;
     }
 
-    if (pickupCode.trim().length !== 4) {
-      setError('O código deve ter 4 caracteres');
+    if (pickupCode.trim().length !== 6) {
+      setError('O código deve ter 6 números');
       return;
     }
 
@@ -43,7 +44,7 @@ export function PickupConfirmationModal({ order, isOpen, onClose, onSuccess }) {
     try {
       // Chama o endpoint /pickup que já existe no backend
       const response = await api.post(`/api/orders/${order.id}/pickup`, {
-        pickup_code: pickupCode.toUpperCase().trim()
+        pickup_code: pickupCode.trim()   // já é só dígito; upper não faz sentido
       });
 
       addToast('success', 'Retirada confirmada! Pedido saiu para entrega.');
@@ -104,7 +105,7 @@ export function PickupConfirmationModal({ order, isOpen, onClose, onSuccess }) {
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-800">Confirmar Retirada</h2>
-              <p className="text-sm text-gray-500">Pedido #{String(order.id || '').substring(0, 8)}...</p>
+              <p className="text-sm text-gray-500">Pedido {numeroPedido(order)}</p>
             </div>
           </div>
           <button
@@ -130,7 +131,7 @@ export function PickupConfirmationModal({ order, isOpen, onClose, onSuccess }) {
         {/* Instruções */}
         <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-sm text-blue-800">
-            <strong>📱 Peça ao entregador</strong> para mostrar o código de retirada de 4 caracteres que aparece no pedido dele.
+            <strong>📱 Peça ao entregador</strong> para mostrar o código de retirada de 6 números que aparece no pedido dele.
           </p>
         </div>
 
@@ -159,7 +160,7 @@ export function PickupConfirmationModal({ order, isOpen, onClose, onSuccess }) {
               autoComplete="off"
             />
             <p className="text-xs text-gray-500 mt-1 text-center">
-              Digite os 4 caracteres do código
+              Digite os 6 números do código
             </p>
           </div>
 
@@ -184,7 +185,7 @@ export function PickupConfirmationModal({ order, isOpen, onClose, onSuccess }) {
             <button
               type="submit"
               className="flex-1 px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors disabled:bg-purple-300 disabled:cursor-not-allowed"
-              disabled={isLoading || pickupCode.length !== 4}
+              disabled={isLoading || pickupCode.length !== 6}
             >
               {isLoading ? 'Confirmando...' : 'Confirmar Retirada'}
             </button>
