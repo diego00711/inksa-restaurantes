@@ -40,6 +40,11 @@ messaging.onBackgroundMessage((payload) => {
     tag: d.order_id || d.tag || 'inksa-parceiro',
     // Pedido novo tem que insistir: o dono pode estar de costas pro balcão.
     requireInteraction: d.type === 'new_order',
+    // Vibração no urgente: no celular, o aviso pode chegar com o som
+    // do sistema baixo ou no silencioso — a vibração é o que sobra.
+    // Padrão longo-curto-longo pra não ser confundido com mensagem.
+    vibrate: d.type === 'new_order' ? [300, 120, 300, 120, 300] : undefined,
+    renotify: d.type === 'new_order',
     data: d,
   });
 });
