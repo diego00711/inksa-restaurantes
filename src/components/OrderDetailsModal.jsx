@@ -6,6 +6,7 @@ import { orderService } from '../services/orderService';
 import { useToast } from '../context/ToastContext.jsx';
 import { printOrder, ehAplicativo, ENDERECO_WEB } from '../utils/orderPrint';
 import { detalharOpcoes, precoBase } from '../utils/orderItems';
+import { numeroPedido } from '../utils/pedidoNumero';
 
 // O checkout do cliente grava a taxa de entrega como um ITEM do pedido, além de
 // ter a linha "Taxa de Entrega" própria (delivery_fee) — mostrar os dois é
@@ -116,7 +117,7 @@ export function OrderDetailsModal({ order, onClose, restaurantName = '' }) {
         </button>
 
         <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6">
-          Detalhes do Pedido #{order.id ? String(order.id).substring(0, 8) : 'N/A'}...
+          Detalhes do Pedido {numeroPedido(order)}
         </h2>
 
         {isLoading ? (

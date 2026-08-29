@@ -77,11 +77,13 @@ export function PickupConfirmationModal({ order, isOpen, onClose, onSuccess }) {
   };
 
   const handleInputChange = (e) => {
-    const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-    if (value.length <= 4) {
-      setPickupCode(value);
-      setError('');
-    }
+    // Código agora é NUMÉRICO de 6 dígitos. Descarta o que não for dígito em
+    // vez de bloquear a digitação: quem cola o código de outro lugar costuma
+    // trazer espaço ou traço junto, e travar o campo faz a pessoa achar que o
+    // código está errado.
+    const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+    setPickupCode(value);
+    setError('');
   };
 
   return (
@@ -143,8 +145,10 @@ export function PickupConfirmationModal({ order, isOpen, onClose, onSuccess }) {
               type="text"
               value={pickupCode}
               onChange={handleInputChange}
-              placeholder="Ex: LHRG"
-              maxLength={4}
+              placeholder="Ex: 480315"
+              maxLength={6}
+              inputMode="numeric"
+              pattern="[0-9]*"
               className={`w-full px-4 py-3 text-center text-2xl font-bold tracking-widest border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors min-h-[44px] ${
                 error
                   ? 'border-red-300 bg-red-50'

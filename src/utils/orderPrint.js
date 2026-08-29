@@ -1,4 +1,5 @@
 import { parseItensDoPedido } from './orderItems';
+import { numeroPedido } from './pedidoNumero';
 // Impressão do pedido (comanda) e "sumir do aparelho".
 //
 // IMPRIMIR: monta uma via simples de 80mm e manda pra impressora pelo próprio
@@ -92,7 +93,7 @@ export function printOrder(order, restaurantName = '') {
     : (endereco || '');
 
   const html = `<!doctype html>
-<html><head><meta charset="utf-8"><title>Pedido ${escapeHtml(String(order?.id || '').substring(0, 8))}</title>
+<html><head><meta charset="utf-8"><title>Pedido ${escapeHtml(numeroPedido(order))}</title>
 <style>
   @page { size: 80mm auto; margin: 4mm; }
   * { box-sizing: border-box; }
@@ -130,7 +131,7 @@ export function printOrder(order, restaurantName = '') {
 </style></head>
 <body>
   <h1>${escapeHtml(restaurantName || 'Inksa Delivery')}</h1>
-  <div class="sub">Pedido #${escapeHtml(String(order?.id || '').substring(0, 8))}<br>${escapeHtml(quando)}</div>
+  <div class="sub">Pedido ${escapeHtml(numeroPedido(order))}<br>${escapeHtml(quando)}</div>
   <hr>
   <div><strong>Cliente:</strong> ${escapeHtml(cliente)}</div>
   ${enderecoTxt ? `<div><strong>Entrega:</strong> ${escapeHtml(enderecoTxt)}</div>` : ''}

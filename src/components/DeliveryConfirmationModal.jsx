@@ -97,8 +97,10 @@ export function DeliveryConfirmationModal({ order, isOpen, onClose, onSuccess })
                 <input
                   type="text"
                   value={codigo}
-                  onChange={(e) => setCodigo(e.target.value.toUpperCase().slice(0, 4))}
-                  maxLength={4}
+                  onChange={(e) => setCodigo(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  maxLength={6}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   autoFocus
                   inputMode="text"
                   autoCapitalize="characters"

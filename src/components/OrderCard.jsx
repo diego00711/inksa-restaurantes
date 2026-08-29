@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Package, CheckCircle, Printer, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { parseItensDoPedido } from '../utils/orderItems';
+import { numeroPedido } from '../utils/pedidoNumero';
 
 const StatusBadge = ({ status }) => {
   const statusColors = {
@@ -94,7 +95,7 @@ export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus
       <div className="cursor-pointer" onClick={() => onViewDetails(order)}>
         <div className="flex items-center justify-between gap-2 mb-2">
           <h3 className="text-sm font-bold text-gray-800 truncate">
-            Pedido #{String(order.id || '').substring(0, 8)}...
+            Pedido {numeroPedido(order)}
           </h3>
           <StatusBadge status={order.status} />
         </div>
