@@ -158,6 +158,44 @@ export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus
           {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(order.total_amount)}
         </p>
 
+        {/* ── QUEM VEM BUSCAR ──────────────────────────────────────────────
+            Antes o parceiro não fazia ideia de quem ia aparecer no balcão:
+            batia uma pessoa de capacete pedindo um pedido, e a única
+            conferência era o código. Com o nome, a foto e a placa, a loja
+            reconhece antes de perguntar — e a moto na porta bate com a moto
+            do pedido.
+
+            Só aparece depois que alguém aceita a corrida (courier_first_name
+            vem NULL enquanto não há entregador). O bloco some sozinho na
+            entrega própria, onde não existe entregador Inksa. */}
+        {order.courier_first_name && (
+          <div className="flex items-center gap-2.5 rounded-lg bg-gray-50 p-2">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-orange-100 text-sm font-bold text-orange-700">
+              {order.courier_avatar
+                ? <img src={order.courier_avatar} alt="" className="h-full w-full object-cover" />
+                : String(order.courier_first_name).charAt(0).toUpperCase()}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-gray-800">
+                {order.courier_first_name} {order.courier_last_name || ''}
+              </p>
+              <p className="truncate text-xs text-gray-500">
+                {[
+                  order.courier_vehicle,
+                  order.courier_plate ? String(order.courier_plate).toUpperCase() : null,
+                ].filter(Boolean).join(' · ') || 'vem buscar'}
+              </p>
+            </div>
+            {/* Nota só quando existe. "0,0 ★" num entregador que ainda não foi
+                avaliado não é informação, é acusação. */}
+            {Number(order.courier_rating) > 0 && (
+              <span className="shrink-0 text-xs font-bold text-gray-600">
+                {Number(order.courier_rating).toFixed(1)} ★
+              </span>
+            )}
+          </div>
+        )}
+
         {/* Payment method badge */}
         {(() => {
           const method = order.payment_method;
