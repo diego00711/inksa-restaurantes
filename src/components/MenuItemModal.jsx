@@ -14,7 +14,7 @@ import { XCircle } from 'lucide-react';
 const SEGMENTOS_COM_PESO = ['pet', 'mercado', 'agropecuaria', 'bebidas'];
 
 export function MenuItemModal({ onClose, onItemAdded, onItemUpdated, itemToEdit }) {
-	const [formData, setFormData] = useState({ name: '', description: '', price: '', category: '', is_available: true, image_url: '', peso_kg: '', promo_price: '' });
+	const [formData, setFormData] = useState({ name: '', description: '', price: '', category: '', is_available: true, image_url: '', peso_kg: '', promo_price: '', age_restricted: false });
 	// Unidade SÓ da digitação — o banco guarda sempre kg. Começa em 'kg'
 	// porque todo item já cadastrado foi digitado assim: abrir em 'g'
 	// multiplicaria por mil o que a pessoa vê.
@@ -50,6 +50,7 @@ export function MenuItemModal({ onClose, onItemAdded, onItemUpdated, itemToEdit 
 				price: itemToEdit.price?.toString() || '',
 				category: itemToEdit.category || '',
 				is_available: itemToEdit.is_available !== undefined ? itemToEdit.is_available : true,
+				age_restricted: !!itemToEdit.age_restricted,
 				image_url: itemToEdit.image_url || '',
 				peso_kg: itemToEdit.peso_kg != null ? String(itemToEdit.peso_kg) : '',
 				// Campo vazio = sem promoção. É assim que o parceiro desliga:
@@ -58,7 +59,7 @@ export function MenuItemModal({ onClose, onItemAdded, onItemUpdated, itemToEdit 
 			});
 			setImagePreview(itemToEdit.image_url || null);
 		} else {
-			setFormData({ name: '', description: '', price: '', category: '', is_available: true, image_url: '', peso_kg: '', promo_price: '' });
+			setFormData({ name: '', description: '', price: '', category: '', is_available: true, image_url: '', peso_kg: '', promo_price: '', age_restricted: false });
 			setImagePreview(null);
 			setSelectedFile(null);
 		}
@@ -115,7 +116,8 @@ export function MenuItemModal({ onClose, onItemAdded, onItemUpdated, itemToEdit 
 				? (pesoUnidade === 'g' ? _peso / 1000 : _peso)
 				: '';
 			const itemDataToSend = { ...formData, price: parseFloat(formData.price) || 0,
-				peso_kg: pesoEmKg, image_url: finalImageUrl };
+				peso_kg: pesoEmKg, image_url: finalImageUrl,
+				age_restricted: !!formData.age_restricted };
 
 			if (itemToEdit) {
 				const response = await menuService.updateMenuItem(itemToEdit.id, itemDataToSend);
@@ -225,6 +227,22 @@ export function MenuItemModal({ onClose, onItemAdded, onItemUpdated, itemToEdit 
                         <label className="flex items-center text-sm font-medium text-gray-700 cursor-pointer min-h-[44px]">
                             <input type="checkbox" name="is_available" checked={formData.is_available} onChange={handleChange} className="form-checkbox h-4 w-4 text-primary rounded"/>
                             <span className="ml-2">Disponível para Venda</span>
+                        </label>
+                    </div>
+                    {/* Marca de item para maiores de 18. Fica ao lado de
+                        "Disponível" de propósito: são as duas decisões que
+                        mudam o que acontece com o item na hora da venda. */}
+                    <div className="rounded-md border border-amber-300 bg-amber-50 p-3">
+                        <label className="flex items-start text-sm font-medium text-gray-800 cursor-pointer">
+                            <input type="checkbox" name="age_restricted" checked={formData.age_restricted} onChange={handleChange} className="form-checkbox h-4 w-4 mt-0.5 text-amber-600 rounded"/>
+                            <span className="ml-2">
+                                Venda proibida para menores de 18 anos
+                                <span className="block font-normal text-xs text-gray-600 mt-1">
+                                    Marque em bebida alcoólica e tabaco. O cliente terá que
+                                    declarar maioridade antes de pagar, e o entregador recebe a
+                                    instrução de conferir documento na entrega.
+                                </span>
+                            </span>
                         </label>
                     </div>
                     <div>
