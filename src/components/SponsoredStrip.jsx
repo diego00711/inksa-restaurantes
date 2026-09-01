@@ -3,6 +3,7 @@
 // mostra uma linha discreta e dispensável. Só aparece quando há banner ativo
 // e dentro da janela agendada — senão renderiza null (sem espaço vazio).
 import { useEffect, useRef, useState } from 'react';
+import { useProfile } from '../context/ProfileContext';
 import { useNavigate } from 'react-router-dom';
 import { X, ExternalLink } from 'lucide-react';
 
@@ -23,13 +24,25 @@ export default function SponsoredStrip() {
   const [items, setItems] = useState([]);
   const [idx, setIdx] = useState(0);
   const rotateRef = useRef(null);
+  // A loja já sabe onde fica: o banner com alcance geográfico usa isso.
+  const { profile } = useProfile();
+  const lat = Number(profile?.latitude);
+  const lng = Number(profile?.longitude);
+  const temCoord = Number.isFinite(lat) && Number.isFinite(lng);
 
   // Carrega os banners do parceiro uma vez (público, sem auth).
   useEffect(() => {
     let alive = true;
     (async () => {
       try {
-        const r = await fetch(`${API}/api/banners/?audience=parceiro`);
+        /* Manda a coordenada DA LOJA. O backend só mostra banner
+           geolocalizado a quem está dentro do raio dele; sem lat/lng ele
+           devolve apenas os nacionais, e um anunciante regional pagaria por
+           zero exibições sem ninguém perceber. Mesmo defeito que o carrossel
+           do app do cliente tinha. */
+        const qs = new URLSearchParams({ audience: 'parceiro' });
+        if (temCoord) { qs.set('lat', lat); qs.set('lng', lng); }
+        const r = await fetch(`${API}/api/banners/?${qs}`);
         const d = await r.json();
         if (!alive) return;
         const dismissed = getDismissed();
@@ -40,7 +53,7 @@ export default function SponsoredStrip() {
       }
     })();
     return () => { alive = false; };
-  }, []);
+  }, [temCoord, lat, lng]);
 
   // Rotação suave quando há mais de um, respeitando duration_seconds de cada.
   useEffect(() => {
