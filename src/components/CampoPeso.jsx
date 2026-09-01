@@ -58,7 +58,7 @@ export default function CampoPeso({ valorKg, unidade, onChange, obrigatorio }) {
   const impossivel = kg > 300;     // nem o maior veículo leva
 
   return (
-    <div className="flex-1">
+    <div>
       <label htmlFor="peso_valor" className="block text-sm font-medium text-gray-700">
         Peso {obrigatorio && <span className="text-red-500">*</span>}
       </label>

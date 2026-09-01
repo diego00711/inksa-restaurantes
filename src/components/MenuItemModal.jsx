@@ -142,7 +142,13 @@ export function MenuItemModal({ onClose, onItemAdded, onItemUpdated, itemToEdit 
 
 	return (
 		<div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-start sm:items-center z-50 p-4" onClick={onClose}>
-            <div className="bg-white p-6 sm:p-8 rounded-lg shadow-xl w-full max-w-lg relative max-h-[90vh] overflow-y-auto mx-4" onClick={e => e.stopPropagation()}>
+            {/* max-w-3xl (768px) no lugar de max-w-lg (512px): eram QUATRO campos
+                lado a lado (preço, promocional, peso e categoria) sobrando ~100px
+                cada um.
+                E sem `mx-4`: o overlay já dá `p-4` de respiro. Com `w-full` +
+                `mx-4` o painel pedia 100% da largura MAIS 32px, e o que sobrava
+                virava rolagem lateral. */}
+            <div className="bg-white p-6 sm:p-8 rounded-lg shadow-xl w-full max-w-3xl relative max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
                 <h2 className="text-xl sm:text-2xl font-bold mb-6 text-gray-800">{itemToEdit ? 'Editar Item do Cardápio' : 'Adicionar Novo Item'}</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
@@ -153,8 +159,11 @@ export function MenuItemModal({ onClose, onItemAdded, onItemUpdated, itemToEdit 
                         <label htmlFor="description" className="block text-sm font-medium text-gray-700">Descrição</label>
                         <textarea name="description" id="description" value={formData.description} onChange={handleChange} rows="3" className="mt-1 w-full px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"></textarea>
                     </div>
-                    <div className="flex flex-col sm:flex-row gap-4">
-                        <div className="flex-1">
+                    {/* Grade 2x2 em vez de fila de quatro. Numa fila, cada campo
+                        recebia um quarto da largura — e o de peso, que tem número
+                        + seletor de unidade dentro, era o que mais sofria. */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-4">
+                        <div>
                             <label htmlFor="price" className="block text-sm font-medium text-gray-700">Preço (ex: 45.50)</label>
                             <input type="number" name="price" id="price" step="0.01" value={formData.price} onChange={handleChange} required className="mt-1 w-full px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"/>
                             <p className="mt-1 text-xs text-gray-500">
@@ -167,7 +176,7 @@ export function MenuItemModal({ onClose, onItemAdded, onItemUpdated, itemToEdit 
                             valor promocional, ou seja, sobre o que realmente
                             entrou; a loja não paga comissão sobre um preço que
                             ninguém pagou. */}
-                        <div className="flex-1">
+                        <div>
                             <label htmlFor="promo_price" className="block text-sm font-medium text-gray-700">
                                 Preço promocional
                             </label>
@@ -215,7 +224,7 @@ export function MenuItemModal({ onClose, onItemAdded, onItemUpdated, itemToEdit 
                                 setFormData((f) => ({ ...f, peso_kg: valor }));
                             }}
                         />
-                        <div className="flex-1">
+                        <div>
                             <label htmlFor="category" className="block text-sm font-medium text-gray-700">Categoria</label>
                             <select name="category" id="category" value={formData.category} onChange={handleChange} required className="mt-1 w-full px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
                                 <option value="" disabled>Selecione uma categoria</option>
