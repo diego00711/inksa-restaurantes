@@ -23,6 +23,7 @@ const SISTEMAS = [
   'Não uso nenhum sistema (anoto no papel/WhatsApp)',
   'Consumer',
   'Saipos',
+  'Suitable',
   'Colibri / Bemacash',
   'Linear',
   'Teknisa',
