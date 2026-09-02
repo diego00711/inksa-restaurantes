@@ -177,7 +177,7 @@ export function PortalLayout() {
             {loading ? (
               <div className="h-10 w-10 bg-gray-700 rounded-full animate-pulse"></div>
             ) : profile?.logo_url ? (
-              <img src={profile.logo_url} alt="Logo do Restaurante" className="h-10 w-10 rounded-full object-cover" />
+              <img src={profile.logo_url} alt="Logo da loja" className="h-10 w-10 rounded-full object-cover" />
             ) : (
               <div className="h-10 w-10 bg-primary rounded-full flex items-center justify-center font-bold text-white">
                 {profile?.restaurant_name?.charAt(0).toUpperCase() || '?'}

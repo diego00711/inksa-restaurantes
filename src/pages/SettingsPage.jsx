@@ -314,7 +314,7 @@ export function SettingsPage() {
   return (
     <div className="p-4 sm:p-6 bg-gray-50 min-h-screen">
       <div className="flex flex-wrap justify-between items-center gap-2 mb-6 sm:mb-8 max-w-4xl mx-auto">
-        <h1 className="text-xl sm:text-3xl font-bold text-gray-800">Configurações do Restaurante</h1>
+        <h1 className="text-xl sm:text-3xl font-bold text-gray-800">Configurações do Parceiro</h1>
         {!isEditing && (
           <button
             type="button"
@@ -333,7 +333,7 @@ export function SettingsPage() {
         <form onSubmit={handleSubmit} className="space-y-8">
             {/* Secção do Logo */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Logo do Restaurante</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Logo da Loja</label>
               <div className="flex items-center gap-5">
                 {logoPreview ? (
                   <img src={logoPreview} alt="Logo" className="h-24 w-24 rounded-full object-cover border-2 border-gray-200" />
@@ -358,7 +358,7 @@ export function SettingsPage() {
               <h2 className="text-xl font-semibold mb-4 text-gray-700">Informações Gerais</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="restaurant_name" className="block text-sm font-medium text-gray-700">Nome do Restaurante</label>
+                  <label htmlFor="restaurant_name" className="block text-sm font-medium text-gray-700">Nome da Loja</label>
                   <input type="text" name="restaurant_name" id="restaurant_name" value={profileData.restaurant_name || ''} onChange={handleChange} disabled={!isEditing} required className="mt-1 block w-full px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/>
                 </div>
                 <div>
@@ -396,7 +396,7 @@ export function SettingsPage() {
                   {cuisineList.length === 0 && <p className="text-xs text-amber-600 mt-1">Selecione ao menos um — é como o cliente te encontra no filtro.</p>}
                 </div>
                 <div className="md:col-span-2">
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700">Descrição Curta do Restaurante</label>
+                  <label htmlFor="description" className="block text-sm font-medium text-gray-700">Descrição Curta da Loja</label>
                   <textarea name="description" id="description" rows="3" value={profileData.description || ''} onChange={handleChange} disabled={!isEditing} className="mt-1 block w-full px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></textarea>
                 </div>
               </div>
@@ -508,7 +508,7 @@ export function SettingsPage() {
 
             {/* Secção de Endereço */}
             <div className="border-t pt-8">
-              <h2 className="text-xl font-semibold mb-4 text-gray-700">Endereço do Restaurante</h2>
+              <h2 className="text-xl font-semibold mb-4 text-gray-700">Endereço da Loja</h2>
               <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
                 <div className="col-span-6 md:col-span-3">
                   <label htmlFor="address_zipcode" className="block text-sm font-medium text-gray-700">

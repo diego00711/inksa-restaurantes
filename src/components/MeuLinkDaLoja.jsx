@@ -14,12 +14,15 @@
 // não: o Samuca tem 2.491 seguidores, o Espetinhos 5.180, e a Inksa 995.
 // Cada link colado é um funil da audiência DELE para dentro da plataforma.
 import { useState } from 'react';
-import { Copy, Check, Instagram } from 'lucide-react';
+import { Copy, Check, Instagram, ChevronDown } from 'lucide-react';
 
 const BASE = 'https://clientes.inksadelivery.com.br';
 
 export default function MeuLinkDaLoja({ slug, nomeDaLoja }) {
   const [copiado, setCopiado] = useState(null); // 'link' | 'texto' | null
+  // Fechado por padrão: quem já sabe usar não precisa rolar por cima do
+  // passo a passo toda vez que abre Configurações.
+  const [comoUsar, setComoUsar] = useState(false);
 
   // Sem apelido não há link — e mostrar um link quebrado é pior que não
   // mostrar nada. Acontece só em loja recém-criada, até o perfil salvar.
@@ -53,8 +56,14 @@ export default function MeuLinkDaLoja({ slug, nomeDaLoja }) {
           </p>
 
           <div className="mt-3 flex items-center gap-2 rounded-lg bg-white border border-orange-200 px-3 py-2">
-            <span className="font-mono text-sm text-gray-800 truncate flex-1">
-              {link.replace('https://', '')}
+            {/* Sem truncate: em tela de celular o link cabia como
+                "clientes.inksadelive…" e escondia exatamente o pedaço que é do
+                parceiro. Ele precisa VER o próprio apelido — é o que faz o
+                link parecer dele. Então quebra em duas linhas e o apelido vem
+                destacado. */}
+            <span className="font-mono text-xs sm:text-sm break-all flex-1 min-w-0 leading-snug">
+              <span className="text-gray-500">{BASE.replace('https://', '')}/</span>
+              <span className="text-gray-900 font-semibold">{slug}</span>
             </span>
             <button
               type="button"
@@ -78,6 +87,61 @@ export default function MeuLinkDaLoja({ slug, nomeDaLoja }) {
               ? '✓ Texto copiado'
               : 'Copiar com uma frase pronta para a bio'}
           </button>
+
+          {/* O PASSO A PASSO.
+              A versão anterior deste bloco só dizia "coloque na bio" — o que
+              serve para quem já sabe. Os comércios que a gente prospecta em
+              Lages são donos de espetinho, marmitaria, salgaderia: dizer ONDE
+              tocar dentro do Instagram é o que separa "faço depois" de "fiz
+              agora". Não custa nada a quem já sabe, porque nasce fechado. */}
+          <button
+            type="button"
+            onClick={() => setComoUsar((v) => !v)}
+            aria-expanded={comoUsar}
+            className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-gray-700 hover:text-gray-900 min-h-[36px]"
+          >
+            Como usar
+            <ChevronDown
+              className={`h-4 w-4 transition-transform ${comoUsar ? 'rotate-180' : ''}`}
+              aria-hidden="true"
+            />
+          </button>
+
+          {comoUsar && (
+            <ol className="mt-1 space-y-2 text-sm text-gray-700">
+              <li className="flex gap-2">
+                <span className="shrink-0 font-bold text-primary">1.</span>
+                <span>Toque em <strong>Copiar</strong> aqui em cima.</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="shrink-0 font-bold text-primary">2.</span>
+                <span>
+                  No Instagram, abra seu perfil e toque em{' '}
+                  <strong>Editar perfil</strong>. Cole no campo{' '}
+                  <strong>Links</strong> (em celular mais antigo aparece como{' '}
+                  <strong>Site</strong>) e salve.
+                </span>
+              </li>
+              <li className="flex gap-2">
+                <span className="shrink-0 font-bold text-primary">3.</span>
+                <span>
+                  Pronto. Quem tocar no link da sua bio cai direto no seu
+                  cardápio, com o carrinho pronto para fechar o pedido.
+                </span>
+              </li>
+              {/* Vale dizer: é o motivo de existir a api/preview.js. O parceiro
+                  precisa saber que, ao mandar o link, aparece a marca DELE. */}
+              <li className="flex gap-2 pt-1 border-t border-orange-200">
+                <span className="shrink-0" aria-hidden="true">💬</span>
+                <span className="text-gray-600">
+                  Funciona no WhatsApp também: ao mandar o link para um cliente
+                  ou num grupo, aparece o nome e a foto{' '}
+                  {nomeDaLoja ? <>da <strong>{nomeDaLoja}</strong></> : <>da <strong>sua loja</strong></>}
+                  {' '}— não a da Inksa.
+                </span>
+              </li>
+            </ol>
+          )}
 
           <p className="mt-3 text-xs text-gray-500">
             {nomeDaLoja

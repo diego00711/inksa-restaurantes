@@ -74,7 +74,7 @@ export function RegisterPage() {
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
                         <label htmlFor="restaurant_name" className="block text-sm font-medium text-gray-700">
-                            Nome do Restaurante
+                            Nome da Loja
                         </label>
                         <input
                             id="restaurant_name"
