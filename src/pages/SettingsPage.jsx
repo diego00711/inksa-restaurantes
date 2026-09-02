@@ -6,6 +6,7 @@ import { RESTAURANT_API_URL } from '../services/api';
 import { Save, Loader } from 'lucide-react';
 import { useToast } from '../context/ToastContext.jsx';
 import { useProfile } from '../context/ProfileContext';
+import MeuLinkDaLoja from '../components/MeuLinkDaLoja';
 import OpeningHoursEditor from '../components/OpeningHoursEditor';
 
 // Uma consulta de geocodificação. Passa pelo NOSSO backend
@@ -324,6 +325,10 @@ export function SettingsPage() {
           </button>
         )}
       </div>
+      <div className="max-w-4xl mx-auto mb-6">
+        <MeuLinkDaLoja slug={profileData?.slug} nomeDaLoja={profileData?.restaurant_name} />
+      </div>
+
       <div className="bg-white rounded-lg shadow-md p-4 sm:p-8 max-w-4xl mx-auto">
         <form onSubmit={handleSubmit} className="space-y-8">
             {/* Secção do Logo */}
