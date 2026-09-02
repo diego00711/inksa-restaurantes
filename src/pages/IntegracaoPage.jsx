@@ -3,6 +3,7 @@ import { Plug, Loader2, CheckCircle2, AlertCircle, Send } from 'lucide-react';
 import { RESTAURANT_API_URL } from '../services/api';
 import { apiFetch } from '../services/apiClient';
 import { authService } from '../services/authService';
+import CredenciaisApi from '../components/CredenciaisApi';
 
 /**
  * Integração com o sistema da loja.
@@ -275,6 +276,11 @@ export default function IntegracaoPage() {
           Sua mensagem vira um chamado e você acompanha a resposta em <strong>Suporte</strong>.
         </p>
       </form>
+
+      {/* DEPOIS do formulário, não no lugar dele: a maioria dos parceiros não
+          sabe o que é uma chave de API e precisa da conversa. Quem já tem o
+          técnico do PDV do lado pega a chave aqui e vai embora. */}
+      <CredenciaisApi />
     </div>
   );
 }
