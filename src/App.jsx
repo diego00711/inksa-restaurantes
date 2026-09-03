@@ -10,7 +10,6 @@ import GuidedTour from './components/onboarding/GuidedTour.jsx';
 import GlobalError from './components/GlobalError';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 import WakingUpScreen from './components/WakingUpScreen';
-import SupportButton from './components/SupportButton';
 import { configurarAcoesDePush, criarCanalUrgente } from './services/notificationService';
 
 // --- Lazy-loaded pages ---
@@ -95,7 +94,16 @@ function AppRoutes() {
       <WakingUpScreen onReady={handleServerReady} />
       {serverReady && (
         <>
-          <SupportButton />
+          {/* O botão flutuante de suporte foi removido: era um círculo
+              fixo no canto inferior direito, em TODA tela, cobrindo
+              conteúdo e roubando toques destinados ao que está embaixo.
+              O menu já tem "Suporte", e aquela página traz tanto os
+              chamados quanto o contato direto (WhatsApp, e-mail,
+              telefone) — nada se perdeu. Aqui todo mundo está logado,
+              então não existe o caso do visitante sem outro caminho,
+              que é por isso que o app do CLIENTE manteve um ícone no
+              cabeçalho em vez de simplesmente remover.
+              components/SupportButton.jsx segue no repositório. */}
           <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/login" element={<LoginPage />} />
