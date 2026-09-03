@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Plug, Loader2, CheckCircle2, AlertCircle, Send } from 'lucide-react';
+import { Plug, Loader2, CheckCircle2, AlertCircle, Send, KeyRound, MessageCircle, ExternalLink } from 'lucide-react';
 import { RESTAURANT_API_URL } from '../services/api';
 import { apiFetch } from '../services/apiClient';
 import { authService } from '../services/authService';
 import CredenciaisApi from '../components/CredenciaisApi';
+
+const DOCS = 'https://www.inksadelivery.com.br/api';
 
 /**
  * Integração com o sistema da loja.
@@ -29,6 +31,10 @@ const SISTEMAS = [
   'Linear',
   'Teknisa',
   'Goomer',
+  'ConnectPlug / CPlug',
+  'Simpliza',
+  'SisFood',
+  'Sischef',
   'Outro (escrevo abaixo)',
 ];
 
@@ -58,6 +64,14 @@ export default function IntegracaoPage() {
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState(null);
   const [enviado, setEnviado] = useState(false);
+
+  // Rolagem suave, respeitando quem pediu menos animação no sistema.
+  const irPara = (id) => {
+    const alvo = document.getElementById(id);
+    if (!alvo) return;
+    const reduzir = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    alvo.scrollIntoView({ behavior: reduzir ? 'auto' : 'smooth', block: 'start' });
+  };
 
   const alternarInteresse = (id) =>
     setInteresses((atual) => (atual.includes(id) ? atual.filter((i) => i !== id) : [...atual, id]));
@@ -145,20 +159,76 @@ export default function IntegracaoPage() {
         </div>
       </div>
 
-      {/* Expectativa honesta ANTES do formulário. Integração depende do
-          fabricante do outro sistema, e prometer botão mágico cria frustração
-          que custa mais caro que a integração em si. */}
-      <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
-        <p className="font-semibold">Como funciona, sem enrolação</p>
+      {/* Este texto hedgeava ("cada caso é avaliado separadamente") porque foi
+          escrito quando a Inksa não tinha API nenhuma. Hoje tem, pública e
+          documentada — e continuar hedgeando faria o parceiro entender "não
+          dá". A parte honesta que PERMANECE: quem escreve o conector é o
+          fabricante do sistema dele, não a gente. */}
+      <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+        <p className="font-semibold">Sim, dá para integrar</p>
         <p className="mt-1">
-          Integrar significa que o pedido feito no Inksa cai direto no seu sistema, sem ninguém
-          digitar de novo. Para isso, o fabricante do seu sistema precisa permitir essa conexão —
-          então cada caso é avaliado separadamente.
+          A Inksa tem uma <strong>API pública e documentada</strong>. Qualquer sistema de gestão
+          que acesse a internet consegue receber os seus pedidos direto, mudar o status e manter
+          o cardápio em dia — sem ninguém digitar duas vezes.
         </p>
         <p className="mt-2">
-          Preencha abaixo e a gente retorna dizendo o que é possível no seu caso, o que precisamos
-          de você e qual o prazo. <strong>Se você ainda não usa sistema nenhum</strong>, responda
-          assim mesmo: o app já mostra os pedidos na hora e talvez você nem precise de integração.
+          Quem liga os dois lados é <strong>o fabricante do seu sistema</strong>. A gente entrega
+          a documentação e a chave de acesso, e entra na conversa com eles junto com você.
+        </p>
+        <a
+          href={DOCS}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-3 inline-flex items-center gap-1.5 font-semibold text-emerald-800 hover:underline"
+        >
+          Ver a documentação técnica
+          <ExternalLink className="h-4 w-4" aria-hidden="true" />
+        </a>
+      </div>
+
+      {/* Dois públicos muito diferentes caem nesta tela: quem já tem um técnico
+          do PDV do lado (quer a chave e vai embora) e quem não sabe o que é
+          uma API (precisa da conversa). Sem este atalho, o primeiro rolava um
+          formulário de seis campos que não era para ele. */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <button
+          type="button"
+          onClick={() => irPara('chaves')}
+          className="text-left rounded-xl border border-gray-200 bg-white p-4 hover:border-orange-300 hover:bg-orange-50/40"
+        >
+          <span className="flex items-center gap-2 font-semibold text-gray-900">
+            <KeyRound className="h-4 w-4 text-orange-600" aria-hidden="true" />
+            Já tenho quem cuide do meu sistema
+          </span>
+          <span className="block text-sm text-gray-500 mt-1">
+            Gere a chave de acesso e entregue ao técnico junto com a documentação.
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => irPara('ajuda')}
+          className="text-left rounded-xl border border-gray-200 bg-white p-4 hover:border-orange-300 hover:bg-orange-50/40"
+        >
+          <span className="flex items-center gap-2 font-semibold text-gray-900">
+            <MessageCircle className="h-4 w-4 text-orange-600" aria-hidden="true" />
+            Não sei por onde começar
+          </span>
+          <span className="block text-sm text-gray-500 mt-1">
+            Conte qual sistema você usa e a gente fala com o fornecedor por você.
+          </span>
+        </button>
+      </div>
+
+      <div id="chaves">
+        <CredenciaisApi />
+      </div>
+
+      <div id="ajuda">
+        <h2 className="font-bold text-gray-900">Prefere que a gente ajude?</h2>
+        <p className="text-sm text-gray-500 mt-0.5">
+          Conte qual sistema você usa e quem cuida dele. A gente avalia e responde
+          o que dá para fazer no seu caso.
         </p>
       </div>
 
@@ -276,11 +346,6 @@ export default function IntegracaoPage() {
           Sua mensagem vira um chamado e você acompanha a resposta em <strong>Suporte</strong>.
         </p>
       </form>
-
-      {/* DEPOIS do formulário, não no lugar dele: a maioria dos parceiros não
-          sabe o que é uma chave de API e precisa da conversa. Quem já tem o
-          técnico do PDV do lado pega a chave aqui e vai embora. */}
-      <CredenciaisApi />
     </div>
   );
 }

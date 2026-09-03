@@ -15,7 +15,7 @@ import { RESTAURANT_API_URL, createAuthHeaders } from '../services/api';
 import { apiFetch } from '../services/apiClient';
 
 const BASE = `${RESTAURANT_API_URL}/api/parceiro/credenciais`;
-const DOCS = 'https://inksadelivery.com.br/api';
+const DOCS = 'https://www.inksadelivery.com.br/api';
 
 export default function CredenciaisApi() {
   const [lista, setLista] = useState(null);
@@ -104,9 +104,12 @@ export default function CredenciaisApi() {
           <p className="text-sm text-gray-500 mt-0.5">
             Para quem já tem um técnico configurando o sistema. Entregue a chave a
             ele junto com o endereço da documentação:{' '}
+            {/* break-words e nao break-all: com break-all a URL partia no meio
+                da palavra ("...com.b / r/api") e ficava ilegivel na tela do
+                celular. E mostra sem o www, que e mais curto e funciona igual. */}
             <a href={DOCS} target="_blank" rel="noreferrer"
-               className="text-orange-600 font-medium hover:underline break-all">
-              {DOCS.replace('https://', '')}
+               className="text-orange-600 font-medium hover:underline break-words">
+              inksadelivery.com.br/api
             </a>
           </p>
         </div>
