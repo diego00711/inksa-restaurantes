@@ -1,7 +1,7 @@
 // src/pages/MenuPage.jsx - VERSÃO FINAL E ROBUSTA
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { PlusCircle, Edit, Trash2, Image as ImageIcon, FileSpreadsheet, SlidersHorizontal } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { PlusCircle, Edit, Trash2, Image as ImageIcon, FileSpreadsheet, SlidersHorizontal, Search, X } from 'lucide-react';
 import OpcoesDoItem from '../components/OpcoesDoItem';
 import { menuService } from '../services/menuService';
 import { MenuItemModal } from '../components/MenuItemModal';
@@ -20,8 +20,33 @@ export function MenuPage() {
   const [importAberto, setImportAberto] = useState(false);
   // Item cujas opções (corte, molho, adicionais) estão sendo editadas.
   const [itemOpcoes, setItemOpcoes] = useState(null);
+  const [busca, setBusca] = useState('');
   const { addToast } = useToast();
   const confirm = useConfirm();
+
+  // ACENTO NÃO PODE ATRAPALHAR. Quem digita "acai" tem que achar "Açaí", e
+  // quem digita "PUDIM" tem que achar "Pudim". Numa cozinha, ninguém para pra
+  // apertar til no meio do expediente — busca que exige acento certo é busca
+  // que não acha, e o dono conclui que o item sumiu do cardápio.
+  const normalizar = (s) => (s ?? '')
+    .toString()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')   // tira os acentos que o NFD separou
+    .toLowerCase()
+    .trim();
+
+  const itensFiltrados = useMemo(() => {
+    const termo = normalizar(busca);
+    if (!termo) return menuItems;
+    // Cada palavra precisa aparecer em ALGUM campo, em qualquer ordem: assim
+    // "bolo choc" acha "Bolo de chocolate" sem exigir que a pessoa lembre do
+    // nome exato — que é justamente o que ela não lembra quando está buscando.
+    const palavras = termo.split(/\s+/);
+    return menuItems.filter((item) => {
+      const alvo = normalizar(`${item.name} ${item.description} ${item.category}`);
+      return palavras.every((p) => alvo.includes(p));
+    });
+  }, [menuItems, busca]);
 
   const fetchMenuItems = useCallback(async () => {
     setIsLoading(true);
@@ -45,6 +70,10 @@ export function MenuPage() {
 
   const handleItemAdded = (newItem) => {
     setMenuItems(prevItems => [newItem, ...prevItems]);
+    // Limpa a busca ao cadastrar: o item novo entra no topo da lista, e se um
+    // filtro estivesse ativo ele poderia não casar com o termo — o dono
+    // salvaria, não veria nada aparecer e tentaria cadastrar de novo.
+    setBusca('');
   };
 
   const handleItemUpdated = (updatedItem) => {
@@ -118,11 +147,67 @@ export function MenuPage() {
             </p>
         </AvisoNovidade>
 
+        <AvisoNovidade id="busca-cardapio-2026-09" titulo="Novo: busca no cardápio">
+            <p>
+                Agora tem um <strong>campo de busca</strong> logo acima da lista. Digite parte do
+                nome, da descrição ou da categoria e a lista filtra sozinha.
+            </p>
+            <p>
+                Não precisa acertar o acento nem o nome inteiro: <strong>"acai" acha "Açaí"</strong>,
+                e <strong>"bolo choc" acha "Bolo de chocolate"</strong> — as palavras podem estar
+                em qualquer ordem.
+            </p>
+            <p>
+                Feito para quem tem cardápio grande: achar um item entre dezenas para corrigir
+                preço ou marcar como esgotado deixa de exigir rolar a lista inteira.
+            </p>
+        </AvisoNovidade>
+
         <ImportarCatalogo
             aberto={importAberto}
             onFechar={() => setImportAberto(false)}
             onConcluido={fetchMenuItems}
         />
+
+        {/* BUSCA — só aparece com cardápio que justifique procurar. Com 5 itens
+            a lista inteira cabe na tela e o campo seria só ruído ocupando
+            altura; a partir daí, rolar para achar um item vira o trabalho. */}
+        {menuItems.length > 5 && (
+            <div className="mb-4">
+                <div className="relative">
+                    <Search
+                        size={18}
+                        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                        aria-hidden="true"
+                    />
+                    <input
+                        type="search"
+                        value={busca}
+                        onChange={(e) => setBusca(e.target.value)}
+                        placeholder="Buscar por nome, descrição ou categoria..."
+                        aria-label="Buscar item no cardápio"
+                        className="w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-10 text-gray-800 placeholder:text-gray-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary min-h-[44px]"
+                    />
+                    {busca && (
+                        <button
+                            type="button"
+                            onClick={() => setBusca('')}
+                            aria-label="Limpar busca"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                        >
+                            <X size={16} />
+                        </button>
+                    )}
+                </div>
+                {busca && (
+                    <p className="mt-2 text-sm text-gray-500">
+                        {itensFiltrados.length === 0
+                            ? 'Nenhum item corresponde à busca.'
+                            : `${itensFiltrados.length} de ${menuItems.length} ${menuItems.length === 1 ? 'item' : 'itens'}`}
+                    </p>
+                )}
+            </div>
+        )}
 
         <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
             <table className="w-full text-left min-w-[560px]">
@@ -141,8 +226,8 @@ export function MenuPage() {
                 <tr><td colSpan="6" className="text-center p-4 text-gray-500">Carregando cardápio...</td></tr>
                 ) : error ? (
                 <tr><td colSpan="6" className="text-center p-4 text-red-500">Erro ao carregar cardápio: {error}</td></tr>
-                ) : menuItems.length > 0 ? (
-                menuItems.map((item) => (
+                ) : itensFiltrados.length > 0 ? (
+                itensFiltrados.map((item) => (
                     <tr key={item.id} className="border-b border-gray-200 hover:bg-gray-50">
                         <td className="p-4">
                             {item.image_url ? (
@@ -213,6 +298,20 @@ export function MenuPage() {
                         </td>
                     </tr>
                 ))
+                ) : busca ? (
+                /* BUSCA VAZIA ≠ CARDÁPIO VAZIO. Mandar "adicione um para
+                   começar" pra quem tem 28 itens e só errou a busca faz o dono
+                   achar que perdeu o cardápio. Aqui a saída é limpar a busca. */
+                <tr><td colSpan="6" className="text-center p-6 text-gray-500">
+                    <p>Nenhum item encontrado para <strong className="text-gray-700">"{busca}"</strong>.</p>
+                    <button
+                        type="button"
+                        onClick={() => setBusca('')}
+                        className="mt-2 font-semibold text-primary hover:underline"
+                    >
+                        Limpar a busca e ver os {menuItems.length} itens
+                    </button>
+                </td></tr>
                 ) : (
                 <tr><td colSpan="6" className="text-center p-4 text-gray-500">Nenhum item encontrado. Adicione um para começar.</td></tr>
                 )}
