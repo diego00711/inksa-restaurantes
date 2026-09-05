@@ -11,6 +11,15 @@ import { useConfirm } from '../components/ConfirmProvider.jsx';
 import AvisoNovidade from '../components/AvisoNovidade.jsx';
 import { emPromocao, descontoPct } from '../utils/promo';
 
+// A partir de quantos itens vale ter busca. Abaixo disso a lista inteira cabe
+// na tela e o campo só ocuparia altura — no celular, onde o parceiro mais mexe
+// no cardápio, isso custa caro.
+//
+// MORA AQUI, numa constante só, porque a MESMA régua vale para o campo e para
+// o aviso de novidade. Em duas cópias, mudar uma e esquecer a outra faz o app
+// anunciar uma busca que a loja não tem.
+const MINIMO_PARA_BUSCA = 6;
+
 export function MenuPage() {
   const [menuItems, setMenuItems] = useState([]);
   const [error, setError] = useState(null);
@@ -147,6 +156,12 @@ export function MenuPage() {
             </p>
         </AvisoNovidade>
 
+        {/* O AVISO USA A MESMA TRAVA DO CAMPO. Sem isso, a loja com 2 itens
+            leria "Novo: busca no cardápio", procuraria o campo e não acharia —
+            anunciar o que a pessoa não tem é pior que não anunciar. Como a
+            condição é a mesma, o aviso aparece sozinho no dia em que o cardápio
+            passar de 5 itens, que é quando ele começa a fazer sentido. */}
+        {menuItems.length >= MINIMO_PARA_BUSCA && (
         <AvisoNovidade id="busca-cardapio-2026-09" titulo="Novo: busca no cardápio">
             <p>
                 Agora tem um <strong>campo de busca</strong> logo acima da lista. Digite parte do
@@ -162,6 +177,7 @@ export function MenuPage() {
                 preço ou marcar como esgotado deixa de exigir rolar a lista inteira.
             </p>
         </AvisoNovidade>
+        )}
 
         <ImportarCatalogo
             aberto={importAberto}
@@ -172,7 +188,7 @@ export function MenuPage() {
         {/* BUSCA — só aparece com cardápio que justifique procurar. Com 5 itens
             a lista inteira cabe na tela e o campo seria só ruído ocupando
             altura; a partir daí, rolar para achar um item vira o trabalho. */}
-        {menuItems.length > 5 && (
+        {menuItems.length >= MINIMO_PARA_BUSCA && (
             <div className="mb-4">
                 <div className="relative">
                     <Search
