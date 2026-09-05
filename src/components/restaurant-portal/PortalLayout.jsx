@@ -111,6 +111,9 @@ export function PortalLayout() {
     { name: 'Financeiro', icon: DollarSign, path: '/financeiro' },
     { name: 'Integração', icon: Plug, path: '/integracao' },
     { name: 'Suporte', icon: LifeBuoy, path: '/suporte' },
+    // Porta separada da do suporte de proposito: quem tem uma ideia nao se
+    // ve "abrindo um chamado". Mesmo destino, convite diferente.
+    { name: 'Sugestões', icon: Lightbulb, path: '/suporte?sugestao=1' },
     { name: 'Configurações', icon: Settings, path: '/configuracoes' },
     { name: 'Categorias', icon: Tag, path: '/categorias' },
   ];
