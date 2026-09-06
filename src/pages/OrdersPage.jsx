@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { orderService } from '../services/orderService.js';
 import OrderCard from '../components/OrderCard';
 import AvisoCardapioVazio from '../components/AvisoCardapioVazio';
+import AvisoNovidade from '../components/AvisoNovidade';
 import { OrderDetailsModal } from '../components/OrderDetailsModal';
 import { PickupConfirmationModal } from '../components/PickupConfirmationModal';
 import { DeliveryConfirmationModal } from '../components/DeliveryConfirmationModal';
@@ -504,6 +505,30 @@ export function OrdersPage() {
           porque é a informação mais importante da tela pra quem está nessa
           situação: não adianta olhar pedidos se nenhum cliente te vê. */}
       <AvisoCardapioVazio />
+
+      {/* Retirada no local. O aviso mora AQUI, no painel de pedidos, e não na
+          tela de Configurações: ninguém vai em Configurações procurar um botão
+          cuja existência não conhece. Some quando a loja já ligou — aviso que
+          continua depois de atendido vira ruído.
+          O id carrega a data: mudar o texto sem mudar o id não faz o aviso
+          voltar pra quem já fechou. */}
+      {!profile?.accepts_pickup && (
+        <AvisoNovidade id="retirada-no-local-2026-09" titulo="Novo: retirada no local">
+          <p>
+            Você pode deixar o cliente <strong>pagar pelo app e buscar no balcão</strong>.
+            Nesses pedidos não tem frete nem entregador — então funciona
+            mesmo quando não há nenhum entregador disponível.
+          </p>
+          <p className="mt-2">
+            A comissão nesses pedidos é <strong>metade</strong> da comissão de entrega,
+            porque o trabalho de entregar é seu.
+          </p>
+          <p className="mt-2">
+            Para ligar: <strong>Configurações → Retirada no Local</strong>.
+          </p>
+        </AvisoNovidade>
+      )}
+
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex flex-wrap justify-between items-center gap-3 mb-5">
         <div className="flex items-center gap-3">
