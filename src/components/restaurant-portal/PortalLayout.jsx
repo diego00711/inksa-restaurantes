@@ -4,7 +4,11 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import { RESTAURANT_API_URL, createAuthHeaders } from '../../services/api';
 import { apiFetch } from '../../services/apiClient';
-import { ListOrdered, Utensils, Settings, LogOut, BarChart2, Tag, Trophy, Medal, Star, DollarSign, Menu, X, LifeBuoy, AlertTriangle, Ticket, Plug } from 'lucide-react';
+// ⚠️ Lightbulb entrou na lista de navegacao em 05/09/2026 SEM entrar aqui. O
+// build passou, o deploy passou, e o app inteiro morria com "Lightbulb is not
+// defined" — tela branca em TODA tela logada, porque este layout envolve todas.
+// Icone novo na navegacao entra nesta linha NO MESMO COMMIT.
+import { ListOrdered, Utensils, Settings, LogOut, BarChart2, Tag, Trophy, Medal, Star, DollarSign, Menu, X, LifeBuoy, AlertTriangle, Ticket, Plug, Lightbulb } from 'lucide-react';
 import { authService } from '../../services/authService.js';
 import { useProfile } from '../../context/ProfileContext';
 import { useToast } from '../../context/ToastContext.jsx';
