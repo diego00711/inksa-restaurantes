@@ -105,6 +105,8 @@ export function SettingsPage() {
     bank_account_number: '', bank_account_type: 'corrente',
     pix_key: '', pix_key_type: '', mp_account_id: '', delivery_type: 'platform',
     accepts_cash: true,
+    // Nasce desligado: retirada é escolha da loja, não padrão nosso.
+    accepts_pickup: false,
     opening_hours: null, hours_auto: false,
   });
   const [logoFile, setLogoFile] = useState(null);
@@ -504,6 +506,42 @@ export function SettingsPage() {
               <p className="text-xs text-gray-500 mt-2 ml-0">
                 Se desativado, a opção "Dinheiro" não será exibida para os clientes no checkout.
               </p>
+            </div>
+
+            {/* Retirada no local */}
+            <div className="border-t pt-8">
+              <h2 className="text-xl font-semibold mb-4 text-gray-700">Retirada no Local</h2>
+              <label className="flex items-center gap-3 cursor-pointer w-fit">
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    name="accepts_pickup"
+                    checked={profileData.accepts_pickup ?? false}
+                    onChange={handleChange} disabled={!isEditing}
+                    className="sr-only"
+                  />
+                  <div className={`w-11 h-6 rounded-full transition-colors duration-200 ${(profileData.accepts_pickup ?? false) ? 'bg-indigo-600' : 'bg-gray-300'}`} />
+                  <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${(profileData.accepts_pickup ?? false) ? 'translate-x-5' : ''}`} />
+                </div>
+                <span className="text-sm font-medium text-gray-700">
+                  Aceitar que o cliente retire no balcão
+                </span>
+              </label>
+              <div className="text-xs text-gray-500 mt-2 space-y-1">
+                <p>
+                  O cliente escolhe "Retirar no local" no carrinho, paga pelo app e vem
+                  buscar. <strong className="text-gray-700">Sem frete e sem entregador</strong> —
+                  então funciona mesmo quando não há nenhum entregador disponível.
+                </p>
+                <p>
+                  Nesses pedidos a <strong className="text-gray-700">comissão cai pela metade</strong>,
+                  porque o trabalho de entregar é seu.
+                </p>
+                <p>
+                  Quando o cliente chegar, ele mostra um código de 6 números. Você digita
+                  esse código para dar o pedido como entregue.
+                </p>
+              </div>
             </div>
 
             {/* Secção de Endereço */}

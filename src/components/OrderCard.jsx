@@ -25,6 +25,10 @@ const StatusBadge = ({ status }) => {
 };
 
 export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus, onViewDetails, onConfirmPickup, onConfirmDelivery, onAcceptOrder, onPrint }) {
+  // RETIRADA NO LOCAL é do PEDIDO, não da loja: a mesma loja tem pedidos de
+  // entrega e de retirada ao mesmo tempo. Por isso não dá pra reaproveitar o
+  // isOwnDelivery, que é uma configuração da loja inteira.
+  const ehRetirada = !!order?.is_pickup;
   const [estimatedTime, setEstimatedTime] = useState(20);
   // Campo livre para quem passa de uma hora. Nasceu do mercado: os botões
   // fixos param em 60 min, e separar uma compra grande leva mais que isso.
@@ -55,6 +59,10 @@ export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus
       case 'Preparando':
         return { text: 'Pronto', nextStatus: 'ready' };
       case 'Pronto':
+        // RETIRADA NO LOCAL: não há entrega nenhuma. O pedido fica pronto no
+        // balcão até o cliente aparecer, e fecha com o código que ELE mostra.
+        // Por isso para direto aqui, sem passar por "Saiu para Entrega".
+        if (ehRetirada) return { text: '✅ Confirmar Retirada', confirmDelivery: true };
         // ENTREGA PRÓPRIA: o restaurante despacha com a própria moto —
         // "Saiu para Entrega" direto, sem esperar entregador Inksa.
         if (isOwnDelivery) return { text: '🛵 Saiu para Entrega', nextStatus: 'delivering' };
@@ -75,8 +83,9 @@ export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus
 
   // Botão de confirmar retirada só no fluxo COM entregador Inksa. Na entrega
   // própria não existe retirada por entregador — o restaurante leva ele mesmo.
+  // Na RETIRADA NO LOCAL também não: não existe entregador para retirar.
   const shouldShowPickupButton = () => {
-    if (isOwnDelivery) return false;
+    if (isOwnDelivery || ehRetirada) return false;
     return order.status === 'Aguardando Retirada' || order.status === 'accepted_by_delivery';
   };
 
@@ -99,6 +108,15 @@ export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus
           </h3>
           <StatusBadge status={order.status} />
         </div>
+
+        {/* RETIRADA precisa gritar. Um pedido de retirada tratado como entrega
+            fica esperando um entregador que nunca vem, e o cliente chega no
+            balcão para buscar algo que ninguém separou. */}
+        {ehRetirada && (
+          <p className="mb-2 inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-amber-800 bg-amber-100 border border-amber-300 rounded-full px-2 py-0.5">
+            🛍️ Retirada no local — o cliente vem buscar
+          </p>
+        )}
 
         {/* Prova de entrega. Fica visível justamente pra quem quis a trava: o
             dono vê quais entregas o motoboy dele fechou sem o código. */}
