@@ -74,7 +74,7 @@ export function LoginPage() {
           <div className="space-y-1">
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
             <input
-              type="email"
+              type="email" autoCapitalize="none" autoCorrect="off" spellCheck={false}
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}

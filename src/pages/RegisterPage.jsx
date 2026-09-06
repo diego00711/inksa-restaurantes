@@ -93,7 +93,7 @@ export function RegisterPage() {
                         <input
                             id="email"
                             name="email"
-                            type="email"
+                            type="email" autoCapitalize="none" autoCorrect="off" spellCheck={false}
                             autoComplete="email"
                             required
                             value={formData.email}
