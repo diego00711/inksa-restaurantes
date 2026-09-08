@@ -8,7 +8,7 @@ import { apiFetch } from '../../services/apiClient';
 // build passou, o deploy passou, e o app inteiro morria com "Lightbulb is not
 // defined" — tela branca em TODA tela logada, porque este layout envolve todas.
 // Icone novo na navegacao entra nesta linha NO MESMO COMMIT.
-import { ListOrdered, Utensils, Settings, LogOut, BarChart2, Tag, Trophy, Medal, Star, DollarSign, Menu, X, LifeBuoy, AlertTriangle, Ticket, Plug, Lightbulb } from 'lucide-react';
+import { ListOrdered, Utensils, Settings, LogOut, BarChart2, Tag, Trophy, Medal, Star, DollarSign, Menu, X, LifeBuoy, AlertTriangle, Ticket, Plug, Lightbulb, Calculator } from 'lucide-react';
 import { authService } from '../../services/authService.js';
 import { useProfile } from '../../context/ProfileContext';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -118,6 +118,9 @@ export function PortalLayout() {
     // Porta separada da do suporte de proposito: quem tem uma ideia nao se
     // ve "abrindo um chamado". Mesmo destino, convite diferente.
     { name: 'Sugestões', icon: Lightbulb, path: '/suporte?sugestao=1' },
+    // Antes de Configurações de propósito: é conteúdo que o parceiro precisa
+    // ANTES de cadastrar o primeiro item, não depois de errar o preço.
+    { name: 'Meu Preço', icon: Calculator, path: '/precificacao' },
     { name: 'Configurações', icon: Settings, path: '/configuracoes' },
     { name: 'Categorias', icon: Tag, path: '/categorias' },
   ];

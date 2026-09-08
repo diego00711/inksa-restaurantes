@@ -123,6 +123,7 @@ function AppRoutes() {
                 <Route path="pedidos" element={<OrdersPage />} />
                 <Route path="cardapio" element={<MenuPage />} />
                 <Route path="analytics" element={<AnalyticsPage />} />
+                <Route path="precificacao" element={<PrecificacaoPage />} />
                 <Route path="configuracoes" element={<SettingsPage />} />
                 <Route path="categorias" element={<CategoryManagementPage />} />
                 <Route path="avaliacoes" element={<RestaurantEvaluationsCenter />} />
