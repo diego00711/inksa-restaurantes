@@ -20,6 +20,12 @@ const RegisterPage = lazy(() => import('./pages/RegisterPage').then(m => ({ defa
 const OrdersPage = lazy(() => import('./pages/OrdersPage').then(m => ({ default: m.OrdersPage })));
 const MenuPage = lazy(() => import('./pages/MenuPage').then(m => ({ default: m.MenuPage })));
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage').then(m => ({ default: m.AnalyticsPage })));
+// ⚠️ Export DEFAULT (sem .then), diferente das vizinhas — PrecificacaoPage usa
+// `export default`. Este import faltou no commit 232091b1: a rota entrou, o
+// import não, o build passou e o app inteiro morreu com "PrecificacaoPage is
+// not defined". Segunda vez na mesma semana (a primeira foi o ícone Lightbulb).
+// Rota nova e import nascem no MESMO commit, e a conferência é grep dos DOIS.
+const PrecificacaoPage = lazy(() => import('./pages/PrecificacaoPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
 const CategoryManagementPage = lazy(() => import('./pages/CategoryManagementPage').then(m => ({ default: m.CategoryManagementPage })));
 const RestaurantGamificationPage = lazy(() => import('./pages/RestaurantGamificationPage'));
