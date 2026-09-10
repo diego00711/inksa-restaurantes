@@ -65,7 +65,7 @@ export function LoginPage() {
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4">
       <div className="p-8 bg-white rounded-xl shadow-md w-full max-w-sm">
         <div className="text-center mb-6">
-          <img src="/inka-logo.png" alt="Inksa Logo" className="h-10 w-auto mx-auto" />
+          <img src="/inksa-marca.png" alt="Inksa Logo" className="h-10 w-auto mx-auto" />
           <h1 className="text-2xl font-bold text-gray-900 mt-4">Acesse sua Conta</h1>
           <p className="text-gray-500 text-sm">Bem-vindo de volta!</p>
         </div>

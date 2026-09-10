@@ -261,7 +261,7 @@ export function PortalLayout() {
           </button>
 
           <div className="flex items-center gap-2 min-w-0">
-            <img src="/inka-logo.png" alt="Inksa" className="h-7 w-7 rounded-lg object-cover shrink-0" />
+            <img src="/inksa-marca.png" alt="Inksa" className="h-7 w-auto shrink-0" />
             <h1 className="text-lg sm:text-xl font-bold text-white truncate">
               {navItems.find(item => location.pathname.startsWith(item.path))?.name || 'Painel'}
             </h1>
