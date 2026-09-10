@@ -261,7 +261,10 @@ export function PortalLayout() {
           </button>
 
           <div className="flex items-center gap-2 min-w-0">
-            <img src="/inksa-marca.png" alt="Inksa" className="h-7 w-auto shrink-0" />
+            {/* Versão BRANCA: este cabeçalho é from-orange-500 to-orange-600, e
+                marca laranja sobre barra laranja não se lê. Mesmo caso do app
+                do Entregador. Em fundo claro, a laranja continua valendo. */}
+            <img src="/inksa-marca-branca.png" alt="Inksa" className="h-7 w-auto shrink-0" />
             <h1 className="text-lg sm:text-xl font-bold text-white truncate">
               {navItems.find(item => location.pathname.startsWith(item.path))?.name || 'Painel'}
             </h1>

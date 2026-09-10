@@ -68,7 +68,7 @@ export default function GuidedTour({ onComplete }) {
           </button>
           <button
             onClick={goNext}
-            className="bg-[#FF6F00] text-white rounded-full min-h-[44px] px-6 font-semibold text-sm shadow-md active:opacity-90 transition-opacity"
+            className="bg-orange-500 text-white rounded-full min-h-[44px] px-6 font-semibold text-sm shadow-md active:opacity-90 transition-opacity"
           >
             {isLast ? 'Concluir' : 'Próximo'}
           </button>

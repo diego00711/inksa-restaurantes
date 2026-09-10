@@ -28,7 +28,7 @@ export function SalesChart({ data }) {
           contentStyle={{ backgroundColor: '#fff', border: '1px solid #ccc' }}
         />
         <Legend formatter={() => 'Vendas no Dia'} />
-        <Bar dataKey="total" fill="#ff8c00" name="Vendas no Dia" />
+        <Bar dataKey="total" fill="#F97316" name="Vendas no Dia" />
       </BarChart>
     </ResponsiveContainer>
   );
