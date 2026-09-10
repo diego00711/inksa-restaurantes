@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Package, CheckCircle, Printer, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { parseItensDoPedido } from '../utils/orderItems';
 import { numeroPedido } from '../utils/pedidoNumero';
+import { brl } from '../utils/dinheiro';
 
 const StatusBadge = ({ status }) => {
   const statusColors = {
@@ -173,7 +174,7 @@ export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus
 
       <div className="border-t pt-3 flex flex-col gap-2">
         <p className="text-lg font-bold text-gray-900">
-          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(order.total_amount)}
+          {brl(order.total_amount)}
         </p>
 
         {/* ── QUEM VEM BUSCAR ──────────────────────────────────────────────

@@ -7,6 +7,7 @@ import { useProfile } from '../context/ProfileContext';
 import { RESTAURANT_API_URL, createAuthHeaders, processResponse } from '../services/api';
 import { apiFetch } from '../services/apiClient';
 import MyRedemptions from '../components/MyRedemptions';
+import { brlSemCentavos } from '../utils/dinheiro';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -75,9 +76,10 @@ const CLUB_GRADIENT = {
 // pedidos — porque o benefício dele é desconto na comissão, e o que esse
 // desconto custa acompanha o quanto ele vende. Então tudo nesta tela é dinheiro.
 // A API manda `unit: 'brl'` justamente pra tela não precisar adivinhar.
-const brl = (v) => Number(v || 0).toLocaleString('pt-BR', {
-  style: 'currency', currency: 'BRL', maximumFractionDigits: 0,
-});
+// SEM CENTAVOS aqui de propósito: meta e faixa são número redondo ("venda
+// R$ 3.000"), e o ",00" só faz o olho trabalhar. É a única tela que usa esta
+// variante — o resto do app usa `brl`.
+const brl = brlSemCentavos;
 const ehDinheiro = (u) => (u || 'brl') === 'brl';
 const medida = (v, u) => (ehDinheiro(u) ? brl(v) : `${v} venda${v !== 1 ? 's' : ''}`);
 

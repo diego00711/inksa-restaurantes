@@ -20,6 +20,7 @@ import ClientReviewForm from '../components/ClientReviewForm';
 import DeliveryReviewForm from '../components/DeliveryReviewForm';
 import IncidentAlerts from '../components/IncidentAlerts.jsx';
 import { printOrder, ehAplicativo, ENDERECO_WEB } from '../utils/orderPrint';
+import { brl } from '../utils/dinheiro';
 
 // ─── OrderTimer ───────────────────────────────────────────────────────────────
 function OrderTimer({ createdAt, acceptedAt, finishedAt, parado = false }) {
@@ -112,8 +113,8 @@ function KPIBar({ orders }) {
 
     return [
       { label: 'Pedidos Hoje', value: String(todayOrds.length), icon: ShoppingBag, color: 'text-blue-700', bg: 'bg-blue-50', border: 'border-blue-100' },
-      { label: 'Faturamento', value: `R$ ${revenue.toFixed(2)}`, icon: DollarSign, color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-100' },
-      { label: 'Ticket Médio', value: `R$ ${ticket.toFixed(2)}`, icon: TrendingUp, color: 'text-purple-700', bg: 'bg-purple-50', border: 'border-purple-100' },
+      { label: 'Faturamento', value: brl(revenue), icon: DollarSign, color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-100' },
+      { label: 'Ticket Médio', value: brl(ticket), icon: TrendingUp, color: 'text-purple-700', bg: 'bg-purple-50', border: 'border-purple-100' },
       { label: 'Em Andamento', value: String(inProgress), icon: AlertCircle, color: 'text-orange-700', bg: 'bg-orange-50', border: 'border-orange-100' },
     ];
   }, [orders]);

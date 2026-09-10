@@ -20,6 +20,7 @@ import {
 import { analyticsService } from '../services/analyticsService';
 import { useToast } from '../context/ToastContext.jsx';
 import { SalesChart } from '../components/SalesChart';
+import { brl } from '../utils/dinheiro';
 
 export function AnalyticsPage() {
   const [analyticsData, setAnalyticsData] = useState(null);
@@ -111,20 +112,13 @@ export function AnalyticsPage() {
     );
   }
 
-  const formattedTotalSales = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  }).format(analyticsData.total_vendas || 0);
+  const formattedTotalSales = brl(analyticsData.total_vendas);
 
   const metricas = analyticsData.metricas_extras || {};
   const insights = analyticsData.insights || {};
   const topItens = insights.top_itens || [];
   const porHora = insights.vendas_por_hora || [];
   const porDiaSemana = insights.vendas_por_dia_semana || [];
-
-  const brl = (v) => new Intl.NumberFormat('pt-BR', {
-    style: 'currency', currency: 'BRL'
-  }).format(v || 0);
 
   const maxItemQtd = Math.max(1, ...topItens.map((i) => i.quantidade || 0));
   const maiorHora = porHora.reduce((a, b) => (b.total > a.total ? b : a), { hora: null, total: 0 });

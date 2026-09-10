@@ -2,8 +2,7 @@
 
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-
-const formatCurrency = (value) => `R$ ${value.toFixed(2)}`;
+import { brl } from '../utils/dinheiro';
 
 const formatXAxis = (tickItem) => {
   const date = new Date(tickItem + 'T00:00:00');
@@ -21,9 +20,9 @@ export function SalesChart({ data }) {
       >
         <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
         <XAxis dataKey="dia" tickFormatter={formatXAxis} />
-        <YAxis tickFormatter={formatCurrency} />
+        <YAxis tickFormatter={brl} />
         <Tooltip
-          formatter={(value) => [formatCurrency(value), 'Vendas']}
+          formatter={(value) => [brl(value), 'Vendas']}
           labelFormatter={(label) => `Dia: ${formatXAxis(label)}`}
           contentStyle={{ backgroundColor: '#fff', border: '1px solid #ccc' }}
         />

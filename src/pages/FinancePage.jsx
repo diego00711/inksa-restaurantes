@@ -3,9 +3,7 @@ import { Link } from 'react-router-dom';
 import { DollarSign, Calendar, TrendingUp, AlertTriangle, Pencil } from 'lucide-react';
 import { RESTAURANT_API_URL, AUTH_TOKEN_KEY } from '../services/api';
 import { useProfile } from '../context/ProfileContext';
-
-const fmt = (value) =>
-  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
+import { brl } from '../utils/dinheiro';
 
 export default function FinancePage() {
   const { profile } = useProfile();
@@ -74,7 +72,7 @@ export default function FinancePage() {
           <AlertTriangle className="text-amber-600 shrink-0 mt-0.5" size={20} />
           <div className="text-sm text-amber-900">
             <p className="font-bold">
-              Comissão a acertar: {fmt(summary.commissionDebt)}
+              Comissão a acertar: {brl(summary.commissionDebt)}
             </p>
             <p className="mt-1">
               Nos seus pedidos <strong>em dinheiro</strong> o seu entregador recebeu o valor
@@ -95,7 +93,7 @@ export default function FinancePage() {
             <div className="inline-flex p-2 rounded-xl bg-white/20 mb-3"><DollarSign className="h-5 w-5" /></div>
             <p className="text-sm font-medium text-white/90">A Receber</p>
             <p className="text-3xl font-black mt-1 break-words">
-              {loadingData ? '...' : summary.balance !== null ? fmt(summary.balance) : '--'}
+              {loadingData ? '...' : summary.balance !== null ? brl(summary.balance) : '--'}
             </p>
             <p className="text-xs text-white/80 mt-1">
               {summary.pendingCount > 0
@@ -129,7 +127,7 @@ export default function FinancePage() {
             <div className="inline-flex p-2 rounded-xl bg-white/20 mb-3"><TrendingUp className="h-5 w-5" /></div>
             <p className="text-sm font-medium text-white/90">Recebido no mês</p>
             <p className="text-3xl font-black mt-1 break-words">
-              {loadingData ? '...' : summary.monthTotal !== null ? fmt(summary.monthTotal) : '--'}
+              {loadingData ? '...' : summary.monthTotal !== null ? brl(summary.monthTotal) : '--'}
             </p>
             <p className="text-xs text-white/80 mt-1">já caiu na sua conta</p>
           </div>
@@ -180,7 +178,7 @@ export default function FinancePage() {
                         : '--'}
                     </td>
                     <td className="px-4 py-3 font-semibold text-green-700">
-                      {fmt(payout.amount)}
+                      {brl(payout.amount)}
                     </td>
                     <td className="px-4 py-3">{statusBadge(payout.status)}</td>
                     <td className="px-4 py-3 text-gray-500 font-mono text-xs">

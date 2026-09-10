@@ -34,6 +34,12 @@ export function unhideAllOrders() {
   return new Set();
 }
 
+// ⚠️ ESTE `brl` NÃO É O DE `utils/dinheiro.js`, E NÃO DEVE SER TROCADO POR ELE.
+// Aqui o texto vai pra impressora térmica. O `Intl` devolve ESPAÇO DURO
+// (U+00A0) entre o "R$" e o número, e impressora térmica trabalha em CP850/
+// CP437, onde esse caractere não existe: sai caixinha ou nada. Espaço comum,
+// escrito à mão, é o que atravessa. Se um dia precisar de separador de milhar,
+// use `numeroBR(v)` de dinheiro.js e monte o "R$ " aqui.
 const brl = (v) => `R$ ${Number(v || 0).toFixed(2).replace('.', ',')}`;
 
 function escapeHtml(s) {

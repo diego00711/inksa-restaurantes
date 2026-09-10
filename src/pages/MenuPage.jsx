@@ -10,6 +10,7 @@ import { useToast } from '../context/ToastContext.jsx';
 import { useConfirm } from '../components/ConfirmProvider.jsx';
 import AvisoNovidade from '../components/AvisoNovidade.jsx';
 import { emPromocao, descontoPct } from '../utils/promo';
+import { brl } from '../utils/dinheiro';
 
 // A partir de quantos itens vale ter busca. Abaixo disso a lista inteira cabe
 // na tela e o campo só ocuparia altura — no celular, onde o parceiro mais mexe
@@ -280,9 +281,9 @@ export function MenuPage() {
                             {emPromocao(item) ? (
                                 <div className="flex flex-col gap-0.5">
                                     <div className="flex items-baseline gap-1.5">
-                                        <span className="text-green-700">R$ {parseFloat(item.promo_price).toFixed(2)}</span>
+                                        <span className="text-green-700">{brl(parseFloat(item.promo_price))}</span>
                                         <span className="text-xs text-gray-400 line-through font-normal">
-                                            R$ {parseFloat(item.price || 0).toFixed(2)}
+                                            {brl(parseFloat(item.price || 0))}
                                         </span>
                                     </div>
                                     <span className="self-start rounded bg-green-100 px-1.5 py-0.5 text-[11px] font-bold text-green-700">
@@ -290,7 +291,7 @@ export function MenuPage() {
                                     </span>
                                 </div>
                             ) : (
-                                <>R$ {parseFloat(item.price || 0).toFixed(2)}</>
+                                <>{brl(parseFloat(item.price || 0))}</>
                             )}
                         </td>
                         <td className="p-4">

@@ -7,6 +7,7 @@ import { useToast } from '../context/ToastContext.jsx';
 import { printOrder, ehAplicativo, ENDERECO_WEB } from '../utils/orderPrint';
 import { detalharOpcoes, precoBase } from '../utils/orderItems';
 import { numeroPedido } from '../utils/pedidoNumero';
+import { brl } from '../utils/dinheiro';
 
 // O checkout do cliente grava a taxa de entrega como um ITEM do pedido, além de
 // ter a linha "Taxa de Entrega" própria (delivery_fee) — mostrar os dois é
@@ -54,13 +55,6 @@ export function OrderDetailsModal({ order, onClose, restaurantName = '' }) {
   }, [order, addToast]);
 
   // ✅ Função auxiliar para formatar valores de forma segura
-  const formatCurrency = (value) => {
-    const numValue = typeof value === 'number' ? value : parseFloat(value) || 0;
-    return new Intl.NumberFormat('pt-BR', { 
-      style: 'currency', 
-      currency: 'BRL' 
-    }).format(numValue);
-  };
 
   const getStatusClass = (status) => {
     switch (status) {
@@ -190,7 +184,7 @@ export function OrderDetailsModal({ order, onClose, restaurantName = '' }) {
                               <span className="flex-1">
                                 <span className="font-medium">{qtd}x</span> {item.title || item.name || 'Item sem nome'}
                               </span>
-                              <span className="font-medium">{formatCurrency(base)}</span>
+                              <span className="font-medium">{brl(base)}</span>
                             </div>
                             {/* Cada escolha na sua linha, com o que somou. Sem
                                 isso o parceiro vê 52,50 e não sabe quanto foi
@@ -198,7 +192,7 @@ export function OrderDetailsModal({ order, onClose, restaurantName = '' }) {
                             {escolhas.map((o, k) => (
                               <div key={k} className="flex justify-between items-start pl-4 text-sm text-gray-500">
                                 <span>+ {o.qtd > 1 ? `${o.qtd}x ` : ''}{o.nome}</span>
-                                <span>{o.valor > 0 ? formatCurrency(o.valor) : ''}</span>
+                                <span>{o.valor > 0 ? brl(o.valor) : ''}</span>
                               </div>
                             ))}
                           </li>
@@ -217,12 +211,12 @@ export function OrderDetailsModal({ order, onClose, restaurantName = '' }) {
               <div className="pt-2 space-y-1">
                 <div className="flex justify-between text-gray-700">
                   <span>Subtotal dos Itens:</span>
-                  <span>{formatCurrency(fullOrderDetails.total_amount_items)}</span>
+                  <span>{brl(fullOrderDetails.total_amount_items)}</span>
                 </div>
                 {fullOrderDetails.delivery_fee && (
                   <div className="flex justify-between text-gray-700">
                     <span>Taxa de Entrega:</span>
-                    <span>{formatCurrency(fullOrderDetails.delivery_fee)}</span>
+                    <span>{brl(fullOrderDetails.delivery_fee)}</span>
                   </div>
                 )}
               </div>
@@ -231,7 +225,7 @@ export function OrderDetailsModal({ order, onClose, restaurantName = '' }) {
             {/* Total */}
             <div className="text-right pt-4 border-t-2 border-gray-300">
               <p className="text-xl font-bold text-gray-900">
-                Total do Pedido: {formatCurrency(fullOrderDetails.total_amount)}
+                Total do Pedido: {brl(fullOrderDetails.total_amount)}
               </p>
             </div>
 

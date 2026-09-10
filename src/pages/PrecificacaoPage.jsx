@@ -19,9 +19,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { RESTAURANT_API_URL, createAuthHeaders } from '../services/api';
 import { Calculator, Info, AlertTriangle, Loader2 } from 'lucide-react';
+import { brl } from '../utils/dinheiro';
 
-const brl = (v) =>
-  (Number.isFinite(v) ? v : 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 export default function PrecificacaoPage() {
   const [taxa, setTaxa] = useState(null);

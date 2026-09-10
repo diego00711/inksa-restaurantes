@@ -6,6 +6,7 @@ import { X, Package, AlertCircle } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import api from '../services/api';
 import { numeroPedido } from '../utils/pedidoNumero';
+import { brl } from '../utils/dinheiro';
 
 export function PickupConfirmationModal({ order, isOpen, onClose, onSuccess }) {
   const [pickupCode, setPickupCode] = useState('');
@@ -16,13 +17,6 @@ export function PickupConfirmationModal({ order, isOpen, onClose, onSuccess }) {
   if (!isOpen || !order) return null;
 
   // ✅ FUNÇÃO AUXILIAR para formatar valores de forma segura
-  const formatCurrency = (value) => {
-    const numValue = typeof value === 'number' ? value : parseFloat(value) || 0;
-    return new Intl.NumberFormat('pt-BR', { 
-      style: 'currency', 
-      currency: 'BRL' 
-    }).format(numValue);
-  };
 
   const handleConfirmPickup = async (e) => {
     e.preventDefault();
@@ -123,8 +117,7 @@ export function PickupConfirmationModal({ order, isOpen, onClose, onSuccess }) {
             <span className="font-medium">Cliente:</span> {order.client_first_name} {order.client_last_name}
           </p>
           <p className="text-sm text-gray-600">
-            {/* ✅ CORRIGIDO: Usando formatCurrency ao invés de toFixed */}
-            <span className="font-medium">Total:</span> {formatCurrency(order.total_amount)}
+            <span className="font-medium">Total:</span> {brl(order.total_amount)}
           </p>
         </div>
 

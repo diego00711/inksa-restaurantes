@@ -7,6 +7,7 @@ import { categoryService } from '../services/categoryService';
 import { useToast } from '../context/ToastContext.jsx';
 import { useProfile } from '../context/ProfileContext';
 import { XCircle } from 'lucide-react';
+import { brl } from '../utils/dinheiro';
 
 // Espelha _SEGMENTOS_COM_PESO do backend (src/routes/menu.py). Aqui o efeito é
 // só avisar antes; quem realmente barra é o servidor — o app pode estar numa
@@ -205,7 +206,7 @@ export function MenuItemModal({ onClose, onItemAdded, onItemUpdated, itemToEdit 
                                 return (
                                     <p className="mt-1 text-xs text-green-700 font-medium">
                                         {Math.round(((base - promo) / base) * 100)}% de desconto — o cliente vê
-                                        R$ {promo.toFixed(2)} e R$ {base.toFixed(2)} riscado.
+                                        {brl(promo)} e {brl(base)} riscado.
                                     </p>
                                 );
                             })()}

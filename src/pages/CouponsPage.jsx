@@ -8,6 +8,7 @@ import { Ticket, Plus, Trash2, Pencil, Loader2, AlertTriangle, X } from 'lucide-
 import { RESTAURANT_API_URL, createAuthHeaders } from '../services/api';
 import { apiFetch } from '../services/apiClient';
 import { useToast } from '../context/ToastContext.jsx';
+import { brl } from '../utils/dinheiro';
 
 const TIPOS = [
   { value: 'percentage', label: 'Percentual (%)' },
@@ -26,8 +27,6 @@ const formVazio = () => ({
   description: '',
 });
 
-const brl = (v) =>
-  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v) || 0);
 
 const dataBR = (s) => {
   if (!s) return 'Sem prazo';
