@@ -14,9 +14,12 @@ import { useProfile } from '../../context/ProfileContext';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useNewOrderAlarm } from '../../hooks/useNewOrderAlarm.js';
 import { useIdleLogout } from '../../hooks/useIdleLogout.js';
+// ⚠️ Import na MESMA edição em que o uso entrou — a regra que este arquivo
+// aprendeu do jeito difícil no dia do ícone Lightbulb (ver comentário no topo).
+import { tempoInicial, buscarTempo } from '../../utils/tempoInatividade.js';
 
-// Desloga sozinho após 1h sem nenhuma interação (segurança de sessão esquecida).
-const IDLE_LOGOUT_MS = 60 * 60 * 1000;
+// O padrão de 1h mudou de casa: agora é PADRAO_MS em utils/tempoInatividade.js,
+// junto da busca que o consome.
 
 // Campos obrigatórios para o restaurante poder RECEBER pedidos.
 // Sem o endereço completo (com coordenadas), o cálculo de frete falha.
@@ -68,17 +71,12 @@ export function PortalLayout() {
   // Logoff automático por inatividade — tempo CONFIGURÁVEL no admin
   // (platform_settings.idle_logout_minutes; 0 = desligado). Busca 1x; enquanto
   // não responde, usa o padrão de 1h.
-  const [idleMs, setIdleMs] = useState(IDLE_LOGOUT_MS);
+  const [idleMs, setIdleMs] = useState(tempoInicial);
   useEffect(() => {
     let alive = true;
-    fetch(`${RESTAURANT_API_URL}/api/public/app-config`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (!alive) return;
-        const min = Number(d?.idle_logout_minutes);
-        if (Number.isFinite(min)) setIdleMs(min > 0 ? min * 60000 : 0);
-      })
-      .catch(() => {});
+    buscarTempo(RESTAURANT_API_URL).then((ms) => {
+      if (alive && ms !== null) setIdleMs(ms);
+    });
     return () => { alive = false; };
   }, []);
   useIdleLogout({
