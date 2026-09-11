@@ -178,6 +178,20 @@ function ClubLevelsCard({ levels, currentLevel }) {
         <Medal className="h-5 w-5 text-amber-500" />
         <h2 className="text-lg font-bold text-gray-800">Todos os níveis do Clube</h2>
       </div>
+
+      {/* A REGRA, ESCRITA ONDE ELA É LIDA.
+          Antes esta lista mostrava só as faixas de valor. O parceiro via
+          "R$ 5.000 a R$ 7.499 vendidos no mês" e concluía, com razão, que no
+          dia 1º voltaria pra estaca zero — que era verdade até 11/09/2026 e
+          deixou de ser. A etiqueta "garantido pelo mês passado" lá em cima só
+          aparece para quem HERDOU o nível; quem conquistou no próprio mês
+          nunca ficava sabendo que ele está protegido. */}
+      <p className="mb-3 rounded-lg bg-amber-50 border border-amber-100 px-3 py-2 text-xs text-amber-900">
+        Seu nível é o <strong>melhor</strong> entre o que você vendeu neste mês e no mês
+        passado. Ele <strong>sobe na hora</strong> em que você cruza a faixa e{' '}
+        <strong>não cai no meio do mês</strong>.
+      </p>
+
       <div className="space-y-2">
         {levels.map((lvl) => {
           const isCurrent = lvl.level === currentLevel;
@@ -201,6 +215,23 @@ function ClubLevelsCard({ levels, currentLevel }) {
                   </p>
                 </div>
               </div>
+
+              {/* O QUE CADA NÍVEL DÁ. A lista mostrava só o preço de entrada
+                  ("R$ 5.000 no mês") e nada do que se ganha em troca — uma
+                  escada sem dizer o que tem no topo. O texto vem pronto do
+                  backend (_render_benefits), que o monta a partir do PRÓPRIO
+                  benefício: se você tirar o desconto no admin, a frase some
+                  junto, em vez de ficar prometendo o que não existe mais. */}
+              {lvl.benefits?.length > 0 && (
+                <ul className="mt-2 space-y-1 pl-11">
+                  {lvl.benefits.map((b, i) => (
+                    <li key={i} className="flex items-start gap-1.5 text-xs text-gray-600">
+                      <CheckCircle2 className="mt-0.5 h-3 w-3 shrink-0 text-green-500" aria-hidden="true" />
+                      <span>{b}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           );
         })}
