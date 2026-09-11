@@ -165,6 +165,26 @@ export default function PrecificacaoPage() {
               : '.'}
           </p>
         )}
+
+        {/* DE ONDE VEM ESSA TAXA.
+            Numa tela que ensina a formar preço, o número sozinho não basta: o
+            parceiro precisa saber se ele está garantido ou se muda amanhã. O
+            nível é o MAIOR entre o faturamento deste mês e o do mês passado,
+            então dá pra responder com honestidade — e é justamente por isso
+            que a taxa não volta pra cheia todo dia 1º.
+            Só aparece quando o Clube é o que manda: se ele é Fundador, o
+            desconto do Fundador já ganha e falar do Clube confundiria. */}
+        {!taxa.fundador && taxa.clube_nivel
+          && Number(taxa.taxa_entrega_pct) < Number(taxa.taxa_base_pct) && (
+          <p className="text-xs text-gray-400 mt-3">
+            Você está no nível <strong className="text-orange-300">{taxa.clube_nivel}</strong> do
+            Clube, por isso paga {taxa.taxa_entrega_pct}% em vez de {taxa.taxa_base_pct}%.
+            {taxa.clube_garantido_mes_anterior
+              ? ' Esse nível está garantido pelo que você faturou no mês passado — ele não cai no meio do mês.'
+              : ' Seu nível acompanha o seu faturamento e não cai no meio do mês.'}
+          </p>
+        )}
+
         <p className="text-xs text-gray-400 mt-2">
           A taxa incide só sobre os <strong>produtos</strong>. O frete não entra nessa conta.
         </p>

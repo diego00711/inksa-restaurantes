@@ -104,9 +104,19 @@ function ClubHeroCard({ status, points }) {
         </div>
         <div className="bg-white/20 rounded-full p-3"><Crown className="w-8 h-8 text-white" /></div>
       </div>
-      <p className="text-white/90 text-sm mb-4">
+      <p className="text-white/90 text-sm">
         {ehDinheiro(unit) ? `${brl(vendido)} vendidos este mês` : medida(vendido, unit)}
       </p>
+      {/* Sem esta linha a tela mostraria "Ouro" logo acima de "R$ 0 vendidos
+          este mês" e pareceria defeito. O nível é o MAIOR entre este mês e o
+          anterior — é por isso que ele não cai no dia 1º. */}
+      {status?.nivel_garantido_mes_anterior && (
+        <p className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-xs font-semibold text-white/90">
+          <Trophy className="h-3.5 w-3.5" aria-hidden="true" />
+          Nível garantido pelo mês passado
+        </p>
+      )}
+      <div className="mb-4" />
       {next ? (
         <>
           <div className="bg-black/20 rounded-full h-2.5 overflow-hidden">
