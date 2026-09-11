@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
 import { useToast } from '../context/ToastContext.jsx';
 import { Loader, Eye, EyeOff } from 'lucide-react';
+import { mensagemDeErro } from '../utils/mensagemDeErro.js';
 
 // Exportado como uma função nomeada, para ser compatível com o seu App.jsx
 export function RegisterPage() {
@@ -58,7 +59,7 @@ export function RegisterPage() {
 
         } catch (err) {
             console.error("Erro no registo:", err);
-            addToast('error', err.message || 'Ocorreu um erro ao tentar registar.');
+            addToast('error', mensagemDeErro(err, 'Ocorreu um erro ao tentar registar.'));
         } finally {
             setIsLoading(false);
         }

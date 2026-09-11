@@ -11,6 +11,7 @@ import { useConfirm } from '../components/ConfirmProvider.jsx';
 import AvisoNovidade from '../components/AvisoNovidade.jsx';
 import { emPromocao, descontoPct } from '../utils/promo';
 import { brl } from '../utils/dinheiro';
+import { mensagemDeErro } from '../utils/mensagemDeErro.js';
 
 // A partir de quantos itens vale ter busca. Abaixo disso a lista inteira cabe
 // na tela e o campo só ocuparia altura — no celular, onde o parceiro mais mexe
@@ -67,8 +68,9 @@ export function MenuPage() {
       setMenuItems(items); // Define o estado diretamente com o array retornado.
     } catch (err) {
       console.error("Falha ao carregar o cardápio na página:", err);
-      setError(err.message);
-      addToast('error', err.message || "Erro ao carregar cardápio.");
+      setError(mensagemDeErro(err, 'Não consegui carregar o cardápio.',
+        'Sem conexão. O cardápio carrega assim que o sinal voltar.'));
+      addToast('error', mensagemDeErro(err, "Erro ao carregar cardápio."));
     } finally {
       setIsLoading(false);
     }
@@ -101,7 +103,7 @@ export function MenuPage() {
       setMenuItems(prevItems => prevItems.filter(item => item.id !== itemId));
       addToast('success', 'Item excluído com sucesso!');
     } catch (err) {
-      addToast('error', `Falha ao excluir o item: ${err.message || 'Erro desconhecido'}`);
+      addToast('error', `Falha ao excluir o item: ${mensagemDeErro(err, 'Erro desconhecido')}`);
     }
   };
 

@@ -8,6 +8,7 @@ import { RESTAURANT_API_URL, createAuthHeaders, processResponse } from '../servi
 import { apiFetch } from '../services/apiClient';
 import MyRedemptions from '../components/MyRedemptions';
 import { brlSemCentavos } from '../utils/dinheiro';
+import { mensagemDeErro } from '../utils/mensagemDeErro.js';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -365,7 +366,7 @@ export default function RestaurantGamificationPage() {
         setRewardsLoading(false);
       }
     } catch (err) {
-      setError(err.message || 'Falha ao carregar gamificação.');
+      setError(mensagemDeErro(err, 'Falha ao carregar gamificação.'));
     } finally {
       setLoading(false);
     }

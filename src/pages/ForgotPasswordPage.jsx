@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { authService } from '../services/authService';
 import { useToast } from '../context/ToastContext.jsx';
 import { Mail } from 'lucide-react';
+import { mensagemDeErro } from '../utils/mensagemDeErro.js';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -20,7 +21,7 @@ export default function ForgotPasswordPage() {
       addToast('success', response?.message || 'Link de recuperação enviado para o seu e-mail!');
       setEmail('');
     } catch (error) {
-      addToast('error', error.message || 'Ocorreu um erro ao enviar o e-mail.');
+      addToast('error', mensagemDeErro(error, 'Ocorreu um erro ao enviar o e-mail.'));
     } finally {
       setIsLoading(false);
     }

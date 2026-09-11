@@ -21,6 +21,7 @@ import { analyticsService } from '../services/analyticsService';
 import { useToast } from '../context/ToastContext.jsx';
 import { SalesChart } from '../components/SalesChart';
 import { brl } from '../utils/dinheiro';
+import { mensagemDeErro } from '../utils/mensagemDeErro.js';
 
 export function AnalyticsPage() {
   const [analyticsData, setAnalyticsData] = useState(null);
@@ -41,8 +42,9 @@ export function AnalyticsPage() {
 
     } catch (err) {
       console.error("Erro ao buscar dados de analytics:", err);
-      setError(err.message);
-      addToast('error', err.message || "Não foi possível carregar os dados.");
+      setError(mensagemDeErro(err, 'Não consegui carregar os dados.',
+        'Sem conexão. Os números voltam assim que o sinal voltar.'));
+      addToast('error', mensagemDeErro(err, "Não foi possível carregar os dados."));
     } finally {
       setIsLoading(false);
     }

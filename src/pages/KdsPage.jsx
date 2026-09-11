@@ -10,6 +10,7 @@ import { useNotificationSound } from '../hooks/useNotificationSound';
 import { supabase } from '../lib/supabase';
 import { Clock, ChefHat, CheckCircle2, Maximize2, Bell } from 'lucide-react';
 import { parseItensDoPedido } from '../utils/orderItems';
+import { mensagemDeErro } from '../utils/mensagemDeErro.js';
 
 const NEW = ['pending', 'Pendente'];
 const PREP = ['accepted', 'Aceito', 'preparing', 'Preparando'];
@@ -83,7 +84,7 @@ export function KdsPage() {
       }
       knownIds.current = new Set(list.map((o) => o.id));
     } catch (e) {
-      addToast('error', e.message || 'Erro ao carregar pedidos.');
+      addToast('error', mensagemDeErro(e, 'Erro ao carregar pedidos.'));
     } finally {
       setLoading(false);
     }
@@ -129,7 +130,7 @@ export function KdsPage() {
   const withBusy = async (id, fn) => {
     setBusy((b) => ({ ...b, [id]: true }));
     try { await fn(); await fetchOrders(); }
-    catch (e) { addToast('error', e.message || 'Falha na operação.'); }
+    catch (e) { addToast('error', mensagemDeErro(e, 'Falha na operação.')); }
     finally { setBusy((b) => ({ ...b, [id]: false })); }
   };
 

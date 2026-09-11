@@ -8,6 +8,7 @@ import { useToast } from '../context/ToastContext.jsx';
 import { useProfile } from '../context/ProfileContext';
 import { XCircle } from 'lucide-react';
 import { brl } from '../utils/dinheiro';
+import { mensagemDeErro } from '../utils/mensagemDeErro.js';
 
 // Espelha _SEGMENTOS_COM_PESO do backend (src/routes/menu.py). Aqui o efeito é
 // só avisar antes; quem realmente barra é o servidor — o app pode estar numa
@@ -37,7 +38,7 @@ export function MenuItemModal({ onClose, onItemAdded, onItemUpdated, itemToEdit 
 				const data = await categoryService.getCategories();
 				setCategories(data || []);
 			} catch (err) {
-				addToast('error', err.message || "Erro ao carregar categorias.");
+				addToast('error', mensagemDeErro(err, "Erro ao carregar categorias."));
 			}
 		};
 		fetchCategories();

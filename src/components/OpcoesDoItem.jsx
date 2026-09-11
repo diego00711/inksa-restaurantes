@@ -16,6 +16,7 @@ import React, { useEffect, useState } from 'react';
 import { X, Plus, Trash2, Loader2, GripVertical, ImagePlus, Eye, EyeOff, AlertTriangle } from 'lucide-react';
 import { RESTAURANT_API_URL, createAuthHeaders } from '../services/api';
 import { useToast } from '../context/ToastContext.jsx';
+import { mensagemDeErro } from '../utils/mensagemDeErro.js';
 
 const opcaoVazia = () => ({ nome: '', preco_extra: '', imagem_url: '', disponivel: true });
 
@@ -151,7 +152,7 @@ export default function OpcoesDoItem({ item, onFechar }) {
       addToast('success', 'Opções salvas.');
       onFechar();
     } catch (e) {
-      addToast('error', e.message || 'Não consegui salvar.');
+      addToast('error', mensagemDeErro(e, 'Não consegui salvar.'));
     } finally {
       setSalvando(false);
     }
@@ -278,7 +279,7 @@ export default function OpcoesDoItem({ item, onFechar }) {
                             const url = await subirFoto(arq);
                             mexerOpcao(i, j, { imagem_url: url });
                           } catch (err) {
-                            addToast('error', err.message || 'Não consegui subir a imagem.');
+                            addToast('error', mensagemDeErro(err, 'Não consegui subir a imagem.'));
                           } finally {
                             e.target.value = '';
                           }

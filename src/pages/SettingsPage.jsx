@@ -8,6 +8,7 @@ import { useToast } from '../context/ToastContext.jsx';
 import { useProfile } from '../context/ProfileContext';
 import MeuLinkDaLoja from '../components/MeuLinkDaLoja';
 import OpeningHoursEditor from '../components/OpeningHoursEditor';
+import { mensagemDeErro } from '../utils/mensagemDeErro.js';
 
 // Uma consulta de geocodificação. Passa pelo NOSSO backend
 // (/api/public/geocode) em vez de bater direto no Nominatim: lá tem cache e
@@ -138,7 +139,7 @@ export function SettingsPage() {
       }
     } catch (err) {
       console.error("Erro ao buscar perfil:", err);
-      addToast('error', err.message || "Erro ao carregar o perfil do restaurante.");
+      addToast('error', mensagemDeErro(err, "Erro ao carregar o perfil do restaurante."));
     } finally {
       setIsLoading(false);
     }
@@ -282,7 +283,7 @@ export function SettingsPage() {
 
     } catch (err) {
       console.error("Erro ao salvar perfil:", err);
-      addToast('error', err.message || "Falha ao atualizar o perfil.");
+      addToast('error', mensagemDeErro(err, "Falha ao atualizar o perfil."));
     } finally {
       setIsSaving(false);
     }

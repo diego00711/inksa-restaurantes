@@ -14,6 +14,7 @@ import { X, Upload, FileSpreadsheet, AlertTriangle, CheckCircle2, Loader2 } from
 import { RESTAURANT_API_URL, createAuthHeaders } from '../services/api';
 import { apiFetch } from '../services/apiClient';
 import { useToast } from '../context/ToastContext.jsx';
+import { mensagemDeErro } from '../utils/mensagemDeErro.js';
 
 const LOTE = 500;          // o backend recusa acima disso
 
@@ -111,7 +112,7 @@ export default function ImportarCatalogo({ aberto, onFechar, onConcluido }) {
       setDados({ cabecalho, linhas });
       setMapa(autoMapear(cabecalho));
     } catch (e2) {
-      setErro('Não consegui ler o arquivo: ' + e2.message);
+      setErro('Não consegui ler o arquivo: ' + mensagemDeErro(e2, 'tente de novo.', 'sem conexão agora — tente quando o sinal voltar.'));
     }
   };
 
@@ -159,7 +160,8 @@ export default function ImportarCatalogo({ aberto, onFechar, onConcluido }) {
       addToast('success', `${soma.criados} novos, ${soma.atualizados} atualizados.`);
       onConcluido?.();
     } catch (e) {
-      setErro(e.message);
+      setErro(mensagemDeErro(e, 'Não consegui importar agora.',
+        'Sem conexão. O catálogo NÃO foi importado — tente de novo quando o sinal voltar.'));
     } finally {
       setEnviando(false);
     }

@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext.jsx';
 import { useToast } from '@/context/ToastContext.jsx';
 import { useConfirm } from '@/components/ConfirmProvider.jsx';
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
+import { mensagemDeErro } from '../utils/mensagemDeErro.js';
 
 export function CategoryManagementPage() {
     const { addToast } = useToast();
@@ -105,7 +106,7 @@ export function CategoryManagementPage() {
             fetchCategories();
         } catch (err) {
             console.error("Erro ao excluir categoria:", err);
-            addToast('error', err.message || "Falha ao excluir a categoria.");
+            addToast('error', mensagemDeErro(err, "Falha ao excluir a categoria."));
         }
     };
     

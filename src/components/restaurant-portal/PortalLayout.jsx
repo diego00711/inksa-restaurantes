@@ -17,6 +17,7 @@ import { useIdleLogout } from '../../hooks/useIdleLogout.js';
 // ⚠️ Import na MESMA edição em que o uso entrou — a regra que este arquivo
 // aprendeu do jeito difícil no dia do ícone Lightbulb (ver comentário no topo).
 import { tempoInicial, buscarTempo } from '../../utils/tempoInatividade.js';
+import { mensagemDeErro } from '../../utils/mensagemDeErro.js';
 
 // O padrão de 1h mudou de casa: agora é PADRAO_MS em utils/tempoInatividade.js,
 // junto da busca que o consome.
@@ -162,7 +163,7 @@ export function PortalLayout() {
       addToast('success', `Restaurante agora está ${newIsOpenStatus ? 'Aberto' : 'Fechado'}!`);
     } catch (error) {
       console.error("Erro ao alternar status 'is_open':", error);
-      addToast('error', error.message || "Falha ao atualizar status do restaurante.");
+      addToast('error', mensagemDeErro(error, "Falha ao atualizar status do restaurante."));
     }
   };
 

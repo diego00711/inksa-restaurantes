@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AlertTriangle, Loader2, RotateCcw, Trash2, CheckCircle2 } from 'lucide-react';
 import { orderService } from '../services/orderService.js';
 import { useToast } from '../context/ToastContext.jsx';
+import { mensagemDeErro } from '../utils/mensagemDeErro.js';
 
 const REASON_LABELS = {
   customer_not_found: 'Cliente não localizado',
@@ -29,7 +30,7 @@ function IncidentCard({ inc, onChanged }) {
       addToast('success', wantReturn ? 'Ok! O entregador vai trazer o pedido de volta.' : 'Ok! O entregador vai descartar o pedido.');
       onChanged();
     } catch (e) {
-      addToast('error', e?.response?.data?.error || e?.message || 'Erro ao responder.');
+      addToast('error', e?.response?.data?.error || mensagemDeErro(e, 'Erro ao responder.'));
     } finally { setBusy(false); }
   };
 
@@ -43,7 +44,7 @@ function IncidentCard({ inc, onChanged }) {
       addToast('success', 'Devolução confirmada! Obrigado.');
       onChanged();
     } catch (e) {
-      addToast('error', e?.response?.data?.error || e?.message || 'Código inválido.');
+      addToast('error', e?.response?.data?.error || mensagemDeErro(e, 'Código inválido.'));
     } finally { setBusy(false); }
   };
 

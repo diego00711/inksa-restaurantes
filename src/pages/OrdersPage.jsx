@@ -21,6 +21,7 @@ import DeliveryReviewForm from '../components/DeliveryReviewForm';
 import IncidentAlerts from '../components/IncidentAlerts.jsx';
 import { printOrder, ehAplicativo, ENDERECO_WEB } from '../utils/orderPrint';
 import { brl } from '../utils/dinheiro';
+import { mensagemDeErro } from '../utils/mensagemDeErro.js';
 
 // ─── OrderTimer ───────────────────────────────────────────────────────────────
 function OrderTimer({ createdAt, acceptedAt, finishedAt, parado = false }) {
@@ -302,7 +303,7 @@ export function OrdersPage() {
       }
       knownOrderIds.current = new Set(newOrders.map(o => o.id));
     } catch (err) {
-      addToast('error', err.message || 'Erro ao carregar pedidos.');
+      addToast('error', mensagemDeErro(err, 'Erro ao carregar pedidos.'));
       setAllOrders([]);
     } finally {
       setIsLoading(false);
@@ -356,7 +357,7 @@ export function OrdersPage() {
       addToast('success', `Status atualizado!`);
       fetchOrders(filters);
     } catch (err) {
-      addToast('error', `Falha: ${err.message}`);
+      addToast('error', `Falha: ${mensagemDeErro(err, 'tente de novo.', 'sem conexão agora — tente quando o sinal voltar.')}`);
     }
   };
 
@@ -367,7 +368,7 @@ export function OrdersPage() {
       addToast('success', `✅ Pedido aceito! Tempo estimado: ${estimatedTime} min`);
       fetchOrders(filters);
     } catch (err) {
-      addToast('error', `Falha ao aceitar: ${err.message}`);
+      addToast('error', `Falha ao aceitar: ${mensagemDeErro(err, 'tente de novo.', 'sem conexão agora — tente quando o sinal voltar.')}`);
     }
   };
 
@@ -378,7 +379,7 @@ export function OrdersPage() {
       addToast('success', 'Pedido removido do painel!');
       fetchOrders(filters);
     } catch (err) {
-      addToast('error', `Erro: ${err.message}`);
+      addToast('error', `Erro: ${mensagemDeErro(err, 'tente de novo.', 'sem conexão agora — tente quando o sinal voltar.')}`);
     }
   };
 

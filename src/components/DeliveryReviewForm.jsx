@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Star, Send, AlertCircle, CheckCircle } from "lucide-react";
 import { postDeliveryReview } from "../services/deliveryReviewsService";
+import { mensagemDeErro } from '../utils/mensagemDeErro.js';
 
 const StarRating = ({ rating, onRatingChange, interactive = false }) => {
   const [hoverRating, setHoverRating] = useState(0);
@@ -61,7 +62,7 @@ export default function DeliveryReviewForm({ deliverymanId, orderId, onSuccess }
         if (onSuccess) onSuccess();
       }, 1500);
     } catch (err) {
-      setError(err.response?.data?.error || err.message || "Erro ao enviar avaliação");
+      setError(err.response?.data?.error || mensagemDeErro(err, "Erro ao enviar avaliação"));
     } finally {
       setLoading(false);
     }

@@ -9,6 +9,7 @@ import { RESTAURANT_API_URL, createAuthHeaders } from '../services/api';
 import { apiFetch } from '../services/apiClient';
 import { useToast } from '../context/ToastContext.jsx';
 import { brl } from '../utils/dinheiro';
+import { mensagemDeErro } from '../utils/mensagemDeErro.js';
 
 const TIPOS = [
   { value: 'percentage', label: 'Percentual (%)' },
@@ -66,7 +67,8 @@ export default function CouponsPage() {
       setCupons(Array.isArray(data.coupons) ? data.coupons : []);
       if (data.max_discount_pct) setTetoPct(Number(data.max_discount_pct));
     } catch (e) {
-      addToast('error', e.message);
+      addToast('error', mensagemDeErro(e, 'Não consegui carregar os cupons.',
+        'Sem conexão. Os cupons carregam assim que o sinal voltar.'));
       setCupons([]);
     } finally {
       setCarregando(false);
@@ -147,7 +149,8 @@ export default function CouponsPage() {
       setModalAberto(false);
       await carregar();
     } catch (e2) {
-      setErro(e2.message);
+      setErro(mensagemDeErro(e2, 'Não consegui salvar o cupom.',
+        'Sem conexão. O cupom NÃO foi salvo — tente de novo quando o sinal voltar.'));
     } finally {
       setSalvando(false);
     }
@@ -166,7 +169,8 @@ export default function CouponsPage() {
       );
       addToast('success', c.is_active ? 'Cupom pausado.' : 'Cupom ativado!');
     } catch (e) {
-      addToast('error', e.message);
+      addToast('error', mensagemDeErro(e, 'Não consegui alterar o cupom.',
+        'Sem conexão. O cupom NÃO foi alterado — tente de novo quando o sinal voltar.'));
     }
   };
 
@@ -181,7 +185,8 @@ export default function CouponsPage() {
       setCupons((prev) => prev.filter((x) => x.id !== c.id));
       addToast('success', 'Cupom excluído.');
     } catch (e) {
-      addToast('error', e.message);
+      addToast('error', mensagemDeErro(e, 'Não consegui excluir o cupom.',
+        'Sem conexão. O cupom NÃO foi excluído — tente de novo quando o sinal voltar.'));
     }
   };
 

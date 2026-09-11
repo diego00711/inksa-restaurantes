@@ -6,6 +6,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
 import { Lock, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { mensagemDeErro } from '../utils/mensagemDeErro.js';
 
 export function ResetPasswordPage() {
   const [password, setPassword] = useState('');
@@ -37,7 +38,7 @@ export function ResetPasswordPage() {
       setMessage(response?.message || 'Senha redefinida com sucesso! Faça login com a nova senha.');
       setTimeout(() => navigate('/login'), 2500);
     } catch (err) {
-      setError(err.message || 'Erro ao redefinir a senha.');
+      setError(mensagemDeErro(err, 'Erro ao redefinir a senha.'));
     } finally {
       setIsLoading(false);
     }

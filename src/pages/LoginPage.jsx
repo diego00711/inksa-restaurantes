@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx'; // Importando o useToast
 import { requestNotificationPermission, saveFcmToken } from '../services/notificationService';
 import { createAuthHeaders, RESTAURANT_API_URL } from '../services/api';
+import { mensagemDeErro } from '../utils/mensagemDeErro.js';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -53,7 +54,7 @@ export function LoginPage() {
 
     } catch (err) {
       // Usa o sistema de toast para exibir o erro de forma não-bloqueante
-      addToast('error', err.message || 'Email ou senha inválidos.');
+      addToast('error', mensagemDeErro(err, 'Email ou senha inválidos.'));
       console.error("Falha no login:", err);
     } finally {
       // Garante que o botão de login seja reativado

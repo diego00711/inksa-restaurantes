@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Star, MessageSquare, Calendar, TrendingUp, Award } from "lucide-react";
 import { restaurantReviewService, reviewUtils } from "../services/reviewServices";
+import { mensagemDeErro } from '../utils/mensagemDeErro.js';
 
 // --- Componentes Internos (sem alterações) ---
 const StarRating = ({ rating, size = "w-5 h-5" }) => {
@@ -75,7 +76,7 @@ export default function RestaurantReviewsList({ restaurantId, onDataLoaded }) {
         })
         .catch(err => {
           if (isMounted) {
-            setError(err.message || "Falha ao buscar avaliações.");
+            setError(mensagemDeErro(err, "Falha ao buscar avaliações."));
             if (onDataLoaded) {
               onDataLoaded(null);
             }

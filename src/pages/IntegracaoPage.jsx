@@ -4,6 +4,7 @@ import { RESTAURANT_API_URL } from '../services/api';
 import { apiFetch } from '../services/apiClient';
 import { authService } from '../services/authService';
 import CredenciaisApi from '../components/CredenciaisApi';
+import { mensagemDeErro } from '../utils/mensagemDeErro.js';
 
 const DOCS = 'https://www.inksadelivery.com.br/api';
 
@@ -121,7 +122,7 @@ export default function IntegracaoPage() {
       if (!res.ok) throw new Error(data?.message || `Não conseguimos enviar (HTTP ${res.status}).`);
       setEnviado(true);
     } catch (e) {
-      setErro(e.message || 'Falha ao enviar. Tente de novo em instantes.');
+      setErro(mensagemDeErro(e, 'Falha ao enviar. Tente de novo em instantes.'));
     } finally {
       setEnviando(false);
     }

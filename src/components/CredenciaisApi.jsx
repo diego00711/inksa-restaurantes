@@ -13,6 +13,7 @@ import { useEffect, useState } from 'react';
 import { KeyRound, Copy, Check, Trash2, Loader2, AlertTriangle, Plus } from 'lucide-react';
 import { RESTAURANT_API_URL, createAuthHeaders } from '../services/api';
 import { apiFetch } from '../services/apiClient';
+import { mensagemDeErro } from '../utils/mensagemDeErro.js';
 
 const BASE = `${RESTAURANT_API_URL}/api/parceiro/credenciais`;
 const DOCS = 'https://www.inksadelivery.com.br/api';
@@ -32,7 +33,8 @@ export default function CredenciaisApi() {
       if (!r.ok) throw new Error(d?.mensagem || 'Não foi possível carregar.');
       setLista(d.credenciais || []);
     } catch (e) {
-      setErro(e.message);
+      setErro(mensagemDeErro(e, 'Não consegui carregar as credenciais.',
+        'Sem conexão. As credenciais carregam assim que o sinal voltar.'));
       setLista([]);
     }
   };
@@ -54,7 +56,8 @@ export default function CredenciaisApi() {
       setNome('');
       carregar();
     } catch (e) {
-      setErro(e.message);
+      setErro(mensagemDeErro(e, 'Não consegui criar a credencial.',
+        'Sem conexão. A credencial NÃO foi criada — tente de novo quando o sinal voltar.'));
     } finally {
       setCriando(false);
     }
@@ -77,7 +80,8 @@ export default function CredenciaisApi() {
       }
       carregar();
     } catch (e) {
-      setErro(e.message);
+      setErro(mensagemDeErro(e, 'Não consegui completar agora.',
+        'Sem conexão agora — tente de novo quando o sinal voltar.'));
     }
   };
 
