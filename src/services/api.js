@@ -3,15 +3,31 @@
 import axios from 'axios';
 
 // --- Configuração de URLs e Chaves ---
+//
+// ⚠️ O ÚLTIMO RECURSO É A URL DE PRODUÇÃO, NUNCA `''`.
+//
+// Até 10/09/2026 estas duas caíam em string vazia. Parece inofensivo e não é:
+// com base vazia toda chamada vira caminho RELATIVO
+// (`restaurante.inksadelivery.com.br/api/...`), e este host responde
+// `index.html` com **status 200** pra qualquer caminho que não exista. Ou
+// seja, `response.ok` seria `true` e o app trataria uma PÁGINA HTML como
+// resposta de API: nenhum erro no console, nenhuma tela de falha, tudo
+// simplesmente vazio. O app do Cliente, do Entregador e do Admin já caíam na
+// URL de produção; só este ficava mudo.
+//
+// Bastaria alguém renomear a variável no painel do host pra derrubar o app
+// inteiro sem nenhum sinal.
+const API_PADRAO = 'https://inksa-auth-flask-dev.onrender.com';
+
 const RESTAURANT_API_URL =
   import.meta.env.VITE_RESTAURANT_API_URL ||
   import.meta.env.VITE_API_URL ||
-  '';
+  API_PADRAO;
 
 const AUTH_API_URL =
   import.meta.env.VITE_AUTH_API_URL ||
   RESTAURANT_API_URL ||
-  '';
+  API_PADRAO;
 
 const AUTH_TOKEN_KEY = 'restaurantAuthToken';
 const USER_DATA_KEY = 'restaurantUser';
