@@ -24,6 +24,7 @@ const formVazio = () => ({
   min_order_value: '',
   max_uses: '',
   uma_vez_por_cliente: false,
+  somente_digitado: false,
   valid_until: '',
   description: '',
 });
@@ -95,6 +96,7 @@ export default function CouponsPage() {
       min_order_value: c.min_order_value ? String(c.min_order_value) : '',
       max_uses: c.max_uses ? String(c.max_uses) : '',
       uma_vez_por_cliente: Number(c.max_uses_per_client) === 1,
+      somente_digitado: !!c.somente_digitado,
       valid_until: c.valid_until ? String(c.valid_until).slice(0, 10) : '',
       description: c.description || '',
     });
@@ -127,6 +129,7 @@ export default function CouponsPage() {
       // null (e não 0) quando desmarcado: no banco NULL = sem limite por
       // pessoa, que é como os cupons antigos se comportam.
       max_uses_per_client: form.uma_vez_por_cliente ? 1 : null,
+      somente_digitado: form.somente_digitado,
       valid_until: form.valid_until || null,
       description: form.description.trim() || null,
     };
@@ -287,6 +290,12 @@ export default function CouponsPage() {
                     <dd className="text-gray-700">1 vez só</dd>
                   </div>
                 )}
+                {c.somente_digitado && (
+                  <div className="flex justify-between">
+                    <dt>No app</dt>
+                    <dd className="text-purple-700 font-medium">só digitando o código</dd>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <dt>Válido até</dt>
                   <dd className="text-gray-700">{dataBR(c.valid_until)}</dd>
@@ -442,6 +451,29 @@ export default function CouponsPage() {
                   <span className="block text-xs text-gray-500">
                     Sem isso, a mesma pessoa pode usar o cupom quantas vezes
                     quiser — e sozinha consumir todo o limite acima.
+                  </span>
+                </span>
+              </label>
+
+              {/* Cupom pra divulgar FORA do app (panfleto, rádio, parceria).
+                  Escondido da vitrine, cada uso vira medição: quem usou veio
+                  de lá. Se aparecesse no app, qualquer cliente pegaria. */}
+              <label className="flex items-start gap-3 rounded-lg border border-gray-200 p-3 cursor-pointer hover:bg-orange-50/50">
+                <input
+                  type="checkbox"
+                  checked={form.somente_digitado}
+                  onChange={(e) => setForm({ ...form, somente_digitado: e.target.checked })}
+                  className="mt-0.5 h-4 w-4 accent-orange-500"
+                />
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium text-gray-800">
+                    Não mostrar no app (só quem digitar o código)
+                  </span>
+                  <span className="block text-xs text-gray-500">
+                    Pra divulgar fora do app — panfleto, rádio, parceria. O cupom
+                    some da sua página e da lista do carrinho, mas continua
+                    valendo pra quem digitar. Assim cada uso mostra que a pessoa
+                    veio de lá.
                   </span>
                 </span>
               </label>
