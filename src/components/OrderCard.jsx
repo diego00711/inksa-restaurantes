@@ -353,7 +353,7 @@ export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus
                     // ENTREGA PRÓPRIA: avisa ANTES de despachar que o
                     // fechamento exige o código do cliente. Sem isso o dono
                     // manda a moto, o motoboy entrega, e só na volta é que
-                    // descobre que precisava ter pedido um código de 6 números
+                    // descobre que precisava ter pedido o código do pedido
                     // ao cliente — que já foi embora.
                     if (isOwnDelivery && mainAction.nextStatus === 'delivering') {
                       const ok = window.confirm(

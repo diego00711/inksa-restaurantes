@@ -125,7 +125,7 @@ export function PickupConfirmationModal({ order, isOpen, onClose, onSuccess }) {
         {/* Instruções */}
         <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-sm text-blue-800">
-            <strong>📱 Peça ao entregador</strong> para mostrar o código de retirada de 6 números que aparece no pedido dele.
+            <strong>📱 Peça ao entregador</strong> para mostrar o código de retirada que aparece no pedido dele.
           </p>
         </div>
 
@@ -154,7 +154,7 @@ export function PickupConfirmationModal({ order, isOpen, onClose, onSuccess }) {
               autoComplete="off"
             />
             <p className="text-xs text-gray-500 mt-1 text-center">
-              Digite os 6 números do código
+              Digite o código do pedido
             </p>
           </div>
 
@@ -179,7 +179,7 @@ export function PickupConfirmationModal({ order, isOpen, onClose, onSuccess }) {
             <button
               type="submit"
               className="flex-1 px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors disabled:bg-purple-300 disabled:cursor-not-allowed"
-              disabled={isLoading || pickupCode.length !== 6}
+              disabled={isLoading || !codigoCompleto(pickupCode)}
             >
               {isLoading ? 'Confirmando...' : 'Confirmar Retirada'}
             </button>

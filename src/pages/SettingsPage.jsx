@@ -526,7 +526,7 @@ export function SettingsPage() {
                   porque o trabalho de entregar é seu.
                 </p>
                 <p>
-                  Quando o cliente chegar, ele mostra um código de 6 números. Você digita
+                  Quando o cliente chegar, ele mostra o código do pedido. Você digita
                   esse código para dar o pedido como entregue.
                 </p>
               </div>
