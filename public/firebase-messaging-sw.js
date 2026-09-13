@@ -47,6 +47,25 @@ messaging.onBackgroundMessage((payload) => {
     renotify: d.type === 'new_order',
     data: d,
   });
+
+  // AVISA A PÁGINA NA HORA — é isto que faz a voz sair junto com o push.
+  //
+  // A notificação do sistema aparecia na hora, mas o alarme falado de dentro
+  // do app só começava quando a sondagem de 15s descobria o pedido sozinha. E
+  // navegador ESTRANGULA temporizador de aba escondida (o ciclo vira ~60s),
+  // que é exatamente a situação em que o alarme importa.
+  //
+  // Relatado pelo Diego em 13/09/2026: "o push veio e a voz demorou um pouco".
+  // Os dois caminhos existiam, só não conversavam.
+  //
+  // includeUncontrolled: a aba pode ter sido carregada antes deste worker
+  // assumir o controle — sem isso ela não aparece na lista e continua surda.
+  self.clients
+    .matchAll({ type: 'window', includeUncontrolled: true })
+    .then((abas) => abas.forEach((aba) => {
+      try { aba.postMessage({ tipo: 'inksa:push', dados: d }); } catch { /* aba morrendo */ }
+    }))
+    .catch(() => { /* sem clientes: a notificação do sistema já foi mostrada */ });
 });
 
 self.addEventListener('notificationclick', (event) => {

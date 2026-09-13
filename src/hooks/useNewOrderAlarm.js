@@ -44,10 +44,27 @@ export function useNewOrderAlarm(enabled = true) {
     // Voltou pra aba: confere na hora, sem esperar o próximo ciclo.
     const aoVoltar = () => { if (document.visibilityState === 'visible') check(); };
     document.addEventListener('visibilitychange', aoVoltar);
+
+    // CHEGOU PUSH: confere AGORA, sem esperar o ciclo.
+    //
+    // O service worker (firebase-messaging-sw.js) manda esta mensagem assim
+    // que o push chega. Sem ela, a notificação do sistema aparecia na hora e a
+    // VOZ só saía quando a sondagem descobria o pedido — até ~60s depois, já
+    // que o navegador estrangula temporizador de aba escondida. Os dois
+    // caminhos existiam e não conversavam.
+    //
+    // É o push que manda; a sondagem vira rede de segurança pra quando ele
+    // falhar (permissão negada, token velho, aparelho sem Google Play).
+    const aoReceberPush = (ev) => {
+      if (ev?.data?.tipo === 'inksa:push') check();
+    };
+    navigator.serviceWorker?.addEventListener?.('message', aoReceberPush);
+
     return () => {
       alive = false;
       clearInterval(id);
       document.removeEventListener('visibilitychange', aoVoltar);
+      navigator.serviceWorker?.removeEventListener?.('message', aoReceberPush);
     };
   }, [enabled]);
 
