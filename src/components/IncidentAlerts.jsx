@@ -7,6 +7,7 @@ import { AlertTriangle, Loader2, RotateCcw, Trash2, CheckCircle2 } from 'lucide-
 import { orderService } from '../services/orderService.js';
 import { useToast } from '../context/ToastContext.jsx';
 import { mensagemDeErro } from '../utils/mensagemDeErro.js';
+import { limparCodigo, codigoCompleto, AVISO_CODIGO } from '../utils/codigoDoPedido';
 
 const REASON_LABELS = {
   customer_not_found: 'Cliente não localizado',
@@ -35,9 +36,10 @@ function IncidentCard({ inc, onChanged }) {
   };
 
   const confirmReturn = async () => {
-    // Código de devolução virou NUMÉRICO de 6 dígitos (generate_verification_code).
+    // Código de devolução sai do mesmo gerador do resto (generate_verification_code):
+    // 4 dígitos desde 13/09/2026, mas os antigos, de 6, seguem valendo.
     const c = code.replace(/\D/g, '');
-    if (c.length !== 6) { addToast('error', 'O código de devolução tem 6 números.'); return; }
+    if (!codigoCompleto(c)) { addToast('error', AVISO_CODIGO); return; }
     setBusy(true);
     try {
       await orderService.confirmIncidentReturn(inc.order_id, c);
@@ -86,7 +88,7 @@ function IncidentCard({ inc, onChanged }) {
           <div className="flex gap-2">
             <input
               value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              onChange={(e) => setCode(limparCodigo(e.target.value))}
               placeholder="Ex.: 480315"
               maxLength={6}
               inputMode="numeric"

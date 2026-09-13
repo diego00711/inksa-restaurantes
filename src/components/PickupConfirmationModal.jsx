@@ -7,6 +7,7 @@ import { useToast } from '../context/ToastContext';
 import api from '../services/api';
 import { numeroPedido } from '../utils/pedidoNumero';
 import { brl } from '../utils/dinheiro';
+import { limparCodigo, codigoCompleto, AVISO_CODIGO } from '../utils/codigoDoPedido';
 
 export function PickupConfirmationModal({ order, isOpen, onClose, onSuccess }) {
   const [pickupCode, setPickupCode] = useState('');
@@ -28,8 +29,8 @@ export function PickupConfirmationModal({ order, isOpen, onClose, onSuccess }) {
       return;
     }
 
-    if (pickupCode.trim().length !== 6) {
-      setError('O código deve ter 6 números');
+    if (!codigoCompleto(pickupCode)) {
+      setError(AVISO_CODIGO);
       return;
     }
 
@@ -76,7 +77,7 @@ export function PickupConfirmationModal({ order, isOpen, onClose, onSuccess }) {
     // vez de bloquear a digitação: quem cola o código de outro lugar costuma
     // trazer espaço ou traço junto, e travar o campo faz a pessoa achar que o
     // código está errado.
-    const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+    const value = limparCodigo(e.target.value);
     setPickupCode(value);
     setError('');
   };

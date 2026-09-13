@@ -1,5 +1,5 @@
 // src/components/DeliveryConfirmationModal.jsx
-// Entrega própria: o restaurante fecha o pedido com o código de 6 números que o
+// Entrega própria: o restaurante fecha o pedido com o código que o
 // CLIENTE mostra no app dele. Antes o restaurante marcava "entregue" direto —
 // o motoboy dizia que entregou e não sobrava prova nenhuma pra conferir.
 
@@ -8,6 +8,7 @@ import { X, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import api from '../services/api';
 import { numeroPedido } from '../utils/pedidoNumero';
+import { limparCodigo, codigoCompleto, AVISO_CODIGO } from '../utils/codigoDoPedido';
 
 // Motivos prontos: escrever à mão no celular, no meio do expediente, ninguém
 // faz — e aí a saída vira sempre a mesma frase vazia.
@@ -48,8 +49,8 @@ export function DeliveryConfirmationModal({ order, isOpen, onClose, onSuccess })
       }
       corpo.no_code_reason = motivo;
     } else {
-      if (codigo.trim().length !== 6) {
-        setErro('O código do cliente tem 6 números.');
+      if (!codigoCompleto(codigo)) {
+        setErro(AVISO_CODIGO);
         return;
       }
       corpo.delivery_code = codigo.toUpperCase().trim();
@@ -98,7 +99,7 @@ export function DeliveryConfirmationModal({ order, isOpen, onClose, onSuccess })
                 <input
                   type="text"
                   value={codigo}
-                  onChange={(e) => setCodigo(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  onChange={(e) => setCodigo(limparCodigo(e.target.value))}
                   maxLength={6}
                   inputMode="numeric"
                   pattern="[0-9]*"
