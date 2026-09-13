@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Printer } from 'lucide-react';
 import { orderService } from '../services/orderService';
 import { useToast } from '../context/ToastContext.jsx';
-import { printOrder, ehAplicativo, ENDERECO_WEB } from '../utils/orderPrint';
+import { printOrder, ehAplicativo, ENDERECO_WEB, abrirNoNavegador } from '../utils/orderPrint';
 import { detalharOpcoes, precoBase } from '../utils/orderItems';
 import { numeroPedido } from '../utils/pedidoNumero';
 import { brl } from '../utils/dinheiro';
@@ -83,15 +83,21 @@ export function OrderDetailsModal({ order, onClose, restaurantName = '' }) {
   const handlePrint = () => {
     const alvo = fullOrderDetails || order;
     if (!alvo) return;
-    const ok = printOrder(alvo, restaurantName);
-    if (!ok) {
-      addToast('error', 'Nao foi possivel abrir a impressao.');
+    // NO APP, NEM TENTA IMPRIMIR — LEVA PRO NAVEGADOR.
+    //
+    // A WebView do Android não implementa impressão. Antes a tela tentava
+    // assim mesmo, não acontecia nada, e vinha um aviso azul pedindo pra
+    // pessoa abrir o navegador e digitar o endereço. Em 13/09/2026 a parceira
+    // leu esse aviso como erro do sistema — e a leitura dela estava certa.
+    if (ehAplicativo()) {
+      const foi = abrirNoNavegador();
+      addToast('info', foi
+        ? 'Abrindo o navegador para imprimir. Entre com o mesmo e-mail e senha.'
+        : `Imprima pelo navegador: ${ENDERECO_WEB}`);
       return;
     }
-    if (ehAplicativo()) {
-      addToast('info',
-        `Se a impressao nao abrir, imprima pelo navegador: ${ENDERECO_WEB}`);
-    }
+    const ok = printOrder(alvo, restaurantName);
+    if (!ok) addToast('error', 'Nao foi possivel abrir a impressao.');
   };
 
   const modalBackdropStyle = {

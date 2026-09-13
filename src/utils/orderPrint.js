@@ -223,3 +223,36 @@ export function ehAplicativo() {
 
 /** Endereço pra abrir no navegador quando a impressão não rola no app. */
 export const ENDERECO_WEB = 'restaurante.inksadelivery.com.br';
+
+/**
+ * Abre o painel no NAVEGADOR DE VERDADE (Chrome), fora da WebView.
+ *
+ * Existe porque mandar a parceira DIGITAR um endereço no meio do movimento é
+ * pedir pra ela desistir. Em 13/09/2026 a Me Mimei apertou imprimir, não saiu
+ * nada, apareceu só um aviso azul dizendo "abra no navegador" — e ela leu
+ * aquilo como erro do sistema. Estava certa: um aviso que dá trabalho pra
+ * pessoa resolver não é aviso, é desculpa.
+ *
+ * ⚠️ `_system` é o que tira do WebView. `window.open(url)` puro abriria
+ * DENTRO do app, onde a impressão continua não existindo — ou seja, daria o
+ * mesmo nada de antes, só que com mais passos.
+ *
+ * ⚠️ Ela vai precisar entrar de novo lá. App instalado e navegador têm
+ * armazenamentos separados, então a sessão não atravessa. Não dá pra evitar
+ * daqui; o texto da tela é que precisa avisar, pra não parecer que a senha
+ * parou de funcionar.
+ */
+export function abrirNoNavegador() {
+  const url = `https://${ENDERECO_WEB}`;
+  try {
+    if (window.Capacitor?.Plugins?.Browser?.open) {
+      window.Capacitor.Plugins.Browser.open({ url });
+      return true;
+    }
+  } catch { /* sem plugin: cai no window.open abaixo */ }
+  try {
+    return !!window.open(url, '_system') || !!window.open(url, '_blank');
+  } catch {
+    return false;
+  }
+}
