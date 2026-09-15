@@ -73,10 +73,12 @@ export function PickupConfirmationModal({ order, isOpen, onClose, onSuccess }) {
   };
 
   const handleInputChange = (e) => {
-    // Código agora é NUMÉRICO de 6 dígitos. Descarta o que não for dígito em
-    // vez de bloquear a digitação: quem cola o código de outro lugar costuma
-    // trazer espaço ou traço junto, e travar o campo faz a pessoa achar que o
-    // código está errado.
+    // Código é NUMÉRICO de 4 a 6 dígitos (nasce com 4 desde 13/09/2026; os
+    // pedidos que já estavam na rua na troca seguem com 6). Quem manda no
+    // tamanho é utils/codigoDoPedido.js — não repita o número aqui.
+    // Descarta o que não for dígito em vez de bloquear a digitação: quem cola
+    // o código de outro lugar costuma trazer espaço ou traço junto, e travar o
+    // campo faz a pessoa achar que o código está errado.
     const value = limparCodigo(e.target.value);
     setPickupCode(value);
     setError('');
