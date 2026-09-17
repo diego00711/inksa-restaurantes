@@ -9,6 +9,7 @@ import { useToast } from '../context/ToastContext.jsx'; // Importando o useToast
 import { requestNotificationPermission, saveFcmToken } from '../services/notificationService';
 import { createAuthHeaders, RESTAURANT_API_URL } from '../services/api';
 import { mensagemDeErro } from '../utils/mensagemDeErro.js';
+import Versiculo from '../components/Versiculo';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -126,6 +127,8 @@ export function LoginPage() {
           Cadastre-se
         </Link>
       </p>
+
+      <Versiculo />
     </div>
   );
 }
