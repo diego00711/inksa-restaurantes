@@ -18,6 +18,10 @@ import { useIdleLogout } from '../../hooks/useIdleLogout.js';
 // aprendeu do jeito difícil no dia do ícone Lightbulb (ver comentário no topo).
 import { tempoInicial, buscarTempo } from '../../utils/tempoInatividade.js';
 import { mensagemDeErro } from '../../utils/mensagemDeErro.js';
+// ⚠️ Import na MESMA edição do uso — a regra do ícone Lightbulb (topo do
+// arquivo) vale pra componente também, e aqui doeria igual: este layout
+// envolve TODA tela logada, então um nome não importado apaga o painel inteiro.
+import { FaixaDaCategoria } from './FaixaDaCategoria.jsx';
 
 // O padrão de 1h mudou de casa: agora é PADRAO_MS em utils/tempoInatividade.js,
 // junto da busca que o consome.
@@ -53,18 +57,10 @@ export function PortalLayout() {
   const missingFields = loading ? [] : getMissingFields(profile);
   const cadastroIncompleto = missingFields.length > 0;
 
-  // Selo Parceiro Fundador: enquanto a janela dele estiver valendo, o parceiro
-  // vê POR QUANTO TEMPO ainda paga metade. Benefício que ninguém lembra que
-  // tem não gera lealdade nenhuma — e a data visível cria o senso de urgência
-  // pra ele aproveitar (e pra sentir falta quando acabar).
-  const fundadorAte = profile?.fundador && profile?.fundador_ate
-    ? new Date(`${String(profile.fundador_ate).slice(0, 10)}T12:00:00`)
-    : null;
-  const fundadorAtivo = fundadorAte instanceof Date && !Number.isNaN(fundadorAte)
-    && fundadorAte >= new Date(new Date().toDateString());
-  const diasRestantes = fundadorAtivo
-    ? Math.ceil((fundadorAte - new Date(new Date().toDateString())) / 86400000)
-    : 0;
+  // A conta do selo de fundador (data, dias restantes) saiu daqui: quem faz
+  // isso agora é FaixaDaCategoria, a partir da taxa que o backend calcula. Era
+  // o último lugar do front que decidia sozinho "este parceiro é fundador",
+  // e decidir isso em dois lugares é como a tela e a fatura divergem.
 
   // Alarme de novo pedido em qualquer tela do painel (não só na tela Pedidos)
   useNewOrderAlarm(!loading);
@@ -305,34 +301,11 @@ export function PortalLayout() {
               </div>
             </div>
           )}
-          {/* Parceiro Fundador — some sozinho quando a janela vence */}
-          {fundadorAtivo && (
-            <div className="mb-4 rounded-xl border border-orange-300 bg-gradient-to-r from-orange-50 to-amber-50 p-4">
-              <div className="flex items-start gap-3">
-                <span className="text-2xl leading-none shrink-0">🏆</span>
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-orange-900">
-                    Você é um Parceiro Fundador da Inksa
-                  </p>
-                  <p className="text-sm text-orange-800 mt-0.5">
-                    Sua comissão está pela <strong>metade</strong> até{' '}
-                    <strong>
-                      {fundadorAte.toLocaleDateString('pt-BR', {
-                        day: '2-digit', month: 'long', year: 'numeric',
-                      })}
-                    </strong>
-                    {diasRestantes <= 45 && (
-                      <> — faltam <strong>{diasRestantes} dias</strong></>
-                    )}
-                    .
-                  </p>
-                  <p className="text-xs text-orange-700 mt-1">
-                    Benefício de quem entrou no começo. Obrigado por acreditar na gente.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* "Hoje você é X e repassa Y%" — para TODO parceiro, não só o
+              fundador. O selo que vivia aqui só aparecia pra quem tinha
+              benefício; quem não tinha nunca via quanto pagava. A faixa se
+              monta sozinha a partir da taxa real (ver FaixaDaCategoria). */}
+          <FaixaDaCategoria />
 
           <Outlet />
         </main>
