@@ -245,15 +245,43 @@ export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus
           return null;
         })()}
 
+        {/* O CÓDIGO DA RETIRADA, GRANDE, PRA MOSTRAR NO BALCÃO (20/09/2026).
+
+            A conferência inverteu: antes o entregador mostrava o número e o
+            parceiro digitava; agora o parceiro mostra e o entregador digita no
+            app dele. A troca tira o trabalho de quem está no aperto — a chapa
+            cheia, o pedido saindo — e passa pra quem está parado esperando.
+
+            Por isso o número precisa ser LEGÍVEL DE LONGE e a um toque: o
+            entregador lê daqui de frente ao balcão. Se ficasse escondido num
+            detalhe do pedido, a inversão só teria trocado o trabalho de lugar. */}
+        {showPickupButton && order.pickup_code && (
+          <div className="mb-2 rounded-xl border-2 border-purple-300 bg-purple-50 px-4 py-3 text-center">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-purple-700">
+              Mostre ao entregador
+            </p>
+            <p className="text-3xl font-extrabold tracking-[0.3em] text-purple-800 select-all">
+              {order.pickup_code}
+            </p>
+            <p className="mt-0.5 text-[11px] text-purple-600">
+              Ele digita no app e a retirada é confirmada
+            </p>
+          </div>
+        )}
+
         <div className="flex flex-col gap-2" onClick={(e) => e.stopPropagation()}>
+          {/* O botão continua aqui como PLANO B: se o app do entregador estiver
+              sem sinal no balcão, o parceiro ainda consegue liberar digitando o
+              código. Tirar a saída de emergência junto com a mudança deixaria o
+              pedido preso justo no pior momento. */}
           {showPickupButton && onConfirmPickup ? (
             <button
               onClick={() => run(onConfirmPickup, order)}
               disabled={busy}
-              className="w-full px-4 py-3 text-sm font-bold text-white bg-purple-600 rounded-xl shadow hover:bg-purple-700 transition-all flex items-center justify-center gap-2 min-h-[48px] disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full px-4 py-2.5 text-sm font-semibold text-purple-700 bg-white border-2 border-purple-300 rounded-xl hover:bg-purple-50 transition-all flex items-center justify-center gap-2 min-h-[44px] disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <Package size={16} />
-              Confirmar Retirada
+              Confirmar aqui (se o app dele falhar)
             </button>
           ) : order.status === 'Pendente' ? (
             /* One-touch accept: time picker + big green button */
