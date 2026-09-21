@@ -16,7 +16,7 @@ import { mensagemDeErro } from '../utils/mensagemDeErro.js';
 const SEGMENTOS_COM_PESO = ['pet', 'mercado', 'agropecuaria', 'bebidas'];
 
 export function MenuItemModal({ onClose, onItemAdded, onItemUpdated, itemToEdit }) {
-	const [formData, setFormData] = useState({ name: '', description: '', price: '', category: '', is_available: true, image_url: '', peso_kg: '', promo_price: '', age_restricted: false });
+	const [formData, setFormData] = useState({ name: '', description: '', price: '', category: '', is_available: true, image_url: '', peso_kg: '', promo_price: '', age_restricted: false, stock: '' });
 	// Unidade SÓ da digitação — o banco guarda sempre kg. Começa em 'kg'
 	// porque todo item já cadastrado foi digitado assim: abrir em 'g'
 	// multiplicaria por mil o que a pessoa vê.
@@ -58,10 +58,13 @@ export function MenuItemModal({ onClose, onItemAdded, onItemUpdated, itemToEdit 
 				// Campo vazio = sem promoção. É assim que o parceiro desliga:
 				// apagando o valor. Não existe botão separado de desativar.
 				promo_price: itemToEdit.promo_price != null ? String(itemToEdit.promo_price) : '',
+				// Vazio = esta loja NAO controla estoque deste item (o banco guarda
+				// NULL). Zero e diferente: significa "acabou" e tira da vitrine.
+				stock: itemToEdit.stock != null ? String(itemToEdit.stock) : '',
 			});
 			setImagePreview(itemToEdit.image_url || null);
 		} else {
-			setFormData({ name: '', description: '', price: '', category: '', is_available: true, image_url: '', peso_kg: '', promo_price: '', age_restricted: false });
+			setFormData({ name: '', description: '', price: '', category: '', is_available: true, image_url: '', peso_kg: '', promo_price: '', age_restricted: false, stock: '' });
 			setImagePreview(null);
 			setSelectedFile(null);
 		}
@@ -117,9 +120,19 @@ export function MenuItemModal({ onClose, onItemAdded, onItemUpdated, itemToEdit 
 			const pesoEmKg = Number.isFinite(_peso) && _peso > 0
 				? (pesoUnidade === 'g' ? _peso / 1000 : _peso)
 				: '';
+			// ⚠️ ESTOQUE VAZIO VAI COMO null, NUNCA COMO 0.
+			// null = "esta loja não controla estoque deste item", que é o
+			// estado de todo item de restaurante. 0 = "acabou" e tira da
+			// vitrine. Mandar 0 por um campo em branco ligaria controle de
+			// estoque no cardápio inteiro de quem nunca pediu isso — e ele se
+			// desligaria sozinho na primeira venda.
+			const _est = String(formData.stock ?? '').trim();
+			const estoqueParaEnviar = _est === '' ? null : Math.max(parseInt(_est, 10) || 0, 0);
+
 			const itemDataToSend = { ...formData, price: parseFloat(formData.price) || 0,
 				peso_kg: pesoEmKg, image_url: finalImageUrl,
-				age_restricted: !!formData.age_restricted };
+				age_restricted: !!formData.age_restricted,
+				stock: estoqueParaEnviar };
 
 			if (itemToEdit) {
 				const response = await menuService.updateMenuItem(itemToEdit.id, itemDataToSend);
@@ -233,6 +246,37 @@ export function MenuItemModal({ onClose, onItemAdded, onItemUpdated, itemToEdit 
                                 {categories.map(cat => <option key={cat.id} value={cat.name}>{cat.name}</option>)}
                             </select>
                         </div>
+                    </div>
+                    {/* ESTOQUE. Fica logo acima de "Disponível para Venda"
+                        porque um manda no outro: zerar o estoque tira o item
+                        da vitrine mesmo com a caixinha marcada. */}
+                    <div className="rounded-md border border-gray-200 bg-gray-50 p-3">
+                        <label htmlFor="stock" className="block text-sm font-medium text-gray-700">
+                            Estoque <span className="font-normal text-gray-500">(opcional)</span>
+                        </label>
+                        <input
+                            type="number" name="stock" id="stock" min="0" step="1"
+                            value={formData.stock}
+                            onChange={handleChange}
+                            placeholder="deixe em branco se não controla"
+                            className="mt-1 w-full px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                        />
+                        <p className="mt-1.5 text-xs text-gray-500">
+                            <strong>Em branco</strong> é o normal para restaurante: a Inksa não controla
+                            quantidade e o item fica sempre à venda.
+                        </p>
+                        {String(formData.stock ?? '').trim() !== '' && (
+                            <p className="mt-1 text-xs text-gray-600">
+                                Com número preenchido, <strong>cada pedido desconta</strong> e um pedido
+                                cancelado devolve. Ao chegar em <strong>zero o item sai da vitrine</strong>{' '}
+                                sozinho e volta quando você repor.
+                            </p>
+                        )}
+                        {String(formData.stock ?? '').trim() === '0' && (
+                            <p className="mt-1 text-xs font-semibold text-amber-700">
+                                Zero não é o mesmo que em branco: o item vai sair da vitrine.
+                            </p>
+                        )}
                     </div>
                     <div>
                         <label className="flex items-center text-sm font-medium text-gray-700 cursor-pointer min-h-[44px]">

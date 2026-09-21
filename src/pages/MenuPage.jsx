@@ -300,6 +300,24 @@ export function MenuPage() {
                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${item.is_available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                             {item.is_available ? 'Disponível' : 'Indisponível'}
                         </span>
+                        {/* O NÚMERO AO LADO DO SELO, e só pra quem controla
+                            estoque (`!= null`). Desde que a venda dá baixa
+                            sozinha, "Indisponível" sem motivo visível vira
+                            chamado no suporte — aqui o motivo fica do lado.
+                            Restaurante tem estoque nulo e não vê nada. */}
+                        {item.stock != null && (
+                            <span
+                                className={`ml-2 px-2 py-1 text-xs font-semibold rounded-full tabular-nums ${
+                                    item.stock === 0 ? 'bg-red-100 text-red-800'
+                                    : item.stock <= 5 ? 'bg-amber-100 text-amber-800'
+                                    : 'bg-gray-100 text-gray-700'}`}
+                                title={item.stock === 0
+                                    ? 'Sem estoque — por isso saiu da vitrine'
+                                    : 'Unidades em estoque. Cada pedido desconta.'}
+                            >
+                                {item.stock === 0 ? 'sem estoque' : `${item.stock} un.`}
+                            </span>
+                        )}
                         </td>
                         <td className="p-4">
                         <div className="flex gap-2">
