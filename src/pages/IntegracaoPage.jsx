@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plug, Loader2, CheckCircle2, AlertCircle, Send, KeyRound, MessageCircle, ExternalLink } from 'lucide-react';
+import { Plug, Loader2, CheckCircle2, AlertCircle, Send, KeyRound, MessageCircle, ExternalLink, Copy, Check } from 'lucide-react';
 import { RESTAURANT_API_URL } from '../services/api';
 import { apiFetch } from '../services/apiClient';
 import { authService } from '../services/authService';
@@ -8,19 +8,51 @@ import { mensagemDeErro } from '../utils/mensagemDeErro.js';
 
 const DOCS = 'https://www.inksadelivery.com.br/api';
 
+// O RECADO QUE O PARCEIRO MANDA PRO FORNECEDOR.
+//
+// Escrito pra ser lido por um TÉCNICO, não pelo lojista: diz o modelo (quem
+// pergunta é o sistema dele), diz o que já vem pronto e diz onde está o
+// contrato. Sem isso o parceiro encaminhava "quero integrar com a Inksa" e o
+// fornecedor voltava com as mesmas cinco perguntas — que é como nasce um
+// chamado que não precisava existir.
+const RECADO = `Oi! A gente vende pela Inksa Delivery e quero ligar os pedidos no nosso sistema.
+
+A documentação da API está em ${DOCS}
+
+O modelo é o mesmo dos outros apps de delivery: o NOSSO sistema pergunta se tem pedido novo, a Inksa não empurra nada. Não precisa de IP fixo, porta aberta nem webhook do nosso lado.
+
+Já vem pronto: receber os pedidos, mudar o status (aceitar, preparar, pronto) e manter o cardápio e os preços sincronizados.
+
+Te mando a chave de acesso em seguida — ela aparece uma vez só, então guarde.
+
+Se travar em alguma coisa que a documentação não responde, me avisa que eu abro um chamado direto com eles.`;
+
 /**
  * Integração com o sistema da loja.
  *
- * O QUE ESTA PÁGINA É: um formulário de contato que abre um ticket com
- * categoria "Integração". Não é um conector — conectar a um PDV exige que o
- * fabricante dele exponha uma API, e isso se combina caso a caso.
+ * O QUE ESTA PÁGINA É (mudou em 24/09/2026): uma tela de AUTOATENDIMENTO. O
+ * parceiro gera a chave, copia um recado pronto e manda pro fornecedor do
+ * sistema dele. Acabou ali — a API é pública e o fabricante não precisa de
+ * autorização nossa pra começar.
  *
- * O QUE ELA NÃO PODE SER: uma promessa. Se a tela sugerir que basta ativar um
- * botão, o parceiro cria expectativa e a frustração vira problema comercial.
- * Por isso o texto diz, em voz alta, que é uma conversa e não uma chave.
+ * ⚠️ ELA ERA UM FORMULÁRIO DE CONTATO, e isso custava chamado à toa. O texto
+ * dizia que a Inksa "entra na conversa junto com você" e que "a gente fala
+ * com o fornecedor por você" — duas frases escritas quando a Inksa ainda não
+ * tinha API nenhuma e integração era mesmo caso a caso. Hoje a API existe,
+ * está documentada e é aberta, mas a tela continuava pedindo licença.
  *
- * Vai pro mesmo sistema de tickets do Suporte de propósito: o Diego já lê
- * aquela caixa todo dia, e um canal novo que ninguém abre é pior que nenhum.
+ * O primeiro chamado de integração que a Inksa recebeu (24/09/2026) provou o
+ * custo: cinco perguntas, quatro delas respondidas na página pública. O
+ * parceiro não abriu chamado por falta de recurso — abriu porque a tela
+ * sugeria que era assim que se começa.
+ *
+ * O QUE ELA NÃO PODE SER: uma promessa de conector. Quem escreve a ligação é
+ * o fabricante do sistema dele, e isso continua dito em voz alta.
+ *
+ * O CHAMADO CONTINUA, com outro papel: dúvida TÉCNICA que a documentação não
+ * responde. Vai pro mesmo sistema de tickets do Suporte de propósito — o
+ * Diego já lê aquela caixa todo dia, e um canal novo que ninguém abre é pior
+ * que nenhum.
  */
 
 const SISTEMAS = [
@@ -65,6 +97,18 @@ export default function IntegracaoPage() {
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState(null);
   const [enviado, setEnviado] = useState(false);
+  const [recadoCopiado, setRecadoCopiado] = useState(false);
+
+  const copiarRecado = async () => {
+    try {
+      await navigator.clipboard.writeText(RECADO);
+      setRecadoCopiado(true);
+      setTimeout(() => setRecadoCopiado(false), 2500);
+    } catch {
+      // Sem permissão de área de transferência o texto continua na tela e
+      // dá pra selecionar na mão — por isso aqui não vira erro na cara.
+    }
+  };
 
   // Rolagem suave, respeitando quem pediu menos animação no sistema.
   const irPara = (id) => {
@@ -165,16 +209,27 @@ export default function IntegracaoPage() {
           documentada — e continuar hedgeando faria o parceiro entender "não
           dá". A parte honesta que PERMANECE: quem escreve o conector é o
           fabricante do sistema dele, não a gente. */}
+      {/* ⚠️ ESTE TEXTO JÁ PEDIU AUTORIZAÇÃO QUANDO NÃO PRECISAVA.
+          Ele dizia que a Inksa "entra na conversa com eles junto com você", e
+          o cartão de baixo prometia "a gente fala com o fornecedor por você".
+          Nas duas frases o parceiro entendia que precisava da gente pra
+          começar — e abria chamado pra perguntar coisa que a documentação
+          responde. Foi o que aconteceu no primeiro chamado de integração que
+          a Inksa recebeu (24/09/2026): cinco perguntas, quatro respondidas na
+          página pública.
+          A API é ABERTA: o parceiro gera a chave e entrega. A gente só entra
+          quando o fornecedor tiver uma dúvida técnica de verdade. */}
       <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
-        <p className="font-semibold">Sim, dá para integrar</p>
+        <p className="font-semibold">Dá para integrar, e você não precisa nos pedir nada</p>
         <p className="mt-1">
           A Inksa tem uma <strong>API pública e documentada</strong>. Qualquer sistema de gestão
           que acesse a internet consegue receber os seus pedidos direto, mudar o status e manter
           o cardápio em dia — sem ninguém digitar duas vezes.
         </p>
         <p className="mt-2">
-          Quem liga os dois lados é <strong>o fabricante do seu sistema</strong>. A gente entrega
-          a documentação e a chave de acesso, e entra na conversa com eles junto com você.
+          São <strong>dois passos</strong>: você gera a chave aqui embaixo e manda, junto com o
+          link da documentação, para quem cuida do seu sistema. Quem escreve a ligação entre os
+          dois lados é o fabricante dele — e ele não precisa de autorização nossa para começar.
         </p>
         <a
           href={DOCS}
@@ -187,10 +242,31 @@ export default function IntegracaoPage() {
         </a>
       </div>
 
-      {/* Dois públicos muito diferentes caem nesta tela: quem já tem um técnico
-          do PDV do lado (quer a chave e vai embora) e quem não sabe o que é
-          uma API (precisa da conversa). Sem este atalho, o primeiro rolava um
-          formulário de seis campos que não era para ele. */}
+      {/* O RECADO PRONTO É A PEÇA QUE FALTAVA.
+          A tela mandava o parceiro "entregar a chave e a documentação ao
+          técnico" — e não dava o texto. Sem ele, quem não sabe explicar o que
+          está pedindo abre um chamado pra que a gente explique. Com ele, o
+          caminho inteiro é copiar e colar no WhatsApp do fornecedor. */}
+      <div className="rounded-xl border border-gray-200 bg-white p-4">
+        <h2 className="flex items-center gap-2 font-bold text-gray-900">
+          <MessageCircle className="h-4 w-4 text-orange-600" aria-hidden="true" />
+          Mande isto para quem cuida do seu sistema
+        </h2>
+        <p className="text-sm text-gray-500 mt-0.5">
+          Copie, cole no WhatsApp dele e anexe a chave que você gerar abaixo.
+        </p>
+        <pre className="mt-3 whitespace-pre-wrap rounded-lg bg-gray-50 p-3 text-sm text-gray-700 font-sans">{RECADO}</pre>
+        <button
+          type="button"
+          onClick={copiarRecado}
+          className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 min-h-[44px]"
+        >
+          {recadoCopiado
+            ? <><Check className="h-4 w-4 text-emerald-600" aria-hidden="true" /> Copiado</>
+            : <><Copy className="h-4 w-4" aria-hidden="true" /> Copiar recado</>}
+        </button>
+      </div>
+
       <div className="grid gap-3 sm:grid-cols-2">
         <button
           type="button"
@@ -199,13 +275,16 @@ export default function IntegracaoPage() {
         >
           <span className="flex items-center gap-2 font-semibold text-gray-900">
             <KeyRound className="h-4 w-4 text-orange-600" aria-hidden="true" />
-            Já tenho quem cuide do meu sistema
+            Gerar a chave de acesso
           </span>
           <span className="block text-sm text-gray-500 mt-1">
-            Gere a chave de acesso e entregue ao técnico junto com a documentação.
+            Aparece uma vez só. Copie e entregue junto com o recado acima.
           </span>
         </button>
 
+        {/* O chamado deixou de ser "não sei por onde começar" e virou o que
+            ele realmente serve: dúvida TÉCNICA que a documentação não cobre.
+            Quem responde isso é a Inksa; o resto o parceiro resolve sozinho. */}
         <button
           type="button"
           onClick={() => irPara('ajuda')}
@@ -213,10 +292,10 @@ export default function IntegracaoPage() {
         >
           <span className="flex items-center gap-2 font-semibold text-gray-900">
             <MessageCircle className="h-4 w-4 text-orange-600" aria-hidden="true" />
-            Não sei por onde começar
+            O fornecedor ficou com dúvida
           </span>
           <span className="block text-sm text-gray-500 mt-1">
-            Conte qual sistema você usa e a gente fala com o fornecedor por você.
+            Só se ele travar em algo que a documentação não responde. A gente fala com ele.
           </span>
         </button>
       </div>
@@ -226,10 +305,11 @@ export default function IntegracaoPage() {
       </div>
 
       <div id="ajuda">
-        <h2 className="font-bold text-gray-900">Prefere que a gente ajude?</h2>
+        <h2 className="font-bold text-gray-900">Seu fornecedor travou em alguma coisa?</h2>
         <p className="text-sm text-gray-500 mt-0.5">
-          Conte qual sistema você usa e quem cuida dele. A gente avalia e responde
-          o que dá para fazer no seu caso.
+          Preencha só se ele tiver uma dúvida que a documentação não responde. A gente fala
+          direto com ele. Para começar a integração você <strong>não precisa</strong> deste
+          formulário — basta a chave e o recado lá de cima.
         </p>
       </div>
 
