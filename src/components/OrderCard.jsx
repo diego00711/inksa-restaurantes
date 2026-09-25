@@ -245,27 +245,28 @@ export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus
           return null;
         })()}
 
-        {/* O CÓDIGO DA RETIRADA, GRANDE, PRA MOSTRAR NO BALCÃO (20/09/2026).
+        {/* O CÓDIGO DA RETIRADA, PRA MOSTRAR NO BALCÃO (20/09/2026).
 
             A conferência inverteu: antes o entregador mostrava o número e o
             parceiro digitava; agora o parceiro mostra e o entregador digita no
             app dele. A troca tira o trabalho de quem está no aperto — a chapa
             cheia, o pedido saindo — e passa pra quem está parado esperando.
 
-            Por isso o número precisa ser LEGÍVEL DE LONGE e a um toque: o
-            entregador lê daqui de frente ao balcão. Se ficasse escondido num
-            detalhe do pedido, a inversão só teria trocado o trabalho de lugar. */}
+            ⚠️ ELE JÁ FOI MUITO MAIOR (25/09/2026). Era um bloco centralizado
+            com o número em 3xl e duas linhas de explicação, porque eu supus
+            que precisava ser "legível de longe". O Diego usou no balcão de
+            verdade e pediu pra encolher: o entregador está a um metro, não a
+            cinco, e o bloco empurrava os botões pra fora da coluna do quadro.
+            Uma linha só, com o número ainda grande o suficiente pra ler à
+            distância de um balcão. Uso real ganha da suposição. */}
         {showPickupButton && order.pickup_code && (
-          <div className="mb-2 rounded-xl border-2 border-purple-300 bg-purple-50 px-4 py-3 text-center">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-purple-700">
-              Mostre ao entregador
-            </p>
-            <p className="text-3xl font-extrabold tracking-[0.3em] text-purple-800 select-all">
+          <div className="mb-2 flex items-center justify-between gap-2 rounded-lg border border-purple-300 bg-purple-50 px-3 py-1.5">
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-purple-700 leading-tight">
+              Mostre ao<br />entregador
+            </span>
+            <span className="text-2xl font-extrabold tracking-[0.2em] text-purple-800 select-all">
               {order.pickup_code}
-            </p>
-            <p className="mt-0.5 text-[11px] text-purple-600">
-              Ele digita no app e a retirada é confirmada
-            </p>
+            </span>
           </div>
         )}
 
@@ -273,14 +274,23 @@ export default function OrderCard({ order, isOwnDelivery = false, onUpdateStatus
           {/* O botão continua aqui como PLANO B: se o app do entregador estiver
               sem sinal no balcão, o parceiro ainda consegue liberar digitando o
               código. Tirar a saída de emergência junto com a mudança deixaria o
-              pedido preso justo no pior momento. */}
+              pedido preso justo no pior momento.
+
+              ⚠️ MENOS PESO, MESMO ALVO DE TOQUE (25/09/2026). Saiu de borda
+              dupla + text-sm pra borda fina + text-xs em cinza: é saída de
+              emergência, e emergência que parece o caminho normal faz gente
+              usar por engano — aqui, o parceiro confirmando a retirada sozinho
+              em vez de o entregador digitar, que é justamente o que a inversão
+              veio evitar.
+              O `min-h-[44px]` FICA: encolher o alvo do dedo pra economizar
+              pixel é trocar um problema de estética por um de uso. */}
           {showPickupButton && onConfirmPickup ? (
             <button
               onClick={() => run(onConfirmPickup, order)}
               disabled={busy}
-              className="w-full px-4 py-2.5 text-sm font-semibold text-purple-700 bg-white border-2 border-purple-300 rounded-xl hover:bg-purple-50 transition-all flex items-center justify-center gap-2 min-h-[44px] disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-purple-700 hover:border-purple-300 transition-all flex items-center justify-center gap-1.5 min-h-[44px] disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <Package size={16} />
+              <Package size={13} />
               Confirmar aqui (se o app dele falhar)
             </button>
           ) : order.status === 'Pendente' ? (

@@ -142,6 +142,21 @@ export function printOrder(order, restaurantName = '') {
   .opcoes { margin: -1px 0 4px 0; padding-left: 12px; font-size: 11px; font-weight: bold; }
   .total { font-size: 14px; font-weight: bold; }
   .obs { border: 1px dashed #000; padding: 4px; margin-top: 6px; }
+  /* CÓDIGO DE RETIRADA NA COMANDA (25/09/2026, pedido do Diego).
+     Existe porque quem está no balcão com a bobina na mão não deveria ter que
+     abrir o aplicativo pra ler quatro dígitos. A comanda já é o papel que a
+     pessoa pega pra achar o pedido; o código estar nela fecha o passo no mesmo
+     lugar. Emoldurado e em 20px pra achar de relance numa pilha.
+
+     ⚠️ QUEM SEGURA ESTE PAPEL PODE LER O CÓDIGO. Se a comanda for grampeada
+     na sacola, o entregador lê sozinho em vez de a loja mostrar — e aí a
+     conferência vira teatro. O estrago é limitado (a API só aceita o código
+     do entregador JÁ ATRIBUÍDO àquele pedido, então ninguém rouba entrega com
+     isso; o que se perde é a prova de que ele esteve no balcão). Se um dia
+     isso importar, esta via é a DA LOJA e a sacola leva outra sem o bloco. */
+  .retirada { border: 2px solid #000; padding: 4px; margin-top: 8px; text-align: center; }
+  .retirada .cod { font-size: 20px; font-weight: bold; letter-spacing: 4px; line-height: 1.2; }
+  .retirada .rot { font-size: 10px; }
   .rodape { text-align: center; margin-top: 10px; font-size: 11px; }
 </style></head>
 <body>
@@ -172,6 +187,11 @@ export function printOrder(order, restaurantName = '') {
   <div class="linha total"><span>TOTAL</span><span>${brl(total)}</span></div>
   <div class="linha"><span>Pagamento</span><span>${escapeHtml(METODOS[order?.payment_method] || order?.payment_method || '-')}</span></div>
   ${order?.notes ? `<div class="obs"><strong>Obs:</strong> ${escapeHtml(order.notes)}</div>` : ''}
+  ${order?.pickup_code ? `<div class="retirada">
+    <div class="rot">CODIGO DE RETIRADA</div>
+    <div class="cod">${escapeHtml(String(order.pickup_code))}</div>
+    <div class="rot">Informe ao entregador. Ele digita no app dele.</div>
+  </div>` : ''}
   <div class="rodape">Inksa Delivery</div>
 </body></html>`;
 
