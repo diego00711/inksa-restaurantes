@@ -105,7 +105,11 @@ export function SettingsPage() {
     bank_name: '', bank_agency: '',
     bank_account_number: '', bank_account_type: 'corrente',
     pix_key: '', pix_key_type: '', mp_account_id: '', delivery_type: 'platform',
-    accepts_cash: true,
+    // Nasce desligado e, na prática, esta linha é só estado inicial de
+    // formulário: o campo saiu da whitelist do backend em 06/09/2026 e
+    // quem liga dinheiro é o admin. Deixar `true` aqui dava a impressão,
+    // pra quem lê o código, de que o parceiro decide isso.
+    accepts_cash: false,
     // Nasce desligado: retirada é escolha da loja, não padrão nosso.
     accepts_pickup: false,
     opening_hours: null, hours_auto: false,
