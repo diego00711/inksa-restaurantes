@@ -105,10 +105,9 @@ export function SettingsPage() {
     bank_name: '', bank_agency: '',
     bank_account_number: '', bank_account_type: 'corrente',
     pix_key: '', pix_key_type: '', mp_account_id: '', delivery_type: 'platform',
-    // Nasce desligado e, na prática, esta linha é só estado inicial de
-    // formulário: o campo saiu da whitelist do backend em 06/09/2026 e
-    // quem liga dinheiro é o admin. Deixar `true` aqui dava a impressão,
-    // pra quem lê o código, de que o parceiro decide isso.
+    // Nasce desligado. Desde 30/09/2026 o parceiro PODE ligar, mas só se fizer
+    // entrega própria — a condição real está no backend
+    // (routes/restaurant.py), e o botão aqui só aparece nesse caso.
     accepts_cash: false,
     // Nasce desligado: retirada é escolha da loja, não padrão nosso.
     accepts_pickup: false,
@@ -491,14 +490,62 @@ export function SettingsPage() {
               onAutoChange={(v) => setProfileData((prev) => ({ ...prev, hours_auto: v }))}
             />
 
-            {/* O BOTÃO DE ACEITAR DINHEIRO SAIU DAQUI EM 06/09/2026.
-                Quem ligava entendia que o entregador traria o dinheiro em mãos.
-                Não é o que acontece: o entregador recolhe em espécie e passa a
-                dever à plataforma, e a loja recebe pelo repasse. Ligar sem saber
-                disso gera discussão sobre dinheiro que já entrou.
-                Agora quem liga é o admin, que conhece a mecânica. O campo também
-                saiu da whitelist do PUT no backend — tela escondida sem tirar da
-                whitelist é aparência de trava, não trava. */}
+            {/* PAGAMENTO EM DINHEIRO — só aparece na ENTREGA PRÓPRIA.
+
+                O botão saiu daqui em 06/09/2026 e voltou em 30/09, com a
+                condição. O motivo de ter saído: quem ligava entendia que o
+                entregador traria o dinheiro em mãos, e não é o que acontece na
+                entrega pela Inksa — o entregador recolhe em espécie e passa a
+                dever à plataforma, a loja recebe pelo repasse. Discussão sobre
+                dinheiro que já entrou é a pior que existe.
+
+                Na entrega própria o mal-entendido não existe: ninguém no meio,
+                a loja recebe no balcão. Então a escolha volta a ser dela.
+
+                ⚠️ Esconder o botão NÃO é a trava — a trava está no backend
+                (routes/restaurant.py recusa accepts_cash quando o tipo efetivo
+                não é 'own', e desliga sozinho quem sai da entrega própria).
+                Tela escondida sem regra no servidor é aparência de trava. */}
+            {profileData.delivery_type === 'own' && (
+              <div className="border-t pt-8">
+                <h2 className="text-xl font-semibold mb-4 text-gray-700">Pagamento em Dinheiro</h2>
+                <label className="flex items-center gap-3 cursor-pointer w-fit">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      name="accepts_cash"
+                      checked={profileData.accepts_cash ?? false}
+                      onChange={handleChange} disabled={!isEditing}
+                      className="sr-only"
+                    />
+                    <div className={`w-11 h-6 rounded-full transition-colors duration-200 ${(profileData.accepts_cash ?? false) ? 'bg-indigo-600' : 'bg-gray-300'}`} />
+                    <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${(profileData.accepts_cash ?? false) ? 'translate-x-5' : ''}`} />
+                  </div>
+                  <span className="text-sm font-medium text-gray-700">
+                    Aceitar pagamento em dinheiro na entrega
+                  </span>
+                </label>
+                <div className="text-xs text-gray-500 mt-2 space-y-1">
+                  <p>
+                    O cliente escolhe dinheiro no carrinho e paga na porta, para quem
+                    levar o pedido. <strong className="text-gray-700">Você fica com o
+                    valor inteiro na hora</strong> — nada passa pela Inksa.
+                  </p>
+                  <p>
+                    Em troca, a <strong className="text-gray-700">comissão desses pedidos
+                    fica registrada como valor a pagar</strong> e é descontada do seu
+                    próximo repasse. Ou seja: o dinheiro entra todo no seu caixa e a
+                    comissão sai depois, não antes.
+                  </p>
+                  <p>
+                    Aparece aqui porque você faz <strong className="text-gray-700">entrega
+                    própria</strong>. Se mudar para entrega pela Inksa, esta opção se
+                    desliga — nesse caso quem recebe o dinheiro é o entregador, e o seu
+                    valor vem pelo repasse.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Retirada no local */}
             <div className="border-t pt-8">
