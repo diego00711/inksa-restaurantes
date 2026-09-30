@@ -14,6 +14,8 @@ import { useProfile } from '../../context/ProfileContext';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useNewOrderAlarm } from '../../hooks/useNewOrderAlarm.js';
 import { useIdleLogout } from '../../hooks/useIdleLogout.js';
+// ⚠️ Import na MESMA edição do uso — a regra do ícone Lightbulb (topo do arquivo).
+import { useApareceNaVitrine } from '../../hooks/useApareceNaVitrine.js';
 // ⚠️ Import na MESMA edição em que o uso entrou — a regra que este arquivo
 // aprendeu do jeito difícil no dia do ícone Lightbulb (ver comentário no topo).
 import { tempoInicial, buscarTempo } from '../../utils/tempoInatividade.js';
@@ -56,6 +58,10 @@ export function PortalLayout() {
 
   const missingFields = loading ? [] : getMissingFields(profile);
   const cadastroIncompleto = missingFields.length > 0;
+
+  // "O cliente me encontra?" — é outra pergunta que "estou aberto", e é a que
+  // o parceiro precisa ver. `null` enquanto o cardápio não respondeu.
+  const { aparece: apareceNaVitrine, faltas: faltasVitrine } = useApareceNaVitrine(profile);
 
   // A conta do selo de fundador (data, dias restantes) saiu daqui: quem faz
   // isso agora é FaixaDaCategoria, a partir da taxa que o backend calcula. Era
@@ -209,8 +215,14 @@ export function PortalLayout() {
                         disabled={loading}
                     />
                     <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                    {/* "Aberto" responde se o balcão está atendendo — NÃO se o
+                        cliente encontra a loja. Quando a vitrine está
+                        escondendo, é isso que o dono precisa ler aqui, senão
+                        ele fica esperando pedido que nunca vem. */}
                     <span className="ml-3 text-sm font-medium text-gray-300">
-                        {profile?.is_open ? 'Aberto' : 'Fechado'}
+                        {profile?.is_open
+                          ? (apareceNaVitrine === false ? 'Aberto, mas oculto' : 'Aberto')
+                          : 'Fechado'}
                     </span>
                 </label>
             )}
@@ -271,25 +283,55 @@ export function PortalLayout() {
             <span className="hidden sm:block text-white/90 text-sm font-medium">
               Bem-vindo, {loading ? '...' : (profile?.restaurant_name || 'Parceiro')}!
             </span>
-            {/* Status pill visible on mobile (sidebar is hidden) */}
-            <span className={`sm:hidden inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full ${profile?.is_open ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-              <span className={`w-2 h-2 rounded-full ${profile?.is_open ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-              {profile?.is_open ? 'Aberto' : 'Fechado'}
+            {/* Status pill visible on mobile (sidebar is hidden).
+                ⚠️ VERDE SÓ QUANDO A LOJA REALMENTE APARECE. Aberta e oculta
+                pintada de verde foi o que fez a Premium açaí esperar pedido o
+                dia inteiro sem saber que estava fora da vitrine. */}
+            <span className={`sm:hidden inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full ${
+              !profile?.is_open ? 'bg-red-100 text-red-700'
+                : apareceNaVitrine === false ? 'bg-amber-100 text-amber-800'
+                : 'bg-green-100 text-green-700'}`}>
+              <span className={`w-2 h-2 rounded-full ${
+                !profile?.is_open ? 'bg-red-500'
+                  : apareceNaVitrine === false ? 'bg-amber-500'
+                  : 'bg-green-500 animate-pulse'}`} />
+              {!profile?.is_open ? 'Fechado'
+                : apareceNaVitrine === false ? 'Oculto' : 'Aberto'}
             </span>
           </div>
         </header>
 
         <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
           {/* Banner de cadastro incompleto — some sozinho quando o cadastro fica completo */}
-          {cadastroIncompleto && (
+          {/* ⚠️ UM AVISO SÓ, EM TODA TELA, COM AS DUAS FALTAS (29/09/2026).
+              Antes eram dois avisos separados: este, de endereço, aqui no
+              layout; e o de cardápio vazio, só na tela Pedidos. Quem estivesse
+              em qualquer outra tela não via metade do motivo — e o crachá
+              verde "Aberto" contradizia os dois. */}
+          {(cadastroIncompleto || apareceNaVitrine === false) && (
             <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-4">
               <div className="flex items-start gap-3">
                 <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <p className="font-semibold text-amber-900">Complete seu cadastro para receber pedidos</p>
+                  <p className="font-semibold text-amber-900">
+                    {apareceNaVitrine === false
+                      ? 'Sua loja NÃO está aparecendo para os clientes'
+                      : 'Complete seu cadastro para receber pedidos'}
+                  </p>
                   <p className="text-sm text-amber-800 mt-0.5">
-                    Falta: <strong>{missingFields.join(', ')}</strong>. Sem o endereço completo o app
-                    não calcula o frete e você não pode ficar <strong>Aberto</strong>.
+                    {apareceNaVitrine === false ? (
+                      <>
+                        Falta <strong>{faltasVitrine.join(' e ')}</strong>. Até lá
+                        ela fica fora da vitrine — mesmo com a loja marcada como
+                        Aberta. Assim que resolver, ela aparece na hora, sem
+                        precisar avisar ninguém.
+                      </>
+                    ) : (
+                      <>
+                        Falta: <strong>{missingFields.join(', ')}</strong>. Sem o endereço completo o app
+                        não calcula o frete e você não pode ficar <strong>Aberto</strong>.
+                      </>
+                    )}
                   </p>
                   <button
                     onClick={() => navigate('/configuracoes')}

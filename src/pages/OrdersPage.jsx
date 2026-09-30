@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { orderService } from '../services/orderService.js';
 import OrderCard from '../components/OrderCard';
-import AvisoCardapioVazio from '../components/AvisoCardapioVazio';
 import AvisoNovidade from '../components/AvisoNovidade';
 import { OrderDetailsModal } from '../components/OrderDetailsModal';
 import { PickupConfirmationModal } from '../components/PickupConfirmationModal';
@@ -505,10 +504,10 @@ export function OrdersPage() {
       <SocialDayBanner />
       {/* Faixa de anúncio/aviso do parceiro (só aparece se houver banner audience=parceiro) */}
       <SponsoredStrip />
-      {/* Loja escondida da vitrine por falta de cardápio. Fica ANTES do painel
-          porque é a informação mais importante da tela pra quem está nessa
-          situação: não adianta olhar pedidos se nenhum cliente te vê. */}
-      <AvisoCardapioVazio />
+      {/* O aviso de "loja escondida da vitrine" saiu daqui: virou UM aviso só,
+          no PortalLayout, que cobre os dois motivos (sem endereço E sem
+          cardápio) e aparece em TODA tela. Aqui ele só pegava quem estava
+          justamente no painel de pedidos. */}
 
       {/* Retirada no local. O aviso mora AQUI, no painel de pedidos, e não na
           tela de Configurações: ninguém vai em Configurações procurar um botão
