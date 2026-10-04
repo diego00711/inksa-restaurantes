@@ -8,7 +8,10 @@ import { apiFetch } from '../../services/apiClient';
 // build passou, o deploy passou, e o app inteiro morria com "Lightbulb is not
 // defined" — tela branca em TODA tela logada, porque este layout envolve todas.
 // Icone novo na navegacao entra nesta linha NO MESMO COMMIT.
-import { ListOrdered, Utensils, Settings, LogOut, BarChart2, Tag, Trophy, Medal, Star, DollarSign, Menu, X, LifeBuoy, AlertTriangle, Ticket, Plug, Lightbulb, Calculator } from 'lucide-react';
+// ⚠️ `Gift` entrou JUNTO com o item "Meus números" do menu. Ícone usado sem
+// constar NESTE import passa no build e apaga a tela de todo mundo logado —
+// foi o que o Lightbulb fez aqui. (Gift e não Ticket: Ticket já é Cupons.)
+import { ListOrdered, Utensils, Settings, LogOut, BarChart2, Tag, Trophy, Medal, Star, DollarSign, Menu, X, LifeBuoy, AlertTriangle, Ticket, Plug, Lightbulb, Calculator, Gift } from 'lucide-react';
 import { authService } from '../../services/authService.js';
 import { useProfile } from '../../context/ProfileContext';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -16,6 +19,8 @@ import { useNewOrderAlarm } from '../../hooks/useNewOrderAlarm.js';
 import { useIdleLogout } from '../../hooks/useIdleLogout.js';
 // ⚠️ Import na MESMA edição do uso — a regra do ícone Lightbulb (topo do arquivo).
 import { useApareceNaVitrine } from '../../hooks/useApareceNaVitrine.js';
+// ⚠️ Import na MESMA edição do uso — a regra deste arquivo.
+import { useRifa } from '../../hooks/useRifa.js';
 // ⚠️ Import na MESMA edição em que o uso entrou — a regra que este arquivo
 // aprendeu do jeito difícil no dia do ícone Lightbulb (ver comentário no topo).
 import { tempoInicial, buscarTempo } from '../../utils/tempoInatividade.js';
@@ -62,6 +67,9 @@ export function PortalLayout() {
   // "O cliente me encontra?" — é outra pergunta que "estou aberto", e é a que
   // o parceiro precisa ver. `null` enquanto o cardápio não respondeu.
   const { aparece: apareceNaVitrine, faltas: faltasVitrine } = useApareceNaVitrine(profile);
+
+  // Campanha de números: o item do menu só existe quando há campanha valendo.
+  const { ligada: rifaLigada } = useRifa();
 
   // A conta do selo de fundador (data, dias restantes) saiu daqui: quem faz
   // isso agora é FaixaDaCategoria, a partir da taxa que o backend calcula. Era
@@ -112,6 +120,9 @@ export function PortalLayout() {
     { name: 'Analytics', icon: BarChart2, path: '/analytics' },
     { name: 'Avaliações', icon: Star, path: '/avaliacoes' },
     { name: 'Clube Inksa', icon: Trophy, path: '/clube' },
+    // Só entra no menu quando há campanha valendo — quem decide é o servidor.
+    // Item apontando pra promoção encerrada é pior que não ter item.
+    ...(rifaLigada ? [{ name: 'Meus números', icon: Gift, path: '/numeros' }] : []),
     { name: 'Cupons', icon: Ticket, path: '/cupons' },
     { name: 'Financeiro', icon: DollarSign, path: '/financeiro' },
     { name: 'Integração', icon: Plug, path: '/integracao' },

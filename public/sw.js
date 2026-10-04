@@ -1,6 +1,6 @@
 // v16 (05/09/2026): o activate abaixo apaga todo cache de nome diferente, entao
 // subir este numero e o que limpa as entradas envenenadas descritas em ehFallbackDeSPA.
-const CACHE_NAME = 'inksa-restaurantes-v20';
+const CACHE_NAME = 'inksa-restaurantes-v21';
 
 // O host devolve o index.html — HTTP 200, content-type text/html — para
 // QUALQUER caminho que nao existe, inclusive /assets/*. Como `res.ok` e true

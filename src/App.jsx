@@ -19,6 +19,7 @@ const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then(m 
 const RegisterPage = lazy(() => import('./pages/RegisterPage').then(m => ({ default: m.RegisterPage })));
 const OrdersPage = lazy(() => import('./pages/OrdersPage').then(m => ({ default: m.OrdersPage })));
 const MenuPage = lazy(() => import('./pages/MenuPage').then(m => ({ default: m.MenuPage })));
+const RifaPage = lazy(() => import('./pages/RifaPage'));
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage').then(m => ({ default: m.AnalyticsPage })));
 // ⚠️ Export DEFAULT (sem .then), diferente das vizinhas — PrecificacaoPage usa
 // `export default`. Este import faltou no commit 232091b1: a rota entrou, o
@@ -140,6 +141,7 @@ function AppRoutes() {
                 {/* Clube Inksa unificado (absorveu a antiga Gamificação) */}
                 <Route path="clube" element={<RestaurantGamificationPage />} />
                 <Route path="gamificacao" element={<Navigate to="/clube" replace />} />
+                <Route path="numeros" element={<RifaPage />} />
               </Route>
 
               <Route path="/dashboard" element={<Navigate to="/pedidos" replace />} />
