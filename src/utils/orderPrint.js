@@ -80,7 +80,7 @@ function parseItems(raw) {
 
 const METODOS = { cash: 'Dinheiro', pix: 'PIX', credit: 'Cartão de crédito', debit: 'Cartão de débito' };
 
-export function printOrder(order, restaurantName = '') {
+export function printOrder(order, restaurantName = '', entregaPropria = false) {
   const { itens, taxaNosItens } = parseItems(order?.items);
   // Subtotal e frete caem pro que dá pra calcular quando o campo não vem. Um
   // recibo cujas linhas não somam o TOTAL vira discussão no balcão, e a loja
@@ -142,7 +142,14 @@ export function printOrder(order, restaurantName = '') {
   .opcoes { margin: -1px 0 4px 0; padding-left: 12px; font-size: 11px; font-weight: bold; }
   .total { font-size: 14px; font-weight: bold; }
   .obs { border: 1px dashed #000; padding: 4px; margin-top: 6px; }
-  /* CÓDIGO DE RETIRADA NA COMANDA (25/09/2026, pedido do Diego).
+  /* ⚠️ NA ENTREGA PRÓPRIA O CÓDIGO DE RETIRADA NÃO VAI NA COMANDA
+     (07/10/2026). Ele existe pro entregador da Inksa digitar no app dele — e
+     na entrega própria não há entregador da Inksa. O papel mandava "informe ao
+     entregador, ele digita no app dele", e a loja ficava procurando alguém que
+     nunca ia aparecer. O que ela precisa é o código do CLIENTE, pedido na
+     porta e digitado no painel; é isso que o bloco diz agora.
+
+     CÓDIGO DE RETIRADA NA COMANDA (25/09/2026, pedido do Diego).
      Existe porque quem está no balcão com a bobina na mão não deveria ter que
      abrir o aplicativo pra ler quatro dígitos. A comanda já é o papel que a
      pessoa pega pra achar o pedido; o código estar nela fecha o passo no mesmo
@@ -187,10 +194,14 @@ export function printOrder(order, restaurantName = '') {
   <div class="linha total"><span>TOTAL</span><span>${brl(total)}</span></div>
   <div class="linha"><span>Pagamento</span><span>${escapeHtml(METODOS[order?.payment_method] || order?.payment_method || '-')}</span></div>
   ${order?.notes ? `<div class="obs"><strong>Obs:</strong> ${escapeHtml(order.notes)}</div>` : ''}
-  ${order?.pickup_code ? `<div class="retirada">
+  ${order?.pickup_code && !entregaPropria ? `<div class="retirada">
     <div class="rot">CODIGO DE RETIRADA</div>
     <div class="cod">${escapeHtml(String(order.pickup_code))}</div>
     <div class="rot">Informe ao entregador. Ele digita no app dele.</div>
+  </div>` : ''}
+  ${entregaPropria ? `<div class="retirada">
+    <div class="rot">ENTREGA SUA</div>
+    <div class="rot">Ao entregar, peca o codigo ao cliente e digite no painel.</div>
   </div>` : ''}
   <div class="rodape">Inksa Delivery</div>
 </body></html>`;

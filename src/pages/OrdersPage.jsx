@@ -427,9 +427,12 @@ export function OrdersPage() {
         : `Imprima pelo navegador: ${ENDERECO_WEB}`);
       return;
     }
-    const ok = printOrder(order, profile?.restaurant_name || '');
+    // `isOwnDelivery` é a definição única desta tela (linha ~244). Na entrega
+    // própria a comanda não imprime o código de retirada: ele é do entregador
+    // da Inksa, que ali não existe.
+    const ok = printOrder(order, profile?.restaurant_name || '', isOwnDelivery);
     if (!ok) addToast('error', 'Não foi possível abrir a impressão.');
-  }, [profile?.restaurant_name, addToast]);
+  }, [profile?.restaurant_name, isOwnDelivery, addToast]);
 
   const handleInputChange = (e) => { setFilters(prev => ({ ...prev, [e.target.name]: e.target.value })); };
   const handleApplyFilters = async () => {
