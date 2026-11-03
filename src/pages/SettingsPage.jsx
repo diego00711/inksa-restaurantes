@@ -26,7 +26,14 @@ async function geocodeOnce({ street, neighborhood, city, state }) {
     const j = await res.json();
     const lat = Number(j?.data?.lat);
     const lng = Number(j?.data?.lng);
-    if (Number.isFinite(lat) && Number.isFinite(lng)) return { lat, lng };
+    // ⚠️ `Number.isFinite(0)` é true, e foi por aqui que o 0,0 entrou: a Oishii
+    // de Fraiburgo salvou latitude 0 / longitude 0 e ficou invisível pra todo
+    // mundo por 13 dias, inclusive dentro da própria cidade — o raio é de 15 km
+    // e ela estava a 11 mil. Zero não é coordenada; é o que sobra quando o
+    // geocode não resolveu. Recusar aqui faz a cadeia tentar a próxima variante.
+    if (Number.isFinite(lat) && Number.isFinite(lng) && !(lat === 0 && lng === 0)) {
+      return { lat, lng };
+    }
   } catch {
     /* falha de rede/limite — o chamador tenta a próxima variante */
   }
